@@ -127,52 +127,13 @@
     $('#silk-import-from').onchange=refresh;$('#silk-import-to').onchange=refresh;$('#silk-import-apply').onclick=apply;
     wrap.onclick=e=>{if(e.target===wrap)close()};
   }
-  function exportStoredQR(){
-    try{
-      // Do not call saveState here: opening Settings can leave the day form
-      // on a different date and overwrite freshly imported period data.
-      let st={};
-      try{st=JSON.parse(localStorage.getItem(typeof STORE!=='undefined'?STORE:'silk_tip_state')||'{}')}catch(_){}
-      if(!st||typeof st!=='object')st={};
-      const entries=Object.entries(st.byDate||{}).filter(([d,x])=>dateOK(d)&&((+x.f||0)>0||(+x.s||0)>0)).sort((a,b)=>a[0].localeCompare(b[0]));
-      if(!entries.length)throw Error('Keine gespeicherten Trinkgeldtage gefunden.');
-      const rowsOut=entries.map(([d,x])=>[d,amount(+x.f||0),amount(+x.s||0)]);
-      const schedule=[];
-      entries.forEach(([d,x])=>(x.assignments||[]).forEach(a=>{if(a&&a.name&&a.shift)schedule.push({date:d,name:String(a.name),shift:String(a.shift)})}));
-      const payload='SILK1:'+JSON.stringify({v:1,type:'silk-tip',rows:rowsOut,schedule});
-      const wrap=document.createElement('div');wrap.id='silk-export-modal';
-      wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="QR-Code exportieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>QR-Code exportieren</h2><p>Deine gespeicherten Trinkgeldbeträge sind bereit.</p><div class="sim-sum">'+entries.length+' Trinkgeldtage · '+schedule.length+' Mitarbeiterdienste</div><label for="silk-export-text" style="display:block;margin:14px 0 6px;font-size:12px;font-weight:650">Export-Code</label><textarea id="silk-export-text" readonly style="width:100%;min-height:120px"></textarea><button class="savewide" id="silk-export-copy" type="button" style="margin-top:10px">Code kopieren</button></div>';
-      document.body.appendChild(wrap);
-      $('#silk-export-text').value=payload;
-      const closeExport=()=>wrap.remove();$('.sim-close',wrap).onclick=closeExport;wrap.onclick=e=>{if(e.target===wrap)closeExport()};
-      $('#silk-export-copy').onclick=async()=>{
-        const ta=$('#silk-export-text');ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
-        try{await navigator.clipboard.writeText(payload);$('#silk-export-copy').textContent='Code kopiert ✓'}
-        catch(e){document.execCommand('copy');$('#silk-export-copy').textContent='Code kopiert ✓'}
-      };
-    }catch(e){alert(e.message||String(e))}
-  }
   function inject(){
     const home=$('#settingsHome');if(!home||$('.silk-import-row',home))return;
     const button=document.createElement('button');button.className='settingsrow silk-import-row';button.type='button';
     button.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM5.5 5.5h2v2h-2zM14 3h7v7h-7zM16.5 5.5h2v2h-2zM3 14h7v7H3zM5.5 16.5h2v2h-2zM14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg></span><span><strong>Trinkgeld importieren</strong><small>QR scannen oder Foto wählen</small></span><span class="silk-import-chevron">›</span>';
     button.onclick=()=>{closeSettings();open();scan()};
     home.prepend(button);
-    if(!$('.silk-export-row',home)){
-      const exp=document.createElement('button');exp.className='settingsrow silk-export-row';exp.type='button';
-      exp.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></span><span><strong>QR-Code exportieren</strong><small>Gespeicherte Beträge & Dienste</small></span><span class="silk-import-chevron">›</span>';
-      exp.onclick=()=>{
-        try{
-          let st={};try{st=JSON.parse(localStorage.getItem(typeof STORE!=='undefined'?STORE:'silk_tip_state')||'{}')}catch(_){}
-          const entries=Object.entries(st.byDate||{}).filter(([d,x])=>dateOK(d)&&((+x.f||0)>0||(+x.s||0)>0)).sort((a,b)=>a[0].localeCompare(b[0]));
-          if(!entries.length){alert('Keine gespeicherten Trinkgeldtage gefunden.');return}
-          const rowsOut=entries.map(([d,x])=>[d,amount(+x.f||0),amount(+x.s||0)]);
-          const schedule=[];entries.forEach(([d,x])=>(x.assignments||[]).forEach(a=>{if(a&&a.name&&a.shift)schedule.push({date:d,name:String(a.name),shift:String(a.shift)})}));
-          const payload='SILK1:'+JSON.stringify({v:1,type:'silk-tip',rows:rowsOut,schedule});
-          window.prompt('SILK Export-Code – alles markieren und kopieren:',payload);
-        }catch(e){alert('Exportfehler: '+(e.message||e))}
-      };home.prepend(exp);
-    }
+
   }
   inject();new MutationObserver(inject).observe(document.body,{childList:true,subtree:true});
 })();
