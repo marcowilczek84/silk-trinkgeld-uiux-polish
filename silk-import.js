@@ -129,7 +129,6 @@
   }
   function exportStoredQR(){
     try{
-      if(typeof QRCode==='undefined')throw Error('QR-Erstellung ist noch nicht geladen. Bitte die App kurz neu laden.');
       if(typeof saveState==='function')saveState();
       const st=typeof getState==='function'?getState():{};
       const entries=Object.entries(st.byDate||{}).filter(([d,x])=>dateOK(d)&&((+x.f||0)>0||(+x.s||0)>0)).sort((a,b)=>a[0].localeCompare(b[0]));
@@ -139,15 +138,14 @@
       entries.forEach(([d,x])=>(x.assignments||[]).forEach(a=>{if(a&&a.name&&a.shift)schedule.push({date:d,name:String(a.name),shift:String(a.shift)})}));
       const payload='SILK1:'+JSON.stringify({v:1,type:'silk-tip',rows:rowsOut,schedule});
       const wrap=document.createElement('div');wrap.id='silk-export-modal';
-      wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="QR-Code exportieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>QR-Code exportieren</h2><p>Dieser Code enthält die aktuell gespeicherten Trinkgeldbeträge und Mitarbeiterdienste.</p><div id="silk-export-qr" style="display:flex;justify-content:center;padding:16px 0"></div><div class="sim-sum">'+entries.length+' Trinkgeldtage · '+schedule.length+' Mitarbeiterdienste</div><button class="savewide" id="silk-export-save" type="button">QR-Code als Bild sichern</button></div>';
+      wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="QR-Code exportieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>QR-Code exportieren</h2><p>Deine gespeicherten Trinkgeldbeträge sind bereit.</p><div class="sim-sum">'+entries.length+' Trinkgeldtage · '+schedule.length+' Mitarbeiterdienste</div><label for="silk-export-text" style="display:block;margin:14px 0 6px;font-size:12px;font-weight:650">Export-Code</label><textarea id="silk-export-text" readonly style="width:100%;min-height:120px"></textarea><button class="savewide" id="silk-export-copy" type="button" style="margin-top:10px">Code kopieren</button></div>';
       document.body.appendChild(wrap);
+      $('#silk-export-text').value=payload;
       const closeExport=()=>wrap.remove();$('.sim-close',wrap).onclick=closeExport;wrap.onclick=e=>{if(e.target===wrap)closeExport()};
-      new QRCode($('#silk-export-qr'),{text:payload,width:300,height:300,correctLevel:QRCode.CorrectLevel.L});
-      $('#silk-export-save').onclick=()=>{
-        const canvas=$('#silk-export-qr canvas'),img=$('#silk-export-qr img');
-        const href=canvas?canvas.toDataURL('image/png'):img?.src;
-        if(!href)return error(Error('QR-Bild konnte nicht erstellt werden.'));
-        const a=document.createElement('a');a.href=href;a.download='SILK_Trinkgeld_QR.png';document.body.appendChild(a);a.click();a.remove();
+      $('#silk-export-copy').onclick=async()=>{
+        const ta=$('#silk-export-text');ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
+        try{await navigator.clipboard.writeText(payload);$('#silk-export-copy').textContent='Code kopiert ✓'}
+        catch(e){document.execCommand('copy');$('#silk-export-copy').textContent='Code kopiert ✓'}
       };
     }catch(e){alert(e.message||String(e))}
   }
