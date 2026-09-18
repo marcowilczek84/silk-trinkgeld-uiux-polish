@@ -92,7 +92,7 @@
   function inject(){
     const drawer=$('.drawer');if(!drawer||$('.silk-import-row',drawer))return;
     const button=document.createElement('button');button.className='settingsrow silk-import-row';button.type='button';
-    button.innerHTML='<span class="silk-import-row-icon">▦</span><span><strong>Trinkgeld importieren</strong><small>QR-Code oder CSV</small></span><span class="silk-import-chevron">›</span>';
+    button.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM5.5 5.5h2v2h-2zM14 3h7v7h-7zM16.5 5.5h2v2h-2zM3 14h7v7H3zM5.5 16.5h2v2h-2zM14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg></span><span><strong>Trinkgeld importieren</strong><small>QR-Code oder CSV</small></span><span class="silk-import-chevron">›</span>';
     button.onclick=()=>{closeSettings();open()};
     drawer.insertBefore(button,$('.drawerhead',drawer)?.nextSibling||drawer.firstChild);
   }
