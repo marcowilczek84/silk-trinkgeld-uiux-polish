@@ -31,3 +31,4 @@
 #silk-import-modal #silk-import-input details{margin-top:16px;color:var(--muted);font-size:12px}
 #silk-import-modal #silk-import-input details label{display:block;margin-top:12px}
 #silk-import-modal #silk-import-input .sim-csv{padding:10px;border:1px solid var(--line);border-radius:10px;color:var(--petrol-dark);text-align:center;cursor:pointer}
+#silk-import-modal .sim-photo{display:block;margin-top:14px;padding:13px;border:1px solid var(--petrol);border-radius:11px;background:var(--petrol-soft);color:var(--petrol-dark);font-size:14px;font-weight:700;text-align:center;cursor:pointer}
