@@ -26,3 +26,8 @@
 #silk-import-modal .sim-go{background:var(--petrol,#1c777b);color:#fff}
 #silk-import-modal .sim-cancel{background:#eef2f1;color:#46504e}
 @media(max-width:560px){#silk-import-modal{padding:12px}#silk-import-modal .sim-card{padding:22px 15px}#silk-import-modal .sim-table-wrap th,#silk-import-modal .sim-table-wrap td{padding:9px 5px;font-size:11px}.period-total{padding:15px 12px;font-size:12px}.period-total strong{font-size:16px}}
+#silk-import-modal #silk-qr-video{display:block;width:100%;max-height:50dvh;margin:16px 0 4px;background:#172927;object-fit:cover}
+#silk-import-modal #silk-qr-camera{width:100%;margin:14px 0;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--petrol-soft);color:var(--petrol-dark);font:inherit;font-weight:650}
+#silk-import-modal #silk-import-input details{margin-top:16px;color:var(--muted);font-size:12px}
+#silk-import-modal #silk-import-input details label{display:block;margin-top:12px}
+#silk-import-modal #silk-import-input .sim-csv{padding:10px;border:1px solid var(--line);border-radius:10px;color:var(--petrol-dark);text-align:center;cursor:pointer}

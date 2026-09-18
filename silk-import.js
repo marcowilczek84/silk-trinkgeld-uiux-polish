@@ -52,41 +52,29 @@
     close();
     $('#days')?.scrollIntoView({behavior:'smooth',block:'start'});
   }
-  function readImage(file){
-    if(!file)return;
-    const image=new Image(),url=URL.createObjectURL(file);
-    image.onload=()=>{URL.revokeObjectURL(url);try{
-      const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
-      const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);
-      const qr=jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height);
-      if(!qr)throw Error('Kein lesbarer QR-Code im Bild gefunden.');
-      preview(validate(qr.data));
-    }catch(e){error(e)}};
-    image.onerror=()=>{URL.revokeObjectURL(url);error(Error('Bild konnte nicht geöffnet werden.'))};
-    image.src=url;
-  }
   async function scan(){
     try{
+      stop();$('#silk-import-error').textContent='';$('#silk-qr-camera').classList.add('hidden');
       stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      if(!$('#silk-import-modal')){stop();return}
       const video=$('#silk-qr-video');video.srcObject=stream;video.classList.remove('hidden');await video.play();
       const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
       function tick(){
         if(!stream)return;
         if(video.videoWidth){canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0);const qr=jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height);
-          if(qr){try{preview(validate(qr.data))}catch(e){error(e)}return}}
+          if(qr){try{preview(validate(qr.data));return}catch(e){error(e)}}}
         frame=requestAnimationFrame(tick);
       }
       tick();
-    }catch(e){stop();error(Error('Kamera nicht verfügbar. Du kannst ein QR-Bild auswählen.'))}
+    }catch(e){stop();$('#silk-qr-camera')?.classList.remove('hidden');error(Error('Kamera nicht verfügbar. Bitte Kamerazugriff erlauben und erneut versuchen.'))}
   }
   function open(){
     close();
     const wrap=document.createElement('div');wrap.id='silk-import-modal';
-    wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="Trinkgeld importieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>Trinkgeld importieren</h2><div id="silk-import-input"><p>QR-Code scannen oder ein Bild beziehungsweise eine CSV-Datei auswählen.</p><div class="sim-choices"><button id="silk-qr-camera" type="button">Kamera öffnen</button><label>QR-Bild wählen<input id="silk-qr-image" type="file" accept="image/*" hidden></label><label>CSV-Datei wählen<input id="silk-csv-file" type="file" accept=".csv,text/csv" hidden></label></div><video id="silk-qr-video" class="hidden" playsinline muted></video><details><summary>QR-Text einfügen</summary><textarea id="silk-qr-text" placeholder="SILK1:..."></textarea><button id="silk-qr-paste" type="button">Text einlesen</button></details><p id="silk-import-error" role="alert"></p></div><div id="silk-import-preview" class="hidden"><p>Wähle den Zeitraum, dessen Beträge du übernehmen möchtest.</p><div class="grid2"><div class="field"><label for="silk-import-from">Von</label><input type="date" id="silk-import-from"></div><div class="field"><label for="silk-import-to">Bis</label><input type="date" id="silk-import-to"></div></div><div class="sim-sum" id="silk-import-summary"></div><div id="silk-import-table" class="sim-table-wrap"></div><div class="sim-actions"><button class="sim-cancel" type="button">Abbrechen</button><button class="sim-go" id="silk-import-apply" type="button">Beträge laden</button></div></div></div>';
+    wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="Trinkgeld importieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>Trinkgeld importieren</h2><div id="silk-import-input"><p>QR-Code vor die Kamera halten. Er wird automatisch gelesen – kein Foto nötig.</p><video id="silk-qr-video" class="hidden" playsinline muted></video><button id="silk-qr-camera" class="hidden" type="button">Kamera erneut öffnen</button><details><summary>Weitere Importwege</summary><label class="sim-csv">CSV-Datei wählen<input id="silk-csv-file" type="file" accept=".csv,text/csv" hidden></label><label for="silk-qr-text">QR-Text einfügen</label><textarea id="silk-qr-text" placeholder="SILK1:..."></textarea><button id="silk-qr-paste" type="button">Text einlesen</button></details><p id="silk-import-error" role="alert"></p></div><div id="silk-import-preview" class="hidden"><p>Wähle den Zeitraum, dessen Beträge du übernehmen möchtest.</p><div class="grid2"><div class="field"><label for="silk-import-from">Von</label><input type="date" id="silk-import-from"></div><div class="field"><label for="silk-import-to">Bis</label><input type="date" id="silk-import-to"></div></div><div class="sim-sum" id="silk-import-summary"></div><div id="silk-import-table" class="sim-table-wrap"></div><div class="sim-actions"><button class="sim-cancel" type="button">Abbrechen</button><button class="sim-go" id="silk-import-apply" type="button">Beträge laden</button></div></div></div>';
     document.body.appendChild(wrap);
     $('.sim-close',wrap).onclick=close;$('.sim-cancel',wrap).onclick=close;
     $('#silk-qr-camera').onclick=scan;
-    $('#silk-qr-image').onchange=e=>readImage(e.target.files[0]);
     $('#silk-csv-file').onchange=async e=>{try{preview(csv(await e.target.files[0].text()))}catch(err){error(err)}};
     $('#silk-qr-paste').onclick=()=>{try{preview(validate($('#silk-qr-text').value))}catch(err){error(err)}};
     $('#silk-import-from').onchange=refresh;$('#silk-import-to').onchange=refresh;$('#silk-import-apply').onclick=apply;
@@ -95,8 +83,8 @@
   function inject(){
     const home=$('#settingsHome');if(!home||$('.silk-import-row',home))return;
     const button=document.createElement('button');button.className='settingsrow silk-import-row';button.type='button';
-    button.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM5.5 5.5h2v2h-2zM14 3h7v7h-7zM16.5 5.5h2v2h-2zM3 14h7v7H3zM5.5 16.5h2v2h-2zM14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg></span><span><strong>Trinkgeld importieren</strong><small>QR-Code oder CSV</small></span><span class="silk-import-chevron">›</span>';
-    button.onclick=()=>{closeSettings();open()};
+    button.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM5.5 5.5h2v2h-2zM14 3h7v7h-7zM16.5 5.5h2v2h-2zM3 14h7v7H3zM5.5 16.5h2v2h-2zM14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg></span><span><strong>Trinkgeld importieren</strong><small>QR-Code scannen</small></span><span class="silk-import-chevron">›</span>';
+    button.onclick=()=>{closeSettings();open();scan()};
     home.prepend(button);
   }
   inject();new MutationObserver(inject).observe(document.body,{childList:true,subtree:true});
