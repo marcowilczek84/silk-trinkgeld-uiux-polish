@@ -127,12 +127,41 @@
     $('#silk-import-from').onchange=refresh;$('#silk-import-to').onchange=refresh;$('#silk-import-apply').onclick=apply;
     wrap.onclick=e=>{if(e.target===wrap)close()};
   }
+  function exportStoredQR(){
+    try{
+      if(typeof QRCode==='undefined')throw Error('QR-Erstellung ist noch nicht geladen. Bitte die App kurz neu laden.');
+      if(typeof saveState==='function')saveState();
+      const st=typeof getState==='function'?getState():{};
+      const entries=Object.entries(st.byDate||{}).filter(([d,x])=>dateOK(d)&&((+x.f||0)>0||(+x.s||0)>0)).sort((a,b)=>a[0].localeCompare(b[0]));
+      if(!entries.length)throw Error('Keine gespeicherten Trinkgeldtage gefunden.');
+      const rowsOut=entries.map(([d,x])=>[d,amount(+x.f||0),amount(+x.s||0)]);
+      const schedule=[];
+      entries.forEach(([d,x])=>(x.assignments||[]).forEach(a=>{if(a&&a.name&&a.shift)schedule.push({date:d,name:String(a.name),shift:String(a.shift)})}));
+      const payload='SILK1:'+JSON.stringify({v:1,type:'silk-tip',rows:rowsOut,schedule});
+      const wrap=document.createElement('div');wrap.id='silk-export-modal';
+      wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="QR-Code exportieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>QR-Code exportieren</h2><p>Dieser Code enthält die aktuell gespeicherten Trinkgeldbeträge und Mitarbeiterdienste.</p><div id="silk-export-qr" style="display:flex;justify-content:center;padding:16px 0"></div><div class="sim-sum">'+entries.length+' Trinkgeldtage · '+schedule.length+' Mitarbeiterdienste</div><button class="savewide" id="silk-export-save" type="button">QR-Code als Bild sichern</button></div>';
+      document.body.appendChild(wrap);
+      const closeExport=()=>wrap.remove();$('.sim-close',wrap).onclick=closeExport;wrap.onclick=e=>{if(e.target===wrap)closeExport()};
+      new QRCode($('#silk-export-qr'),{text:payload,width:300,height:300,correctLevel:QRCode.CorrectLevel.L});
+      $('#silk-export-save').onclick=()=>{
+        const canvas=$('#silk-export-qr canvas'),img=$('#silk-export-qr img');
+        const href=canvas?canvas.toDataURL('image/png'):img?.src;
+        if(!href)return error(Error('QR-Bild konnte nicht erstellt werden.'));
+        const a=document.createElement('a');a.href=href;a.download='SILK_Trinkgeld_QR.png';document.body.appendChild(a);a.click();a.remove();
+      };
+    }catch(e){alert(e.message||String(e))}
+  }
   function inject(){
     const home=$('#settingsHome');if(!home||$('.silk-import-row',home))return;
     const button=document.createElement('button');button.className='settingsrow silk-import-row';button.type='button';
     button.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM5.5 5.5h2v2h-2zM14 3h7v7h-7zM16.5 5.5h2v2h-2zM3 14h7v7H3zM5.5 16.5h2v2h-2zM14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/></svg></span><span><strong>Trinkgeld importieren</strong><small>QR scannen oder Foto wählen</small></span><span class="silk-import-chevron">›</span>';
     button.onclick=()=>{closeSettings();open();scan()};
     home.prepend(button);
+    if(!$('.silk-export-row',home)){
+      const exp=document.createElement('button');exp.className='settingsrow silk-export-row';exp.type='button';
+      exp.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></span><span><strong>QR-Code exportieren</strong><small>Gespeicherte Beträge & Dienste</small></span><span class="silk-import-chevron">›</span>';
+      exp.onclick=()=>{closeSettings();exportStoredQR()};home.prepend(exp);
+    }
   }
   inject();new MutationObserver(inject).observe(document.body,{childList:true,subtree:true});
 })();
