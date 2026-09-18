@@ -11,3 +11,18 @@
 #periodError{color:#b34a46;margin:8px 0 0}
 
 .period-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.period-dates.hidden{display:none!important}.date-parts{display:grid;grid-template-columns:70px minmax(115px,1fr) 86px;gap:8px}.date-parts select{min-width:0;font-size:14px}.period-error{color:#b34a46;margin:8px 0 0}.period-error.hidden{display:none!important}@media(max-width:650px){.period-dates{grid-template-columns:1fr}.date-parts{grid-template-columns:70px minmax(120px,1fr) 85px}}
+.period-total{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:19px 20px;margin-top:0;border:1px solid var(--line);border-radius:0 0 14px 14px;background:var(--petrol-soft);color:var(--ink);font-size:14px;font-weight:650}.period-total strong{font-size:19px;color:var(--petrol-dark);white-space:nowrap}
+#silk-import-modal .sim-card{width:min(680px,100%);max-height:min(90dvh,820px);padding:24px 26px;display:flex;flex-direction:column;text-align:left}
+#silk-import-modal .sim-card h2{padding-right:32px}
+#silk-import-modal .sim-card .sim-sum{display:block;margin:16px 0 10px;padding:0;background:transparent;color:var(--muted);font-size:13px}
+#silk-import-modal .sim-table-wrap{max-height:min(40dvh,350px);overflow:auto;border:1px solid var(--line);border-radius:12px}
+#silk-import-modal .sim-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+#silk-import-modal .sim-table-wrap th,#silk-import-modal .sim-table-wrap td{padding:10px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+#silk-import-modal .sim-table-wrap th:first-child{text-align:left}
+#silk-import-modal .sim-table-wrap thead,#silk-import-modal .sim-table-wrap tfoot{background:var(--petrol-soft);color:var(--petrol-dark)}
+#silk-import-modal .sim-table-wrap tfoot th,#silk-import-modal .sim-table-wrap tfoot td{font-weight:750;border-bottom:0}
+#silk-import-modal .sim-actions{margin-top:16px;flex:none}
+#silk-import-modal .sim-actions button{min-height:48px;cursor:pointer}
+#silk-import-modal .sim-go{background:var(--petrol,#1c777b);color:#fff}
+#silk-import-modal .sim-cancel{background:#eef2f1;color:#46504e}
+@media(max-width:560px){#silk-import-modal{padding:12px}#silk-import-modal .sim-card{padding:22px 15px}#silk-import-modal .sim-table-wrap th,#silk-import-modal .sim-table-wrap td{padding:9px 5px;font-size:11px}.period-total{padding:15px 12px;font-size:12px}.period-total strong{font-size:16px}}
