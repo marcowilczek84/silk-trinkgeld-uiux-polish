@@ -9,8 +9,24 @@
     try{raw=JSON.parse(input.trim().startsWith('SILK1:') ? input.trim().slice(6) : input)}
     catch(e){throw Error('Das ist kein gültiger SILK-Trinkgeld-QR-Code. Bitte den QR-Code mit den Trinkgelddaten wählen.')}
     if(raw.v!==1 || raw.type!=='silk-tip' || !Array.isArray(raw.rows))throw Error('Dieser QR-Code enthält keine SILK-Trinkgelddaten.');
-    const list=raw.rows.map(r=>{if(!Array.isArray(r)||r.length<3||!dateOK(r[0]))throw Error('Ungültiges Datum im QR-Code.');return {date:r[0],early:amount(r[1]),late:amount(r[2])}});
+    const list=raw.rows.map(r=>{if(!Array.isArray(r)||r.length<3||!dateOK(r[0]))throw Error('Ungültiges Datum im QR-Code.');return {date:r[0],early:amount(r[1]),late:amount(r[2]),assignments:[]}});
     if(!list.length || list.length>93 || new Set(list.map(r=>r.date)).size!==list.length)throw Error('Der QR-Code enthält keine gültige Tagesliste.');
+    // Optional schedule block: [{date:"YYYY-MM-DD",name:"Marco",shift:"FR1"}, ...]
+    // Older SILK1 QR codes without schedule remain fully compatible.
+    if(raw.schedule!==undefined){
+      if(!Array.isArray(raw.schedule))throw Error('Ungültige Mitarbeiterdienste im QR-Code.');
+      const byDate=Object.fromEntries(list.map(r=>[r.date,r]));
+      const seen=new Set();
+      raw.schedule.forEach(a=>{
+        if(!a||typeof a!=='object'||!dateOK(a.date)||typeof a.name!=='string'||typeof a.shift!=='string')throw Error('Ungültiger Mitarbeiterdienst im QR-Code.');
+        const name=a.name.trim(),shift=a.shift.trim();
+        if(!name||!shift||name.length>80||shift.length>30)throw Error('Ungültiger Mitarbeiterdienst im QR-Code.');
+        if(!byDate[a.date])return;
+        const key=a.date+'\u0000'+name;
+        if(seen.has(key))throw Error('Ein Mitarbeiter ist an einem Tag mehrfach im QR-Code eingetragen.');
+        seen.add(key);byDate[a.date].assignments.push({name,shift});
+      });
+    }
     return list.sort((a,b)=>a.date.localeCompare(b.date));
   }
   function csv(input){
@@ -38,7 +54,8 @@
     if(!dateOK(from)||!dateOK(to)||from>to||!subset.length){summary.textContent='Bitte einen Zeitraum mit vorhandenen Einträgen wählen.';table.innerHTML='';button.disabled=true;return}
     button.disabled=false;
     const total=Math.round(subset.reduce((a,r)=>a+Math.round(r.early*100)+Math.round(r.late*100),0))/100;
-    summary.textContent=subset.length+' Tage mit Einträgen';
+    const dutyCount=subset.reduce((n,r)=>n+(r.assignments?.length||0),0);
+    summary.textContent=subset.length+' Tage mit Einträgen'+(dutyCount?' · '+dutyCount+' Mitarbeiterdienste':'');
     table.innerHTML='<table><thead><tr><th>Datum</th><th>Früh</th><th>Spät</th><th>Tag</th></tr></thead><tbody>'+subset.map(r=>'<tr><th scope="row">'+r.date.slice(8)+'.'+r.date.slice(5,7)+'.'+r.date.slice(0,4)+'</th><td>'+money(r.early)+'</td><td>'+money(r.late)+'</td><td>'+money(r.early+r.late)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="3">Gesamtsumme zum Abgleichen</th><td>'+money(total)+'</td></tr></tfoot></table>';
   }
   function apply(){
@@ -47,8 +64,17 @@
     saveState();
     const state=getState(),byDate={...(state.byDate||{})};
     const conflicts=subset.filter(r=>+byDate[r.date]?.f||+byDate[r.date]?.s);
-    if(conflicts.length&&!confirm(conflicts.length+' vorhandene Tagesbeträge ersetzen? Die Mitarbeiterdienste bleiben erhalten.'))return;
-    subset.forEach(r=>{byDate[r.date]={...(byDate[r.date]||{}),f:String(r.early),s:String(r.late)}});
+    const hasSchedule=subset.some(r=>r.assignments?.length);
+    if(conflicts.length&&!confirm(conflicts.length+' vorhandene Tagesbeträge ersetzen?'+(hasSchedule?' Enthaltene Mitarbeiterdienste aus dem QR-Code werden ebenfalls übernommen.':' Die Mitarbeiterdienste bleiben erhalten.')))return;
+    subset.forEach(r=>{
+      const current=byDate[r.date]||{};
+      let assignments=current.assignments||[];
+      if(r.assignments?.length){
+        const knownNames=new Set(typeof STAFF!=='undefined'?STAFF:[]),knownShifts=new Set(typeof SHIFTS!=='undefined'?SHIFTS.map(s=>s.name):[]);
+        assignments=r.assignments.filter(a=>knownNames.has(a.name)&&knownShifts.has(a.shift)).map(a=>({name:a.name,shift:a.shift}));
+      }
+      byDate[r.date]={...current,f:String(r.early),s:String(r.late),assignments};
+    });
     localStorage.setItem(STORE,JSON.stringify({...state,byDate,periodStart:from,periodEnd:to,mode:'period'}));
     setPeriodRange(from,to);setMode('period');
     close();
@@ -90,7 +116,7 @@
   function open(){
     close();
     const wrap=document.createElement('div');wrap.id='silk-import-modal';
-    wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="Trinkgeld importieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>Trinkgeld importieren</h2><div id="silk-import-input"><p>QR-Code vor die Kamera halten oder dein gespeichertes QR-Foto wählen.</p><video id="silk-qr-video" class="hidden" playsinline muted></video><label class="sim-photo">QR-Foto aus Fotos wählen<input id="silk-qr-image" type="file" accept="image/*" hidden></label><button id="silk-qr-camera" class="hidden" type="button">Kamera erneut öffnen</button><details><summary>Weitere Importwege</summary><label class="sim-csv">CSV-Datei wählen<input id="silk-csv-file" type="file" accept=".csv,text/csv" hidden></label><label for="silk-qr-text">QR-Text einfügen</label><textarea id="silk-qr-text" placeholder="SILK1:..."></textarea><button id="silk-qr-paste" type="button">Text einlesen</button></details><p id="silk-import-error" role="alert"></p></div><div id="silk-import-preview" class="hidden"><p>Wähle den Zeitraum, dessen Beträge du übernehmen möchtest.</p><div class="grid2"><div class="field"><label for="silk-import-from">Von</label><input type="date" id="silk-import-from"></div><div class="field"><label for="silk-import-to">Bis</label><input type="date" id="silk-import-to"></div></div><div class="sim-sum" id="silk-import-summary"></div><div id="silk-import-table" class="sim-table-wrap"></div><div class="sim-actions"><button class="sim-cancel" type="button">Abbrechen</button><button class="sim-go" id="silk-import-apply" type="button">Beträge laden</button></div></div></div>';
+    wrap.innerHTML='<div class="sim-card" role="dialog" aria-modal="true" aria-label="Trinkgeld importieren"><button class="sim-close" type="button" aria-label="Schließen">×</button><h2>Trinkgeld importieren</h2><div id="silk-import-input"><p>QR-Code vor die Kamera halten oder dein gespeichertes QR-Foto wählen.</p><video id="silk-qr-video" class="hidden" playsinline muted></video><label class="sim-photo">QR-Foto aus Fotos wählen<input id="silk-qr-image" type="file" accept="image/*" hidden></label><button id="silk-qr-camera" class="hidden" type="button">Kamera erneut öffnen</button><details><summary>Weitere Importwege</summary><label class="sim-csv">CSV-Datei wählen<input id="silk-csv-file" type="file" accept=".csv,text/csv" hidden></label><label for="silk-qr-text">QR-Text einfügen</label><textarea id="silk-qr-text" placeholder="SILK1:..."></textarea><button id="silk-qr-paste" type="button">Text einlesen</button></details><p id="silk-import-error" role="alert"></p></div><div id="silk-import-preview" class="hidden"><p>Wähle den Zeitraum, dessen Beträge du übernehmen möchtest.</p><div class="grid2"><div class="field"><label for="silk-import-from">Von</label><input type="date" id="silk-import-from"></div><div class="field"><label for="silk-import-to">Bis</label><input type="date" id="silk-import-to"></div></div><div class="sim-sum" id="silk-import-summary"></div><div id="silk-import-table" class="sim-table-wrap"></div><div class="sim-actions"><button class="sim-cancel" type="button">Abbrechen</button><button class="sim-go" id="silk-import-apply" type="button">Beträge & Dienste laden</button></div></div></div>';
     document.body.appendChild(wrap);
     $('.sim-close',wrap).onclick=close;$('.sim-cancel',wrap).onclick=close;
     $('#silk-qr-camera').onclick=scan;
