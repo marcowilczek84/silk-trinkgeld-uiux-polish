@@ -149,7 +149,22 @@
 <button class="calcbtn" onclick="calculate()">Trinkgeld berechnen</button>
 </div>
 </main>
-<script>const DEFAULT_STAFF=["Sandra","Marco","Sladjana","Manuela","Emily","Martin","Sascha","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];let STAFF=JSON.parse(localStorage.getItem('silk_staff')||'null')||DEFAULT_STAFF.slice(),SHIFTS=JSON.parse(localStorage.getItem('silk_shifts')||'null')||DEFAULT_SHIFTS.map(x=>({...x})),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
+<script>const DEFAULT_STAFF=["Sandra Porepp","Marco Wilczek","Sladjana Trninic","Manuela Ellmaier","Emily","Martin Georgiew","Sascha Mirabito","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao","Julia Lemaitre","Jeannine Grohmann"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];let STAFF=JSON.parse(localStorage.getItem('silk_staff')||'null')||DEFAULT_STAFF.slice(),SHIFTS=JSON.parse(localStorage.getItem('silk_shifts')||'null')||DEFAULT_SHIFTS.map(x=>({...x})),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
+const STAFF_NAME_MIGRATION={"Sandra":"Sandra Porepp","Marco":"Marco Wilczek","Sladjana":"Sladjana Trninic","Manuela":"Manuela Ellmaier","Martin":"Martin Georgiew","Sascha":"Sascha Mirabito","Julia":"Julia Lemaitre","Jeannine":"Jeannine Grohmann"};
+(function migrateStaffNames(){
+  const rename=n=>STAFF_NAME_MIGRATION[n]||n;
+  STAFF=[...new Set(STAFF.map(rename))];
+  localStorage.setItem('silk_staff',JSON.stringify(STAFF));
+  try{
+    const st=JSON.parse(localStorage.getItem(STORE)||'{}');
+    if(st&&st.byDate){
+      Object.values(st.byDate).forEach(day=>{
+        if(Array.isArray(day.assignments)) day.assignments=day.assignments.map(a=>({...a,name:rename(a.name)}));
+      });
+      localStorage.setItem(STORE,JSON.stringify(st));
+    }
+  }catch(e){}
+})();
 function rebuild(){FACTOR={};SHIFTS.forEach(x=>FACTOR[x.name]={f:+x.f,s:+x.s,color:x.color||'#eee'})}rebuild();
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 function chf(n){return'CHF '+Number(n||0).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2})}
