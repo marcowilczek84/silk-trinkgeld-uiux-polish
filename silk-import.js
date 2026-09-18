@@ -67,9 +67,11 @@
     image.src=url;
   }
   async function scan(){
+    let generation;
     try{
       stop();$('#silk-import-error').textContent='';$('#silk-qr-camera').classList.add('hidden');
-      const generation=scanGeneration,media=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      generation=scanGeneration;
+      const media=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
       if(generation!==scanGeneration||!$('#silk-import-modal')){media.getTracks().forEach(t=>t.stop());return}
       stream=media;
       const video=$('#silk-qr-video');video.srcObject=stream;video.classList.remove('hidden');await video.play();
@@ -81,7 +83,7 @@
         frame=requestAnimationFrame(tick);
       }
       tick();
-    }catch(e){if(!$('#silk-import-modal'))return;stop();$('#silk-qr-camera')?.classList.remove('hidden');error(Error('Kamera nicht verfügbar. Du kannst dein gespeichertes QR-Foto wählen oder den Kamerazugriff erneut versuchen.'))}
+    }catch(e){if(generation!==scanGeneration||!$('#silk-import-modal'))return;stop();$('#silk-qr-camera')?.classList.remove('hidden');error(Error('Kamera nicht verfügbar. Du kannst dein gespeichertes QR-Foto wählen oder den Kamerazugriff erneut versuchen.'))}
   }
   function open(){
     close();
