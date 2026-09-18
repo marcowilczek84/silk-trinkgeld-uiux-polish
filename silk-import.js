@@ -161,7 +161,17 @@
     if(!$('.silk-export-row',home)){
       const exp=document.createElement('button');exp.className='settingsrow silk-export-row';exp.type='button';
       exp.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></span><span><strong>QR-Code exportieren</strong><small>Gespeicherte Beträge & Dienste</small></span><span class="silk-import-chevron">›</span>';
-      exp.onclick=()=>{exportStoredQR();setTimeout(()=>{try{closeSettings()}catch(e){}},0)};home.prepend(exp);
+      exp.onclick=()=>{
+        try{
+          let st={};try{st=JSON.parse(localStorage.getItem(typeof STORE!=='undefined'?STORE:'silk_tip_state')||'{}')}catch(_){}
+          const entries=Object.entries(st.byDate||{}).filter(([d,x])=>dateOK(d)&&((+x.f||0)>0||(+x.s||0)>0)).sort((a,b)=>a[0].localeCompare(b[0]));
+          if(!entries.length){alert('Keine gespeicherten Trinkgeldtage gefunden.');return}
+          const rowsOut=entries.map(([d,x])=>[d,amount(+x.f||0),amount(+x.s||0)]);
+          const schedule=[];entries.forEach(([d,x])=>(x.assignments||[]).forEach(a=>{if(a&&a.name&&a.shift)schedule.push({date:d,name:String(a.name),shift:String(a.shift)})}));
+          const payload='SILK1:'+JSON.stringify({v:1,type:'silk-tip',rows:rowsOut,schedule});
+          window.prompt('SILK Export-Code – alles markieren und kopieren:',payload);
+        }catch(e){alert('Exportfehler: '+(e.message||e))}
+      };home.prepend(exp);
     }
   }
   inject();new MutationObserver(inject).observe(document.body,{childList:true,subtree:true});
