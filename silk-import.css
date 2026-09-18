@@ -1,6 +1,7 @@
 /* Trinkgeld importieren */
 .silk-import-row{width:100%;display:flex;align-items:center;gap:12px;text-align:left;color:#16201e;font:inherit;cursor:pointer}
 .silk-import-row-icon{width:34px;height:34px;border-radius:10px;background:#fff;color:var(--silk-petrol);display:grid;place-items:center;font-size:21px}
+.silk-import-row-icon{background:var(--petrol-soft,#edf6f6);color:var(--petrol,#1c777b)}
 .silk-import-row-icon svg{width:23px;height:23px;display:block}
 .silk-import-row span:nth-child(2){display:flex;flex-direction:column;gap:2px;flex:1}.silk-import-row strong{font-size:14px}.silk-import-row small{font-size:12px;color:#7b8481}
 .silk-import-chevron{font-size:24px;color:#9aa4a1}

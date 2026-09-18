@@ -5,7 +5,9 @@
   const dateOK = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(new Date(s+'T12:00:00').getTime()) && new Date(s+'T12:00:00').toISOString().slice(0,10)===s;
   const amount = n => { const v=Number(n); if(!Number.isFinite(v)||v<0||v>100000)throw Error('Ungültiger Trinkgeldbetrag.');return Math.round(v*100)/100 };
   function validate(input) {
-    const raw = input.trim().startsWith('SILK1:') ? JSON.parse(input.trim().slice(6)) : JSON.parse(input);
+    let raw;
+    try{raw=JSON.parse(input.trim().startsWith('SILK1:') ? input.trim().slice(6) : input)}
+    catch(e){throw Error('Das ist kein gültiger SILK-Trinkgeld-QR-Code. Bitte den QR-Code mit den Trinkgelddaten wählen.')}
     if(raw.v!==1 || raw.type!=='silk-tip' || !Array.isArray(raw.rows))throw Error('Dieser QR-Code enthält keine SILK-Trinkgelddaten.');
     const list=raw.rows.map(r=>{if(!Array.isArray(r)||r.length<3||!dateOK(r[0]))throw Error('Ungültiges Datum im QR-Code.');return {date:r[0],early:amount(r[1]),late:amount(r[2])}});
     if(!list.length || list.length>93 || new Set(list.map(r=>r.date)).size!==list.length)throw Error('Der QR-Code enthält keine gültige Tagesliste.');
@@ -92,6 +94,7 @@
     document.body.appendChild(wrap);
     $('.sim-close',wrap).onclick=close;$('.sim-cancel',wrap).onclick=close;
     $('#silk-qr-camera').onclick=scan;
+    $('.sim-photo',wrap).onclick=()=>{stop();$('#silk-qr-video').classList.add('hidden');$('#silk-qr-camera').classList.remove('hidden');$('#silk-import-error').textContent=''};
     $('#silk-qr-image').onchange=e=>readImage(e.target.files[0]);
     $('#silk-csv-file').onchange=async e=>{try{preview(csv(await e.target.files[0].text()))}catch(err){error(err)}};
     $('#silk-qr-paste').onclick=()=>{try{preview(validate($('#silk-qr-text').value))}catch(err){error(err)}};
