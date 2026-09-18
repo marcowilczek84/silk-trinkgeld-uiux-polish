@@ -1,52 +1,293 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffffff"><title>SILK Trinkgeld</title><style>:root{--ink:#181a18;--muted:#787c78;--line:#e4e7e3;--soft:#f7f8f6;--soft2:#fbfbfa;--red:#b34a46;--max:920px}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#fff;color:var(--ink)}body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.012em}button,input,select{font:inherit}.hidden{display:none!important}.topbar{position:sticky;top:0;z-index:40;height:72px;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}.topbar-inner{height:100%;max-width:var(--max);margin:auto;padding:0 18px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center}.wordmark{font-family:Georgia,"Times New Roman",serif;font-size:21px;font-weight:600;letter-spacing:.17em}.submark{font-size:8px;letter-spacing:.17em;color:#8c918c;font-weight:600;margin-top:1px}.brandimg{display:block;width:54px;height:40px;object-fit:cover;border-radius:6px}.drawer .brandimg{width:64px;height:47px}.title{text-align:center}.title strong{display:block;font-size:15px;font-weight:690}.title small{display:block;font-size:10px;color:#929692;margin-top:2px}.iconbtn{justify-self:end;width:40px;height:40px;border:1px solid var(--line);border-radius:11px;background:#fff;display:grid;place-items:center;color:#222}.iconbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}main{max-width:var(--max);margin:auto;padding:28px 18px 42px}.intro{padding:2px 0 22px}.intro h1{font-size:clamp(30px,5vw,42px);line-height:1.04;letter-spacing:-.05em;margin:0 0 7px;font-weight:730}.intro p{margin:0;color:var(--muted);font-size:13px}.mode{display:grid;grid-template-columns:1fr 1fr;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:13px;margin-bottom:25px}.mode button{min-height:46px;border:0;border-radius:10px;background:transparent;color:#6f746f;font-weight:650;font-size:13px}.mode button.active{background:#fff;color:#1c1e1c;box-shadow:0 1px 5px rgba(0,0,0,.06)}.panel{border-top:1px solid var(--line);padding:23px 0}.step{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#8d928d;font-weight:700;margin-bottom:7px}.panel h2{font-size:19px;letter-spacing:-.03em;margin:0 0 6px}.hint{font-size:12px;color:var(--muted);margin:0 0 15px;line-height:1.45}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:10px}.field label{display:block;font-size:9px;color:#7d827d;font-weight:650;margin:0 0 5px}.field input,.field select{width:100%;height:44px;border:1px solid #d8dcd7;border-radius:10px;background:#fff;padding:0 11px;color:#202320;outline:none}.day-list{border-top:1px solid var(--line)}.day{border-bottom:1px solid var(--line)}.dayhead{width:100%;min-height:64px;border:0;background:#fff;padding:10px 2px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;text-align:left}.daydate strong{font-size:14px}.daydate small{display:block;font-size:9px;color:#929692;margin-top:3px}.daysum{font-weight:700;font-size:13px}.chev{font-size:20px;color:#9ca09c;transition:.18s}.day.open .chev{transform:rotate(180deg)}.daybody{display:none;padding:3px 0 18px}.day.open .daybody{display:block}.staffrows{margin-top:14px}.staffrow{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px;align-items:center;min-height:48px;border-bottom:1px solid #eff1ee}.staffname{font-size:12px;font-weight:610}.staffrow select{width:100%;height:38px;border:1px solid #dde0dc;border-radius:9px;padding:0 9px;font-size:11px;font-weight:700}.actionbar{position:sticky;bottom:0;z-index:25;margin:26px -18px -42px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}.calcbtn{width:100%;min-height:50px;border:0;border-radius:12px;background:#232523;color:#fff;font-weight:720;font-size:14px}.result{margin-top:22px;border:1px solid var(--line);border-radius:15px;overflow:hidden}.resulthead{padding:16px;background:var(--soft2);border-bottom:1px solid var(--line)}.resulthead small{display:block;font-size:9px;color:#888d88;margin-bottom:4px}.resulthead strong{font-size:22px}.resrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);align-items:center}.resrow:last-child{border-bottom:0}.resrow span{font-size:12px}.resrow b{font-size:13px}.resrow small{display:block;color:#969a96;font-size:9px;margin-top:3px}.result-actions{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:9px;margin-top:10px}.secondary{min-height:43px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#454945;font-size:12px;font-weight:650}.drawerback{position:fixed;inset:0;background:rgba(18,18,18,.28);z-index:60;opacity:0;pointer-events:none;transition:.2s}.drawerback.open{opacity:1;pointer-events:auto}.drawer{position:fixed;z-index:70;top:10px;right:10px;bottom:10px;width:min(88vw,360px);background:#fff;border:1px solid var(--line);border-radius:18px;transform:translateX(calc(100% + 24px));transition:.22s;padding:18px;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.16)}.drawer.open{transform:none}.drawerhead{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--line)}.drawer h3{font-size:16px;margin:20px 0 8px}.settingsrow{width:100%;min-height:58px;border:0;border-bottom:1px solid var(--line);background:#fff;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:8px 1px}.settingsrow strong{display:block;font-size:13px}.settingsrow small{display:block;font-size:9px;color:#929692;margin-top:3px}.editor{margin:8px 0 16px}.editrow{display:grid;grid-template-columns:1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.editrow input{height:40px;border:1px solid #dfe2de;border-radius:9px;padding:0 10px}.mini{border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 11px;font-size:11px}.danger{color:var(--red)}.savewide{width:100%;height:44px;border:0;border-radius:10px;background:#242624;color:#fff;font-weight:680}.addwide{width:100%;height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:8px}.backlink{border:0;background:transparent;color:#666b66;padding:0;font-size:12px}.savedcalc{padding:12px 0;border-bottom:1px solid var(--line)}.savedcalc-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.savedcalc strong{font-size:13px}.savedcalc small{display:block;color:#8f948f;font-size:9px;margin-top:3px}.savedcalc-total{font-weight:720;font-size:13px;white-space:nowrap}.savedcalc-details{margin-top:8px;font-size:10px;line-height:1.55;color:#555a55}.savedcalc-actions{display:flex;gap:8px;margin-top:9px}.savedcalc-actions button{height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:0 10px;font-size:10px}.emptyhint{font-size:11px;color:#8b908b;padding:14px 0}.login{position:fixed;inset:0;z-index:100;background:#fff;display:grid;place-items:center;padding:24px}.logincard{width:min(100%,350px);text-align:center}.loginword{font-family:Georgia,"Times New Roman",serif;font-size:42px;letter-spacing:.2em;margin-left:.2em;font-weight:600}.loginsub{font-size:12px;color:#828782;margin:10px 0 28px}.loginbox{border-top:1px solid var(--line);padding-top:22px}.loginbox input{width:100%;height:46px;border:1px solid #dce0db;border-radius:10px;text-align:center}.loginbox button{width:100%;height:46px;border:0;border-radius:10px;background:#242624;color:#fff;margin-top:9px;font-weight:680}.error{font-size:10px;color:var(--red);margin-top:8px;min-height:14px}@media(max-width:560px){.topbar{height:68px}.topbar-inner{padding:0 14px}.brandimg{width:48px;height:35px}.title strong{font-size:13px}.title small{display:none}.iconbtn{width:38px;height:38px}main{padding:22px 14px 38px}.intro h1{font-size:30px}.grid3{grid-template-columns:1fr 1fr}.grid3 .field:first-child{grid-column:1/-1}.staffrow{grid-template-columns:minmax(0,1fr) 118px}.actionbar{margin-left:-14px;margin-right:-14px;margin-bottom:-38px;padding-left:14px;padding-right:14px}.result-actions{grid-template-columns:1fr}}@media(min-width:760px){main{padding-left:26px;padding-right:26px}.actionbar{margin-left:-26px;margin-right:-26px;padding-left:26px;padding-right:26px}.staffrows{columns:2;column-gap:28px}.staffrow{break-inside:avoid}.drawer{width:380px}}@media print{.topbar,.mode,.actionbar,.drawer,.drawerback,.result-actions,.intro,.panel{display:none!important}main{padding:0}.result{border:0}}</style>
-</head><body>
-<div id="lock" class="login hidden"><div class="logincard"><img class="brandimg" style="margin:0 auto 16px;width:120px;height:88px" src="" data-silk-logo alt="SILK Restaurant & Bar"><div class="loginsub">Trinkgeld-App</div><div class="loginbox"><input id="pw" type="password" placeholder="Passwort"><button onclick="unlock()">Anmelden</button><div id="loginError" class="error"></div></div></div></div>
-<div id="drawerBack" class="drawerback" onclick="closeSettings()"></div><aside id="drawer" class="drawer"><div class="drawerhead"><img class="brandimg" src="" data-silk-logo alt="SILK Restaurant & Bar"><button class="iconbtn" onclick="closeSettings()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div id="settingsHome"><h3>Einstellungen</h3><button class="settingsrow" onclick="openEditor('staff')"><span><strong>Mitarbeiter</strong><small>Hinzufügen, bearbeiten, löschen</small></span><span>›</span></button><button class="settingsrow" onclick="openEditor('shifts')"><span><strong>Dienste</strong><small>Anteile und Bezeichnungen verwalten</small></span><span>›</span></button><button class="settingsrow" onclick="openEditor('saved')"><span><strong>Gespeicherte Berechnungen</strong><small>Abgeschlossene Berechnungen ansehen</small></span><span>›</span></button><button class="settingsrow" onclick="exportBackup()"><span><strong>Backup exportieren</strong><small>Lokale Daten sichern</small></span><span>›</span></button><label class="settingsrow"><span><strong>Backup importieren</strong><small>Sicherung wiederherstellen</small></span><span>›</span><input id="backupFile" type="file" hidden onchange="importBackup(this.files[0])"></label></div><div id="staffEditor" class="hidden"><h3><button class="backlink" onclick="backSettings()">← Einstellungen</button></h3><h3>Mitarbeiter</h3><div id="employeeEditor" class="editor"></div><button class="addwide" onclick="addEmployee()">Mitarbeiter hinzufügen</button><button class="savewide" onclick="saveEmployees()">Änderungen speichern</button></div><div id="shiftEditor" class="hidden"><h3><button class="backlink" onclick="backSettings()">← Einstellungen</button></h3><h3>Dienste</h3><div id="shiftEditorRows" class="editor"></div><button class="addwide" onclick="addShift()">Dienst hinzufügen</button><button class="savewide" onclick="saveShifts()">Änderungen speichern</button></div><div id="savedEditor" class="hidden"><h3><button class="backlink" onclick="backSettings()">← Einstellungen</button></h3><h3>Gespeicherte Berechnungen</h3><div id="savedCalculations" class="editor"></div></div></aside>
-<header class="topbar"><div class="topbar-inner"><div><img class="brandimg" src="" data-silk-logo alt="SILK Restaurant & Bar"></div><div class="title"><strong>Trinkgeld</strong><small>interne Abrechnung</small></div><button class="iconbtn" onclick="openSettings()"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button></div></header>
-<main id="app"><section class="intro"><h1>Trinkgeld berechnen</h1><p>Ein Tag oder ein frei gewählter Zeitraum.</p></section><div class="mode"><button id="modeDay" class="active" onclick="setMode('day')">Heute / ein Tag</button><button id="modePeriod" onclick="setMode('period')">Zeitraum</button></div><section class="panel"><div class="step">1 · Zeitraum</div><div id="dayPicker" class="field"><label>Datum</label><input id="singleDate" type="date" onchange="buildVisibleDays()"></div><div id="periodPicker" class="grid2 hidden"><div class="field"><label for="periodStart">Von</label><input id="periodStart" type="date" onchange="buildVisibleDays()"></div><div class="field"><label for="periodEnd">Bis</label><input id="periodEnd" type="date" onchange="buildVisibleDays()"></div></div><p id="periodError" class="hint hidden" role="alert"></p></section><section class="panel"><div class="step">2 · Trinkgeld & Dienste</div><h2 id="daysTitle">Tag erfassen</h2><p class="hint">Tag öffnen, Beträge eintragen und pro Mitarbeiter den Dienst wählen.</p><div id="days" class="day-list"></div></section><section id="resultSection" class="hidden"><div id="result" class="result"></div><div class="result-actions"><button id="saveResultBtn" class="savewide" onclick="saveCalculation()">Speichern</button><button class="secondary" onclick="window.print()">PDF / Drucken</button><button class="secondary" onclick="resetCurrent()">Neue Berechnung</button></div></section><div class="actionbar"><button class="calcbtn" onclick="calculate()">Trinkgeld berechnen</button></div></main>
-<script>const DEFAULT_STAFF=["Sandra","Marco","Sladjana","Manuela","Emily","Martin","Sascha","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];let STAFF=JSON.parse(localStorage.getItem('silk_staff')||'null')||DEFAULT_STAFF.slice(),SHIFTS=JSON.parse(localStorage.getItem('silk_shifts')||'null')||DEFAULT_SHIFTS.map(x=>({...x})),FACTOR={},MODE='day';const STORE='silk_v12_data',PW='silk_v12_password',MODEKEY='silk_tip_mode';function rebuild(){FACTOR={};SHIFTS.forEach(x=>FACTOR[x.name]={f:+x.f,s:+x.s,color:x.color||'#eee'})}rebuild();function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}function chf(n){return'CHF '+Math.round(Number(n||0)).toLocaleString('de-CH',{minimumFractionDigits:0,maximumFractionDigits:0})}function unlock(){lock.classList.add('hidden');app.classList.remove('hidden');loadState()}pw.addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});function logout(){closeSettings()}function changePassword(){}function openSettings(){drawer.classList.add('open');drawerBack.classList.add('open')}function closeSettings(){drawer.classList.remove('open');drawerBack.classList.remove('open')}function backSettings(){settingsHome.classList.remove('hidden');staffEditor.classList.add('hidden');shiftEditor.classList.add('hidden');savedEditor.classList.add('hidden')}function openEditor(w){settingsHome.classList.add('hidden');staffEditor.classList.toggle('hidden',w!=='staff');shiftEditor.classList.toggle('hidden',w!=='shifts');savedEditor.classList.toggle('hidden',w!=='saved');if(w==='staff')renderEmployees();else if(w==='shifts')renderShifts();else if(w==='saved')renderSavedCalculations()}function renderEmployees(){employeeEditor.innerHTML=STAFF.map((n,i)=>`<div class="editrow"><input id="emp${i}" value="${esc(n)}"><button class="mini danger" onclick="removeEmployee(${i})">Löschen</button></div>`).join('')}function addEmployee(){STAFF.push('Neuer Mitarbeiter');renderEmployees()}function removeEmployee(i){if(confirm('Mitarbeiter wirklich löschen?')){STAFF.splice(i,1);renderEmployees()}}function saveEmployees(){STAFF=STAFF.map((_,i)=>(document.getElementById('emp'+i)?.value||'').trim()).filter(Boolean);if(!STAFF.length)return alert('Mindestens ein Mitarbeiter ist erforderlich.');localStorage.setItem('silk_staff',JSON.stringify(STAFF));buildVisibleDays();backSettings();alert('Mitarbeiter gespeichert.')}function renderShifts(){shiftEditorRows.innerHTML=SHIFTS.map((s,i)=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div class="editrow"><input id="shn${i}" value="${esc(s.name)}"><button class="mini danger" onclick="removeShift(${i})">Löschen</button></div><div class="grid2"><div class="field"><label>Früh %</label><input id="shf${i}" type="number" value="${Math.round(s.f*100)}"></div><div class="field"><label>Spät %</label><input id="shs${i}" type="number" value="${Math.round(s.s*100)}"></div></div></div>`).join('')}function addShift(){SHIFTS.push({name:'NEU',f:.5,s:.5,color:'#eee'});renderShifts()}function removeShift(i){if(SHIFTS.length>1&&confirm('Dienst wirklich löschen?')){SHIFTS.splice(i,1);renderShifts()}}function saveShifts(){const n=SHIFTS.map((s,i)=>({name:(document.getElementById('shn'+i)?.value||'').trim().toUpperCase(),f:+(document.getElementById('shf'+i)?.value||0)/100,s:+(document.getElementById('shs'+i)?.value||0)/100,color:s.color||'#eee'})).filter(x=>x.name);if(new Set(n.map(x=>x.name)).size!==n.length)return alert('Jeder Dienstname darf nur einmal vorkommen.');const b=n.find(x=>Math.abs(x.f+x.s-1)>.001);if(b)return alert(`Bei ${b.name} müssen Früh und Spät zusammen 100 % ergeben.`);SHIFTS=n;rebuild();localStorage.setItem('silk_shifts',JSON.stringify(SHIFTS));buildVisibleDays();backSettings();alert('Dienste gespeichert.')}const SAVEDKEY='silk_saved_calculations_v1';let LAST_RESULT=null;
-function getSavedCalculations(){try{return JSON.parse(localStorage.getItem(SAVEDKEY)||'[]')}catch(e){return[]}}
-function saveCalculation(){
-  if(!LAST_RESULT)return alert('Bitte zuerst Trinkgeld berechnen.');
-  const saved=getSavedCalculations();
-  const item={...LAST_RESULT,id:Date.now(),savedAt:new Date().toISOString()};
-  saved.unshift(item);
-  localStorage.setItem(SAVEDKEY,JSON.stringify(saved.slice(0,100)));
-  const b=document.getElementById('saveResultBtn');
-  if(b){b.textContent='Gespeichert ✓';b.disabled=true}
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>SILK Trinkgeld</title>
+<style>:root{--ink:#181a18;--muted:#787c78;--line:#e4e7e3;--soft:#f7f8f6;--soft2:#fbfbfa;--red:#b34a46;--max:920px}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#fff;color:var(--ink)}body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.012em}button,input,select{font:inherit}.hidden{display:none!important}.topbar{position:sticky;top:0;z-index:40;height:72px;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}.topbar-inner{height:100%;max-width:var(--max);margin:auto;padding:0 18px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center}.wordmark{font-family:Georgia,"Times New Roman",serif;font-size:21px;font-weight:600;letter-spacing:.17em}.submark{font-size:8px;letter-spacing:.17em;color:#8c918c;font-weight:600;margin-top:1px}.title{text-align:center}.title strong{display:block;font-size:15px;font-weight:690}.title small{display:block;font-size:10px;color:#929692;margin-top:2px}.iconbtn{justify-self:end;width:40px;height:40px;border:1px solid var(--line);border-radius:11px;background:#fff;display:grid;place-items:center;color:#222}.iconbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}main{max-width:var(--max);margin:auto;padding:28px 18px 42px}.intro{padding:2px 0 22px}.intro h1{font-size:clamp(30px,5vw,42px);line-height:1.04;letter-spacing:-.05em;margin:0 0 7px;font-weight:730}.intro p{margin:0;color:var(--muted);font-size:13px}.mode{display:grid;grid-template-columns:1fr 1fr;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:13px;margin-bottom:25px}.mode button{min-height:46px;border:0;border-radius:10px;background:transparent;color:#6f746f;font-weight:650;font-size:13px}.mode button.active{background:#fff;color:#1c1e1c;box-shadow:0 1px 5px rgba(0,0,0,.06)}.panel{border-top:1px solid var(--line);padding:23px 0}.step{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#8d928d;font-weight:700;margin-bottom:7px}.panel h2{font-size:19px;letter-spacing:-.03em;margin:0 0 6px}.hint{font-size:12px;color:var(--muted);margin:0 0 15px;line-height:1.45}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:10px}.field label{display:block;font-size:9px;color:#7d827d;font-weight:650;margin:0 0 5px}.field input,.field select{width:100%;height:44px;border:1px solid #d8dcd7;border-radius:10px;background:#fff;padding:0 11px;color:#202320;outline:none}.day-list{border-top:1px solid var(--line)}.day{border-bottom:1px solid var(--line)}.dayhead{width:100%;min-height:64px;border:0;background:#fff;padding:10px 2px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;text-align:left}.daydate strong{font-size:14px}.daydate small{display:block;font-size:9px;color:#929692;margin-top:3px}.daysum{font-weight:700;font-size:13px}.chev{font-size:20px;color:#9ca09c;transition:.18s}.day.open .chev{transform:rotate(180deg)}.daybody{display:none;padding:3px 0 18px}.day.open .daybody{display:block}.staffrows{margin-top:14px}.staffrow{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px;align-items:center;min-height:48px;border-bottom:1px solid #eff1ee}.staffname{font-size:12px;font-weight:610}.staffrow select{width:100%;height:38px;border:1px solid #dde0dc;border-radius:9px;padding:0 9px;font-size:11px;font-weight:700}.actionbar{position:sticky;bottom:0;z-index:25;margin:26px -18px -42px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}.calcbtn{width:100%;min-height:50px;border:0;border-radius:12px;background:#232523;color:#fff;font-weight:720;font-size:14px}.result{margin-top:22px;border:1px solid var(--line);border-radius:15px;overflow:hidden}.resulthead{padding:16px;background:var(--soft2);border-bottom:1px solid var(--line)}.resulthead small{display:block;font-size:9px;color:#888d88;margin-bottom:4px}.resulthead strong{font-size:22px}.resrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);align-items:center}.resrow:last-child{border-bottom:0}.resrow span{font-size:12px}.resrow b{font-size:13px}.resrow small{display:block;color:#969a96;font-size:9px;margin-top:3px}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.secondary{min-height:43px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#454945;font-size:12px;font-weight:650}.drawerback{position:fixed;inset:0;background:rgba(18,18,18,.28);z-index:60;opacity:0;pointer-events:none;transition:.2s}.drawerback.open{opacity:1;pointer-events:auto}.drawer{position:fixed;z-index:70;top:10px;right:10px;bottom:10px;width:min(88vw,360px);background:#fff;border:1px solid var(--line);border-radius:18px;transform:translateX(calc(100% + 24px));transition:.22s;padding:18px;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.16)}.drawer.open{transform:none}.drawerhead{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--line)}.drawer h3{font-size:16px;margin:20px 0 8px}.settingsrow{width:100%;min-height:58px;border:0;border-bottom:1px solid var(--line);background:#fff;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:8px 1px}.settingsrow strong{display:block;font-size:13px}.settingsrow small{display:block;font-size:9px;color:#929692;margin-top:3px}.editor{margin:8px 0 16px}.editrow{display:grid;grid-template-columns:1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.editrow input{height:40px;border:1px solid #dfe2de;border-radius:9px;padding:0 10px}.mini{border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 11px;font-size:11px}.danger{color:var(--red)}.savewide{width:100%;height:44px;border:0;border-radius:10px;background:#242624;color:#fff;font-weight:680}.addwide{width:100%;height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:8px}.backlink{border:0;background:transparent;color:#666b66;padding:0;font-size:12px}.login{position:fixed;inset:0;z-index:100;background:#fff;display:grid;place-items:center;padding:24px}.logincard{width:min(100%,350px);text-align:center}.loginword{font-family:Georgia,"Times New Roman",serif;font-size:42px;letter-spacing:.2em;margin-left:.2em;font-weight:600}.loginsub{font-size:12px;color:#828782;margin:10px 0 28px}.loginbox{border-top:1px solid var(--line);padding-top:22px}.loginbox input{width:100%;height:46px;border:1px solid #dce0db;border-radius:10px;text-align:center}.loginbox button{width:100%;height:46px;border:0;border-radius:10px;background:#242624;color:#fff;margin-top:9px;font-weight:680}.error{font-size:10px;color:var(--red);margin-top:8px;min-height:14px}@media(max-width:560px){.topbar{height:68px}.topbar-inner{padding:0 14px}.wordmark{font-size:18px}.submark{font-size:7px}.title strong{font-size:13px}.title small{display:none}.iconbtn{width:38px;height:38px}main{padding:22px 14px 38px}.intro h1{font-size:30px}.grid3{grid-template-columns:1fr 1fr}.grid3 .field:first-child{grid-column:1/-1}.staffrow{grid-template-columns:minmax(0,1fr) 118px}.actionbar{margin-left:-14px;margin-right:-14px;margin-bottom:-38px;padding-left:14px;padding-right:14px}.result-actions{grid-template-columns:1fr}}@media(min-width:760px){main{padding-left:26px;padding-right:26px}.actionbar{margin-left:-26px;margin-right:-26px;padding-left:26px;padding-right:26px}.staffrows{columns:2;column-gap:28px}.staffrow{break-inside:avoid}.drawer{width:380px}}@media print{.topbar,.mode,.actionbar,.drawer,.drawerback,.result-actions,.intro,.panel{display:none!important}main{padding:0}.result{border:0}}</style>
+<link rel="stylesheet" href="silk-v11.css?v=24">
+<link rel="stylesheet" href="silk-v12.css?v=24">
+<link rel="stylesheet" href="silk-v13.css?v=24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="silk-import.css?v=25">
+</head>
+<body>
+<div id="appSplash" class="app-splash" aria-hidden="true">
+<img class="splash-logo" src="https://assets.foratable.com/ClientAssets/18401-silk/logo-silk.jpeg" alt="SILK Restaurant &amp; Bar">
+<div class="splash-mark">
+<svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="18" cy="11" rx="10.5" ry="4"/><path d="M7.5 11v20c0 2.2 4.7 4 10.5 4 2.1 0 4-.25 5.65-.7M7.5 17.7c0 2.2 4.7 4 10.5 4 3.05 0 5.8-.58 7.72-1.5M7.5 24.4c0 2.2 4.7 4 10.5 4 1.72 0 3.35-.17 4.78-.49"/><circle cx="33.5" cy="31" r="9.5"/><text x="33.5" y="33.1" text-anchor="middle" fill="currentColor" stroke="none" font-size="6.4" font-weight="750" letter-spacing="-.3">CHF</text></svg>
+</div>
+<strong>Trinkgeld</strong>
+<span>Interne Abrechnung</span>
+<img class="splash-meili" src="meili-selection.webp" alt="Meili Selection Hotels">
+</div>
+<div id="drawerBack" class="drawerback" onclick="closeSettings()">
+</div>
+<aside id="drawer" class="drawer">
+<div class="drawerhead">
+<strong class="drawer-title">Einstellungen</strong>
+<button class="iconbtn" onclick="closeSettings()">
+<svg viewBox="0 0 24 24">
+<path d="M6 6l12 12M18 6 6 18"/>
+</svg>
+</button>
+</div>
+<div id="settingsHome">
+<button class="settingsrow" onclick="openEditor('staff')">
+<span class="setting-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><path d="M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M17 8v6M14 11h6"/></svg>
+</span>
+<span class="setting-copy">
+<strong>Mitarbeiter</strong>
+<small>Hinzufügen, bearbeiten, löschen</small>
+</span>
+<span class="setting-arrow">›</span>
+</button>
+<button class="settingsrow" onclick="openEditor('shifts')">
+<span class="setting-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h3M11 12h9M4 18h8M16 18h4M14 3v6M7 9v6M12 15v6"/></svg>
+</span>
+<span class="setting-copy">
+<strong>Dienste</strong>
+<small>Anteile und Bezeichnungen verwalten</small>
+</span>
+<span class="setting-arrow">›</span>
+</button>
+<a class="companion-app-link" href="https://ambassador-fruehstuecksliste.vercel.app/">
+<span class="companion-app-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><path d="M10 2v2M14 2v2M6 2v2M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/></svg>
+</span>
+<span class="companion-app-copy">
+<small>Interne Zusatz-App</small>
+<strong>Frühstücksliste</strong>
+</span>
+</a>
+</div>
+<div id="staffEditor" class="hidden">
+<h3>
+<button class="backlink" onclick="backSettings()">← Einstellungen</button>
+</h3>
+<h3>Mitarbeiter</h3>
+<div id="employeeEditor" class="editor">
+</div>
+<button class="addwide" onclick="addEmployee()">Mitarbeiter hinzufügen</button>
+<button class="savewide" onclick="saveEmployees()">Änderungen speichern</button>
+</div>
+<div id="shiftEditor" class="hidden">
+<h3>
+<button class="backlink" onclick="backSettings()">← Einstellungen</button>
+</h3>
+<h3>Dienste</h3>
+<div id="shiftEditorRows" class="editor">
+</div>
+<button class="addwide" onclick="addShift()">Dienst hinzufügen</button>
+<button class="savewide" onclick="saveShifts()">Änderungen speichern</button>
+</div>
+</aside>
+<header class="topbar">
+<div class="topbar-inner">
+<img class="silk-logo header-logo" src="https://assets.foratable.com/ClientAssets/18401-silk/logo-silk.jpeg" alt="SILK Restaurant &amp; Bar">
+<div class="title">
+<strong>Trinkgeld</strong>
+<small>interne Abrechnung</small>
+</div>
+<button class="iconbtn" onclick="openSettings()">
+<svg viewBox="0 0 24 24">
+<path d="M4 6h10M18 6h2M4 12h3M11 12h9M4 18h8M16 18h4M14 3v6M7 9v6M12 15v6"/>
+</svg>
+</button>
+</div>
+</header>
+<main id="app">
+<section class="intro">
+<h1>Trinkgeld berechnen</h1>
+<p>Ein Tag oder ein frei gewählter Zeitraum.</p>
+</section>
+<div class="mode">
+<button id="modeDay" class="active" onclick="setMode('day')">Ein Tag</button>
+<button id="modePeriod" onclick="setMode('period')">Zeitraum</button>
+</div>
+<section class="panel">
+<div class="step">1 · Zeitraum</div>
+<div id="dayPicker" class="field">
+<label>Datum</label>
+<input id="singleDate" type="date" onchange="buildVisibleDays()">
+</div>
+<div id="periodPicker" class="period-dates hidden">
+<div class="field"><label>Von</label><div class="date-parts">
+<select id="periodStartDay" aria-label="Von Tag" onchange="updatePeriodFromParts()"></select>
+<select id="periodStartMonth" aria-label="Von Monat" onchange="updatePeriodFromParts()"></select>
+<select id="periodStartYear" aria-label="Von Jahr" onchange="updatePeriodFromParts()"></select>
+</div></div>
+<div class="field"><label>Bis</label><div class="date-parts">
+<select id="periodEndDay" aria-label="Bis Tag" onchange="updatePeriodFromParts()"></select>
+<select id="periodEndMonth" aria-label="Bis Monat" onchange="updatePeriodFromParts()"></select>
+<select id="periodEndYear" aria-label="Bis Jahr" onchange="updatePeriodFromParts()"></select>
+</div></div>
+<input id="periodStart" type="hidden"><input id="periodEnd" type="hidden">
+</div><p id="periodError" class="period-error hidden" role="alert"></p>
+</section>
+<section class="panel">
+<div class="step">2 · Trinkgeld & Dienste</div>
+<h2 id="daysTitle">Tag erfassen</h2>
+<p class="hint">Tag öffnen, Beträge eintragen und pro Mitarbeiter den Dienst wählen.</p>
+<div id="days" class="day-list">
+</div>
+</section>
+<section id="resultSection" class="hidden">
+<div id="result" class="result">
+</div>
+<div class="result-actions">
+<button class="secondary" onclick="window.print()">PDF / Drucken</button>
+<button class="secondary" onclick="resetCurrent()">Neue Berechnung</button>
+</div>
+</section>
+<div class="actionbar">
+<button class="calcbtn" onclick="calculate()">Trinkgeld berechnen</button>
+</div>
+</main>
+<script>const DEFAULT_STAFF=["Sandra","Marco","Sladjana","Manuela","Emily","Martin","Sascha","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];let STAFF=JSON.parse(localStorage.getItem('silk_staff')||'null')||DEFAULT_STAFF.slice(),SHIFTS=JSON.parse(localStorage.getItem('silk_shifts')||'null')||DEFAULT_SHIFTS.map(x=>({...x})),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
+function rebuild(){FACTOR={};SHIFTS.forEach(x=>FACTOR[x.name]={f:+x.f,s:+x.s,color:x.color||'#eee'})}rebuild();
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function chf(n){return'CHF '+Number(n||0).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function openSettings(){drawer.classList.add('open');drawerBack.classList.add('open')}
+function closeSettings(){drawer.classList.remove('open');drawerBack.classList.remove('open')}
+function backSettings(){settingsHome.classList.remove('hidden');staffEditor.classList.add('hidden');shiftEditor.classList.add('hidden')}
+function openEditor(w){settingsHome.classList.add('hidden');staffEditor.classList.toggle('hidden',w!=='staff');shiftEditor.classList.toggle('hidden',w!=='shifts');w==='staff'?renderEmployees():renderShifts()}
+function renderEmployees(){employeeEditor.innerHTML=STAFF.map((n,i)=>`<div class="editrow">
+<input id="emp${i}" value="${esc(n)}">
+<button class="mini danger" onclick="removeEmployee(${i})">Löschen</button>
+</div>`).join('')}
+function addEmployee(){STAFF.push('Neuer Mitarbeiter');renderEmployees()}
+function removeEmployee(i){if(confirm('Mitarbeiter wirklich löschen?')){STAFF.splice(i,1);renderEmployees()}}
+function saveEmployees(){STAFF=STAFF.map((_,i)=>(document.getElementById('emp'+i)?.value||'').trim()).filter(Boolean);if(!STAFF.length)return alert('Mindestens ein Mitarbeiter ist erforderlich.');localStorage.setItem('silk_staff',JSON.stringify(STAFF));buildVisibleDays();backSettings();alert('Mitarbeiter gespeichert.')}
+function renderShifts(){shiftEditorRows.innerHTML=SHIFTS.map((s,i)=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)">
+<div class="editrow">
+<input id="shn${i}" value="${esc(s.name)}">
+<button class="mini danger" onclick="removeShift(${i})">Löschen</button>
+</div>
+<div class="grid2">
+<div class="field">
+<label>Früh %</label>
+<input id="shf${i}" type="number" value="${Math.round(s.f*100)}">
+</div>
+<div class="field">
+<label>Spät %</label>
+<input id="shs${i}" type="number" value="${Math.round(s.s*100)}">
+</div>
+</div>
+</div>`).join('')}
+function addShift(){SHIFTS.push({name:'NEU',f:.5,s:.5,color:'#eee'});renderShifts()}
+function removeShift(i){if(SHIFTS.length>1&&confirm('Dienst wirklich löschen?')){SHIFTS.splice(i,1);renderShifts()}}
+function saveShifts(){const n=SHIFTS.map((s,i)=>({name:(document.getElementById('shn'+i)?.value||'').trim().toUpperCase(),f:+(document.getElementById('shf'+i)?.value||0)/100,s:+(document.getElementById('shs'+i)?.value||0)/100,color:s.color||'#eee'})).filter(x=>x.name);if(new Set(n.map(x=>x.name)).size!==n.length)return alert('Jeder Dienstname darf nur einmal vorkommen.');const b=n.find(x=>Math.abs(x.f+x.s-1)>.001);if(b)return alert(`Bei ${b.name} müssen Früh und Spät zusammen 100 % ergeben.`);SHIFTS=n;rebuild();localStorage.setItem('silk_shifts',JSON.stringify(SHIFTS));buildVisibleDays();backSettings();alert('Dienste gespeichert.')}
+function dateIn(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function populatePeriodParts(prefix,iso){
+ const d=new Date(iso+'T12:00:00');
+ const day=document.getElementById(prefix+'Day'),month=document.getElementById(prefix+'Month'),year=document.getElementById(prefix+'Year');
+ day.innerHTML='';for(let n=1;n<=31;n++)day.add(new Option(String(n),String(n)));
+ month.innerHTML='';for(let n=1;n<=12;n++)month.add(new Option(new Intl.DateTimeFormat('de-CH',{month:'long'}).format(new Date(2026,n-1,1)),String(n)));
+ year.innerHTML='';for(let n=d.getFullYear()-3;n<=d.getFullYear()+3;n++)year.add(new Option(String(n),String(n)));
+ day.value=String(d.getDate());month.value=String(d.getMonth()+1);year.value=String(d.getFullYear());
 }
-function deleteSavedCalculation(id){
-  if(!confirm('Gespeicherte Berechnung wirklich löschen?'))return;
-  localStorage.setItem(SAVEDKEY,JSON.stringify(getSavedCalculations().filter(x=>x.id!==id)));
-  renderSavedCalculations();
+function setPeriodRange(from,to){periodStart.value=from;periodEnd.value=to;populatePeriodParts('periodStart',from);populatePeriodParts('periodEnd',to)}
+function updatePeriodFromParts(){
+ for(const prefix of ['periodStart','periodEnd']){
+  const day=document.getElementById(prefix+'Day'),month=document.getElementById(prefix+'Month'),year=document.getElementById(prefix+'Year');
+  const max=new Date(+year.value,+month.value,0).getDate();
+  if(+day.value>max)day.value=String(max);
+  document.getElementById(prefix).value=year.value+'-'+month.value.padStart(2,'0')+'-'+day.value.padStart(2,'0');
+ }
+ buildVisibleDays()
 }
-function renderSavedCalculations(){
-  const el=document.getElementById('savedCalculations');if(!el)return;
-  const saved=getSavedCalculations();
-  if(!saved.length){el.innerHTML='<div class="emptyhint">Noch keine Berechnung gespeichert.</div>';return}
-  el.innerHTML=saved.map(x=>{
-    const dt=new Date(x.savedAt);
-    const label=x.label||'Trinkgeld-Berechnung';
-    const persons=(x.people||[]).map(p=>`${esc(p.name)}: ${chf(p.amount)}`).join('<br>');
-    return `<div class="savedcalc"><div class="savedcalc-head"><div><strong>${esc(label)}</strong><small>${new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(dt)}</small></div><div class="savedcalc-total">${chf(x.total)}</div></div><div class="savedcalc-details">${persons||'Keine Mitarbeiter im Dienst'}<br>Küche: ${chf(x.kitchen)} · Housekeeping: ${chf(x.housekeeping)}</div><div class="savedcalc-actions"><button class="danger" onclick="deleteSavedCalculation(${x.id})">Löschen</button></div></div>`
-  }).join('')
-}
-function exportBackup(){saveState();const d={version:5,staff:STAFF,shifts:SHIFTS,current:getState(),saved:getSavedCalculations()},b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='Silk-Trinkgeld-Backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u)}async function importBackup(f){if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.staff)||!Array.isArray(d.shifts))throw 0;localStorage.setItem('silk_staff',JSON.stringify(d.staff));localStorage.setItem('silk_shifts',JSON.stringify(d.shifts));if(d.current)localStorage.setItem(STORE,JSON.stringify(d.current));if(Array.isArray(d.saved))localStorage.setItem(SAVEDKEY,JSON.stringify(d.saved));alert('Backup importiert.');location.reload()}catch(e){alert('Backup konnte nicht importiert werden.')}}function dateIn(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}function initDates(){const n=new Date();singleDate.value=dateIn(n);periodStart.value=dateIn(new Date(n.getFullYear(),n.getMonth(),1));periodEnd.value=dateIn(n)}
-function syncPeriodLimits(){}function setMode(m){MODE=m;localStorage.setItem(MODEKEY,m);modeDay.classList.toggle('active',m==='day');modePeriod.classList.toggle('active',m==='period');dayPicker.classList.toggle('hidden',m!=='day');periodPicker.classList.toggle('hidden',m!=='period');daysTitle.textContent=m==='day'?'Tag erfassen':'Zeitraum erfassen';buildVisibleDays();resultSection.classList.add('hidden')}function visibleDates(){
+function initDates(){const n=new Date();singleDate.value=dateIn(n);setPeriodRange(dateIn(new Date(n.getFullYear(),n.getMonth(),1)),dateIn(n))}
+function syncPeriodLimits(){}function setMode(m){MODE=m;localStorage.setItem(MODEKEY,m);modeDay.classList.toggle('active',m==='day');modePeriod.classList.toggle('active',m==='period');dayPicker.classList.toggle('hidden',m!=='day');periodPicker.classList.toggle('hidden',m!=='period');daysTitle.textContent=m==='day'?'Tag erfassen':'Tage erfassen';buildVisibleDays();resultSection.classList.add('hidden')}
+function visibleDates(){
  if(MODE==='day')return[new Date((singleDate.value||dateIn(new Date()))+'T12:00:00')];
  const from=periodStart.value,to=periodEnd.value,err=document.getElementById('periodError');
- if(!from||!to||to<from){err.textContent='Bitte einen gültigen Zeitraum auswählen: „Bis“ muss nach „Von“ liegen.';err.classList.remove('hidden');return[]}
+ if(!from||!to||to<from){err.textContent='Bitte einen gültigen Zeitraum auswählen: Bis muss nach Von liegen.';err.classList.remove('hidden');return[]}
  const a=new Date(from+'T12:00:00'),b=new Date(to+'T12:00:00');
  const count=Math.round((b-a)/86400000)+1;
  if(count>93){err.textContent='Bitte höchstens 93 Tage auswählen.';err.classList.remove('hidden');return[]}
  err.classList.add('hidden');
  return Array.from({length:count},(_,i)=>new Date(a.getFullYear(),a.getMonth(),a.getDate()+i,12))
-}function getState(){try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){return{}}}function opts(sel=''){return`<option value="">Nicht im Dienst</option>`+SHIFTS.map(s=>`<option value="${esc(s.name)}" ${s.name===sel?'selected':''}>${esc(s.name)}</option>`).join('')}function contrast(h){h=(h||'#fff').replace('#','');if(h.length!==6)return'#111';const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return(r*299+g*587+b*114)/1000>150?'#111':'#fff'}function styleShift(s){const x=SHIFTS.find(a=>a.name===s.value),c=x?.color||'#fff';s.style.backgroundColor=c;s.style.borderColor=x?c:'#dde0dc';s.style.color=contrast(c)}function buildVisibleDays(){const st=getState();days.innerHTML='';visibleDates().forEach((d,i)=>{const k=dateIn(d),x=st.byDate?.[k]||{},lab=new Intl.DateTimeFormat('de-CH',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}).format(d);days.insertAdjacentHTML('beforeend',`<div class="day ${i===0&&MODE==='day'?'open':''}" id="day_${k}"><button class="dayhead" onclick="toggleDay('${k}')"><span class="daydate"><strong>${esc(lab)}</strong><small id="meta_${k}">${(x.assignments||[]).filter(a=>a.shift).length} aktiv</small></span><span class="daysum" id="sum_${k}">${chf((+x.f||0)+(+x.s||0))}</span><span class="chev">⌄</span></button><div class="daybody"><div class="grid2"><div class="field"><label>Früh</label><input id="f_${k}" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${esc(x.f||'')}" oninput="changeDay('${k}')"></div><div class="field"><label>Spät</label><input id="s_${k}" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${esc(x.s||'')}" oninput="changeDay('${k}')"></div></div><div class="staffrows">${STAFF.map(n=>{const a=(x.assignments||[]).find(z=>z.name===n);return`<div class="staffrow"><div class="staffname">${esc(n)}</div><select data-name="${esc(n)}" onchange="styleShift(this);changeDay('${k}')">${opts(a?.shift||'')}</select></div>`}).join('')}</div></div></div>`);document.getElementById('day_'+k).querySelectorAll('select').forEach(styleShift)});saveState()}function toggleDay(k){const t=document.getElementById('day_'+k),w=t.classList.contains('open');document.querySelectorAll('.day.open').forEach(x=>x.classList.remove('open'));if(!w)t.classList.add('open')}function changeDay(k){const sum=document.getElementById('sum_'+k);sum.textContent=chf((+document.getElementById('f_'+k).value||0)+(+document.getElementById('s_'+k).value||0));const meta=document.getElementById('meta_'+k);meta.textContent=[...document.getElementById('day_'+k).querySelectorAll('select')].filter(x=>x.value).length+' aktiv';saveState();resultSection.classList.add('hidden')}function saveState(){const p=getState(),byDate={...(p.byDate||{})};document.querySelectorAll('.day').forEach(d=>{const k=d.id.slice(4);byDate[k]={f:document.getElementById('f_'+k)?.value||'',s:document.getElementById('s_'+k)?.value||'',assignments:[...d.querySelectorAll('select')].map(s=>({name:s.dataset.name,shift:s.value}))}});localStorage.setItem(STORE,JSON.stringify({version:4,mode:MODE,singleDate:singleDate.value,periodStart:periodStart.value,periodEnd:periodEnd.value,byDate}))}function loadState(){const s=getState();if(s.singleDate)singleDate.value=s.singleDate;if(s.periodStart&&s.periodEnd){periodStart.value=s.periodStart;periodEnd.value=s.periodEnd}else if(s.periodMonth){const [y,m]=s.periodMonth.split('-').map(Number);periodStart.value=dateIn(new Date(y,m-1,+s.periodFrom||1));periodEnd.value=dateIn(new Date(y,m-1,+s.periodTo||new Date(y,m,0).getDate()))}setMode(s.mode||localStorage.getItem(MODEKEY)||'day')}function calculate(){if(!visibleDates().length)return;saveState();let tf=0,ts=0,kf=0,ks=0,hf=0,hs=0;const totals={};STAFF.forEach(n=>totals[n]={name:n,amount:0,days:0,details:[]});const st=getState();visibleDates().forEach(d=>{const k=dateIn(d),x=st.byDate?.[k]||{},fr=+x.f||0,sp=+x.s||0;tf+=fr;ts+=sp;const kfg=fr*.3,ksg=sp*.3,sfg=fr*.7,ssg=sp*.7,shf=sfg*.025,shs=ssg*.025,khf=kfg*.025,khs=ksg*.025;hf+=shf+khf;hs+=shs+khs;kf+=kfg-khf;ks+=ksg-khs;let sf=sfg-shf,ss=ssg-shs;const seen=new Set(),people=[];(x.assignments||[]).filter(a=>a.name&&FACTOR[a.shift]).forEach(a=>{if(seen.has(a.name))return;seen.add(a.name);const q=FACTOR[a.shift];people.push({name:a.name,shift:a.shift,fw:q.f,sw:q.s,amount:0})});const e=people.find(p=>p.name==='Emily');if(e){const mx=Math.min(10,sf+ss);let ef=Math.min(mx*e.fw,sf),es=Math.min(mx*e.sw,ss),short=mx-ef-es;if(short>0){const add=Math.min(short,sf-ef);ef+=add;es+=Math.min(short-add,ss-es)}e.amount=ef+es;sf-=ef;ss-=es}const o=people.filter(p=>p.name!=='Emily'),af=o.reduce((a,p)=>a+p.fw,0),as=o.reduce((a,p)=>a+p.sw,0);o.forEach(p=>p.amount=(af?sf*p.fw/af:0)+(as?ss*p.sw/as:0));people.forEach(p=>{if(!totals[p.name])totals[p.name]={name:p.name,amount:0,days:0,details:[]};totals[p.name].amount+=p.amount;totals[p.name].days++;totals[p.name].details.push(new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit'}).format(d)+' · '+p.shift)})});const ps=Object.values(totals).filter(p=>p.days>0);
-const vd=visibleDates(),first=vd[0],last=vd[vd.length-1];
-const fmt=d=>new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d);
-LAST_RESULT={label:MODE==='day'?fmt(first):`${fmt(first)} – ${fmt(last)}`,mode:MODE,total:tf+ts,kitchen:kf+ks,housekeeping:hf+hs,people:ps.map(p=>({name:p.name,amount:p.amount,days:p.days,details:p.details}))};
-const saveBtn=document.getElementById('saveResultBtn');if(saveBtn){saveBtn.textContent='Speichern';saveBtn.disabled=false}
-result.innerHTML=`<div class="resulthead"><small>Trinkgeld gesamt</small><strong>${chf(tf+ts)}</strong></div>${ps.map(p=>`<div class="resrow"><span>${esc(p.name)}<small>${p.days} Tag(e) · ${esc(p.details.join(' · '))}</small></span><b>${chf(p.amount)}</b></div>`).join('')||'<div class="resrow"><span>Keine Mitarbeiter im Dienst</span><b>CHF 0.00</b></div>'}<div class="resrow"><span>Küche gesamt</span><b>${chf(kf+ks)}</b></div><div class="resrow"><span>Housekeeping gesamt</span><b>${chf(hf+hs)}</b></div>`;resultSection.classList.remove('hidden');resultSection.scrollIntoView({behavior:'smooth',block:'start'})}function resetCurrent(){if(!confirm('Neue Berechnung starten? Die aktuelle Eingabe wird zurückgesetzt.'))return;localStorage.removeItem(STORE);LAST_RESULT=null;resultSection.classList.add('hidden');initDates();setMode('day')}initDates();loadState();buildVisibleDays();</script>
-<script>/* v11 current refinements */(function(){const originalBuildVisibleDays=buildVisibleDays;function markDay(dayKey){const day=document.getElementById('day_'+dayKey),early=Number(document.getElementById('f_'+dayKey)?.value||0),late=Number(document.getElementById('s_'+dayKey)?.value||0);day?.classList.toggle('has-values',early+late>0)}buildVisibleDays=function(){originalBuildVisibleDays();document.querySelectorAll('.day').forEach(day=>markDay(day.id.slice(4)))};styleShift=function(select){const active=Boolean(select.value);select.style.backgroundColor=active?'var(--turquoise-soft)':'#fff';select.style.borderColor=active?'var(--turquoise)':'var(--line)';select.style.color='var(--ink)'};const originalChangeDay=changeDay;changeDay=function(dayKey){originalChangeDay(dayKey);markDay(dayKey)};document.querySelectorAll('.iconbtn').forEach((button,index)=>{button.type='button';button.setAttribute('aria-label',index===0?'Einstellungen schließen':'Einstellungen öffnen')});document.querySelectorAll('button').forEach(button=>{if(!button.type)button.type='button'});buildVisibleDays()})();</script>
-<script>/* v12 accessibility polish */(function(){const menuButtons=document.querySelectorAll('.iconbtn'),drawerElement=document.getElementById('drawer'),drawerBackdrop=document.getElementById('drawerBack');if(drawerElement){drawerElement.setAttribute('role','dialog');drawerElement.setAttribute('aria-modal','true');drawerElement.setAttribute('aria-label','Einstellungen')}const originalOpenSettings=openSettings,originalCloseSettings=closeSettings;openSettings=function(){originalOpenSettings();document.body.style.overflow='hidden';menuButtons[0]?.focus({preventScroll:true})};closeSettings=function(){originalCloseSettings();document.body.style.overflow='';menuButtons[1]?.focus({preventScroll:true})};drawerBackdrop?.addEventListener('click',()=>{document.body.style.overflow=''});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&drawerElement?.classList.contains('open'))closeSettings()});document.addEventListener('input',event=>{const input=event.target;if(!(input instanceof HTMLInputElement)||input.type!=='number')return;input.min='0';if(Number(input.value)<0)input.value='0'});const refreshAccordionState=()=>document.querySelectorAll('.day').forEach(day=>day.querySelector('.dayhead')?.setAttribute('aria-expanded',String(day.classList.contains('open'))));const originalToggleDay=toggleDay;toggleDay=function(key){originalToggleDay(key);refreshAccordionState()};const originalBuildVisibleDaysV12=buildVisibleDays;buildVisibleDays=function(){originalBuildVisibleDaysV12();document.querySelectorAll('.dayhead').forEach(button=>button.type='button');document.querySelectorAll('.daybody input[type="number"]').forEach(input=>{input.min='0';input.setAttribute('aria-label',input.id.startsWith('f_')?'Trinkgeld Frühdienst':'Trinkgeld Spätdienst')});refreshAccordionState()};buildVisibleDays()})();</script>
-<script>const SILK_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAwFBMVEXvfTv6+vbnhkvvgD3ryKrlmWjufkDnt5DnrITlpnfr07fowpvx5tbjklrv2cX17uPpbSrdiFHpvqHcmWzfo3nbsYzbez3fkl/erIny894AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfb8b0AAAAQHRSTlP//////////////////////////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlAEKaAAAA3xJREFUeNrtWIty4yAMBCEhAzZJ+rjH///oLdhO7TRx7F5nbm6GTTsJkdEaWVpBjGloaGhoaGhoaPhXcNObm7/weI1feePuzfB3pm+CgCXDPMt9y+2TZmttHzua6TjrZNPMdDtDch6ua3AYst+MDiV+4dgXDpkIrGVD1crWfiLorJVrDI0sRneDI1Q9UMj2tCQwE8GJbm+pEtDVPy7Y8O85lNh7XOI/QrQksBsEzgzFP208Ae7v5EIlcM9DRPBvh03/ZPMd+04CpMcJ/jcyjUywPbkvERQz9XbYij9sSIHweQl7CDCr+n9SKXCF1HHuOEH1L5vxHwsJ6d/dluy+FfRToJ4sIYIhh+NZtNO/QyHYUsNKCwnbJBjrwOdd/qvPoVJYlgMreIs27hU7zCctSmQjasbtI3j/PRf7nkUUwesqxZSyO56B2AMM4wOuFLL7IU8M/gAFwVlPu9M0gEGPdCRcGicN2FdoI8MBUHHc7SVAtx4Z/BGOvH8FHjfUPY+SW4tEtnRIrrvnUaJlv/O97u5ovlbpKGUba5Dc07wpcibw/ZZJ5ArK24rgKYMveTNtJXzp+/S0J/sVwcQQnogpS/FBw9UTOuFiVyEL0HoFBbPgP1qEnqqa9pmHtdiN8joK4Yz4QfARFTCkzY1RxznnhZaWWOk8FO3wquh0CsWgugqbdseKYadEbozuXr/eL/ulZcZd8zftkBv+9/OZv74RcsV97qZTBtEiId3Yy28Pd4fOhAs9d+t0p6V10zmpJhJGZQqziDIqGH9BivAxbKYMCYUrEhKXAqYXrjqBmSjsEMonlUcEA/vAISE08SfcDNCaodezKnYAEmHDDrH8p/JV4HLYCkqhquSFcHWOUOQ678H5kimkgHs3yoImiOOiviXqukIAG58VDomTBD1LquKEBkK4NAZNJnS4eR4u/JAgcvYhdjidCWMh0bv4ylIJhsyZDIYIFiUImhTNJA78itBR7EDAv97ZwMeDbaorIcJ96hlHWTRkomjAxi9vCRbhH2Xx+sIXNqEHAdcZZyltmNAwokTVSHzR8PghI6YSE5Ny0kKDJfuEkzOaUDIQaDy+JIq+EM5SGzYSoag1MTPCh3GN4QM1RZvFol39HaGelsmX3S8+obs5mn5hgN2XpHc0bxNoNNVeTVR9uK8U4KPRN8iz903iGhoaGhoaGhr+Gn8AILsYm/kuZjcAAAAASUVORK5CYII=';document.querySelectorAll('img[data-silk-logo]').forEach(i=>i.src=SILK_LOGO)</script><link rel="stylesheet" href="silk-restored.css"><script src="jsQR.js"></script><script src="silk-splash.js"></script><script src="silk-import.js"></script></body></html>
+}function getState(){try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){return{}}}
+function opts(sel=''){return`<option value="">Nicht im Dienst</option>`+SHIFTS.map(s=>`<option value="${esc(s.name)}" ${s.name===sel?'selected':''}>${esc(s.name)}</option>`).join('')}
+function contrast(h){h=(h||'#fff').replace('#','');if(h.length!==6)return'#111';const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return(r*299+g*587+b*114)/1000>150?'#111':'#fff'}
+function styleShift(s){const x=SHIFTS.find(a=>a.name===s.value),c=x?.color||'#fff';s.style.backgroundColor=c;s.style.borderColor=x?c:'#dde0dc';s.style.color=contrast(c)}
+function buildVisibleDays(){const st=getState();days.innerHTML='';visibleDates().forEach((d,i)=>{const k=dateIn(d),x=st.byDate?.[k]||{},lab=new Intl.DateTimeFormat('de-CH',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}).format(d),sum=+x.f||0+(+x.s||0);days.insertAdjacentHTML('beforeend',`<div class="day ${i===0&&MODE==='day'?'open':''}" id="day_${k}">
+<button class="dayhead" onclick="toggleDay('${k}')">
+<span class="daydate">
+<strong>${esc(lab)}</strong>
+<small id="meta_${k}">${(x.assignments||[]).filter(a=>a.shift).length} aktiv</small>
+</span>
+<span class="daysum" id="sum_${k}">${chf((+x.f||0)+(+x.s||0))}</span>
+<span class="chev">⌄</span>
+</button>
+<div class="daybody">
+<div class="grid2">
+<div class="field">
+<label>Früh</label>
+<input id="f_${k}" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${esc(x.f||'')}" oninput="changeDay('${k}')">
+</div>
+<div class="field">
+<label>Spät</label>
+<input id="s_${k}" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${esc(x.s||'')}" oninput="changeDay('${k}')">
+</div>
+</div>
+<div class="staffrows">${STAFF.map(n=>{const a=(x.assignments||[]).find(z=>z.name===n);return`<div class="staffrow">
+<div class="staffname">${esc(n)}</div>
+<select data-name="${esc(n)}" onchange="styleShift(this);changeDay('${k}')">${opts(a?.shift||'')}</select>
+</div>`}).join('')}</div>
+</div>
+</div>`);document.getElementById('day_'+k).querySelectorAll('select').forEach(styleShift)});saveState()}
+function toggleDay(k){const t=document.getElementById('day_'+k),w=t.classList.contains('open');document.querySelectorAll('.day.open').forEach(x=>x.classList.remove('open'));if(!w)t.classList.add('open')}
+function changeDay(k){sum=document.getElementById('sum_'+k);sum.textContent=chf((+document.getElementById('f_'+k).value||0)+(+document.getElementById('s_'+k).value||0));meta=document.getElementById('meta_'+k);meta.textContent=[...document.getElementById('day_'+k).querySelectorAll('select')].filter(x=>x.value).length+' aktiv';saveState();resultSection.classList.add('hidden')}
+function saveState(){const p=getState(),byDate={...(p.byDate||{})};document.querySelectorAll('.day').forEach(d=>{const k=d.id.slice(4);byDate[k]={f:document.getElementById('f_'+k)?.value||'',s:document.getElementById('s_'+k)?.value||'',assignments:[...d.querySelectorAll('select')].map(s=>({name:s.dataset.name,shift:s.value}))}});localStorage.setItem(STORE,JSON.stringify({version:4,mode:MODE,singleDate:singleDate.value,periodStart:periodStart.value,periodEnd:periodEnd.value,byDate}))}
+function loadState(){const s=getState();if(s.singleDate)singleDate.value=s.singleDate;if(s.periodStart&&s.periodEnd)setPeriodRange(s.periodStart,s.periodEnd);else if(s.periodMonth){const [y,m]=s.periodMonth.split('-').map(Number);setPeriodRange(dateIn(new Date(y,m-1,+s.periodFrom||1)),dateIn(new Date(y,m-1,+s.periodTo||new Date(y,m,0).getDate())))}setMode(s.mode||localStorage.getItem(MODEKEY)||'day')}
+function calculate(){if(!visibleDates().length)return;saveState();let tf=0,ts=0,kf=0,ks=0,hf=0,hs=0;const totals={};STAFF.forEach(n=>totals[n]={name:n,amount:0,days:0,details:[]});const st=getState();visibleDates().forEach(d=>{const k=dateIn(d),x=st.byDate?.[k]||{},fr=+x.f||0,sp=+x.s||0;tf+=fr;ts+=sp;const kfg=fr*.3,ksg=sp*.3,sfg=fr*.7,ssg=sp*.7,shf=sfg*.025,shs=ssg*.025,khf=kfg*.025,khs=ksg*.025;hf+=shf+khf;hs+=shs+khs;kf+=kfg-khf;ks+=ksg-khs;let sf=sfg-shf,ss=ssg-shs;const seen=new Set(),people=[];(x.assignments||[]).filter(a=>a.name&&FACTOR[a.shift]).forEach(a=>{if(seen.has(a.name))return;seen.add(a.name);const q=FACTOR[a.shift];people.push({name:a.name,shift:a.shift,fw:q.f,sw:q.s,amount:0})});const e=people.find(p=>p.name==='Emily');if(e){const mx=Math.min(10,sf+ss);let ef=Math.min(mx*e.fw,sf),es=Math.min(mx*e.sw,ss),short=mx-ef-es;if(short>0){const add=Math.min(short,sf-ef);ef+=add;es+=Math.min(short-add,ss-es)}e.amount=ef+es;sf-=ef;ss-=es}const o=people.filter(p=>p.name!=='Emily'),af=o.reduce((a,p)=>a+p.fw,0),as=o.reduce((a,p)=>a+p.sw,0);o.forEach(p=>p.amount=(af?sf*p.fw/af:0)+(as?ss*p.sw/as:0));people.forEach(p=>{if(!totals[p.name])totals[p.name]={name:p.name,amount:0,days:0,details:[]};totals[p.name].amount+=p.amount;totals[p.name].days++;totals[p.name].details.push(new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit'}).format(d)+' · '+p.shift)})});const ps=Object.values(totals).filter(p=>p.days>0);result.innerHTML=`<div class="resulthead">
+<small>Trinkgeld gesamt</small>
+<strong>${chf(tf+ts)}</strong>
+</div>${ps.map(p=>`<div class="resrow">
+<span>${esc(p.name)}<small>${p.days} Tag(e) · ${esc(p.details.join(' · '))}</small>
+</span>
+<b>${chf(p.amount)}</b>
+</div>`).join('')||`<div class="resrow">
+<span>Keine Mitarbeiter im Dienst</span>
+<b>CHF 0.00</b>
+</div>`}<div class="resrow">
+<span>Küche gesamt</span>
+<b>${chf(kf+ks)}</b>
+</div>
+<div class="resrow">
+<span>Housekeeping gesamt</span>
+<b>${chf(hf+hs)}</b>
+</div>`;resultSection.classList.remove('hidden');resultSection.scrollIntoView({behavior:'smooth',block:'start'})}
+function resetCurrent(){if(!confirm('Neue Berechnung starten? Die aktuelle Eingabe wird zurückgesetzt.'))return;localStorage.removeItem(STORE);resultSection.classList.add('hidden');initDates();setMode('day')}initDates();loadState();</script>
+<script>
+(() => {
+  const splash = document.getElementById('appSplash');
+  if (!splash) return;
+  if (sessionStorage.getItem('silk_splash_seen')) {
+    splash.remove();
+    return;
+  }
+  sessionStorage.setItem('silk_splash_seen', '1');
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      splash.classList.add('hide');
+      setTimeout(() => splash.remove(), 320);
+    }, 2680);
+  });
+})();
+</script>
+<script src="silk-v11.js?v=24">
+</script>
+<script src="silk-v12.js?v=24">
+</script>
+<script src="silk-v13.js?v=24">
+</script>
+<script src="jsQR.js?v=25"></script><script src="silk-import.js?v=25"></script>
+</body>
+</html>

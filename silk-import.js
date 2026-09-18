@@ -45,7 +45,7 @@
     if(conflicts.length&&!confirm(conflicts.length+' vorhandene Tagesbeträge ersetzen? Die Mitarbeiterdienste bleiben erhalten.'))return;
     subset.forEach(r=>{byDate[r.date]={...(byDate[r.date]||{}),f:String(r.early),s:String(r.late)}});
     localStorage.setItem(STORE,JSON.stringify({...state,byDate,periodStart:from,periodEnd:to,mode:'period'}));
-    periodStart.value=from;periodEnd.value=to;setMode('period');
+    setPeriodRange(from,to);setMode('period');
     close();
     $('#days')?.scrollIntoView({behavior:'smooth',block:'start'});
   }
