@@ -129,8 +129,11 @@
   }
   function exportStoredQR(){
     try{
-      if(typeof saveState==='function')saveState();
-      const st=typeof getState==='function'?getState():{};
+      // Do not call saveState here: opening Settings can leave the day form
+      // on a different date and overwrite freshly imported period data.
+      let st={};
+      try{st=JSON.parse(localStorage.getItem(typeof STORE!=='undefined'?STORE:'silk_tip_state')||'{}')}catch(_){}
+      if(!st||typeof st!=='object')st={};
       const entries=Object.entries(st.byDate||{}).filter(([d,x])=>dateOK(d)&&((+x.f||0)>0||(+x.s||0)>0)).sort((a,b)=>a[0].localeCompare(b[0]));
       if(!entries.length)throw Error('Keine gespeicherten Trinkgeldtage gefunden.');
       const rowsOut=entries.map(([d,x])=>[d,amount(+x.f||0),amount(+x.s||0)]);
@@ -158,7 +161,7 @@
     if(!$('.silk-export-row',home)){
       const exp=document.createElement('button');exp.className='settingsrow silk-export-row';exp.type='button';
       exp.innerHTML='<span class="silk-import-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></span><span><strong>QR-Code exportieren</strong><small>Gespeicherte Beträge & Dienste</small></span><span class="silk-import-chevron">›</span>';
-      exp.onclick=()=>{closeSettings();exportStoredQR()};home.prepend(exp);
+      exp.onclick=()=>{exportStoredQR();setTimeout(()=>{try{closeSettings()}catch(e){}},0)};home.prepend(exp);
     }
   }
   inject();new MutationObserver(inject).observe(document.body,{childList:true,subtree:true});
