@@ -20,9 +20,10 @@
       raw.schedule.forEach(a=>{
         // Compact QR format also supported: [date,name,shift].
         // The older object format {date,name,shift} remains compatible.
-        const date=Array.isArray(a)?a[0]:a?.date;
-        const rawName=Array.isArray(a)?a[1]:a?.name;
-        const rawShift=Array.isArray(a)?a[2]:a?.shift;
+        const indexed=Array.isArray(a)&&Number.isInteger(a[0])&&Array.isArray(raw.staff)&&Array.isArray(raw.shifts);
+        const date=indexed?list[a[0]]?.date:(Array.isArray(a)?a[0]:a?.date);
+        const rawName=indexed?raw.staff[a[1]]:(Array.isArray(a)?a[1]:a?.name);
+        const rawShift=indexed?raw.shifts[a[2]]:(Array.isArray(a)?a[2]:a?.shift);
         if(!dateOK(date)||typeof rawName!=='string'||typeof rawShift!=='string')throw Error('Ungültiger Mitarbeiterdienst im QR-Code.');
         const name=rawName.trim(),shift=rawShift.trim();
         if(!name||!shift||name.length>80||shift.length>30)throw Error('Ungültiger Mitarbeiterdienst im QR-Code.');
