@@ -18,13 +18,18 @@
       const byDate=Object.fromEntries(list.map(r=>[r.date,r]));
       const seen=new Set();
       raw.schedule.forEach(a=>{
-        if(!a||typeof a!=='object'||!dateOK(a.date)||typeof a.name!=='string'||typeof a.shift!=='string')throw Error('Ungültiger Mitarbeiterdienst im QR-Code.');
-        const name=a.name.trim(),shift=a.shift.trim();
+        // Compact QR format also supported: [date,name,shift].
+        // The older object format {date,name,shift} remains compatible.
+        const date=Array.isArray(a)?a[0]:a?.date;
+        const rawName=Array.isArray(a)?a[1]:a?.name;
+        const rawShift=Array.isArray(a)?a[2]:a?.shift;
+        if(!dateOK(date)||typeof rawName!=='string'||typeof rawShift!=='string')throw Error('Ungültiger Mitarbeiterdienst im QR-Code.');
+        const name=rawName.trim(),shift=rawShift.trim();
         if(!name||!shift||name.length>80||shift.length>30)throw Error('Ungültiger Mitarbeiterdienst im QR-Code.');
-        if(!byDate[a.date])return;
-        const key=a.date+'\u0000'+name;
+        if(!byDate[date])return;
+        const key=date+'\u0000'+name;
         if(seen.has(key))throw Error('Ein Mitarbeiter ist an einem Tag mehrfach im QR-Code eingetragen.');
-        seen.add(key);byDate[a.date].assignments.push({name,shift});
+        seen.add(key);byDate[date].assignments.push({name,shift});
       });
     }
     return list.sort((a,b)=>a.date.localeCompare(b.date));
