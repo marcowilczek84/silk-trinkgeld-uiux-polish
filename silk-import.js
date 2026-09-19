@@ -77,7 +77,7 @@
       let assignments=current.assignments||[];
       if(r.assignments?.length){
         const knownNames=new Set(typeof STAFF!=='undefined'?STAFF:[]),knownShifts=new Set(typeof SHIFTS!=='undefined'?SHIFTS.map(s=>s.name):[]);
-        assignments=r.assignments.filter(a=>knownNames.has(a.name)&&knownShifts.has(a.shift)).map(a=>({name:a.name,shift:a.shift}));
+        assignments=r.assignments.map(a=>({name:a.name,shift:a.shift}));
       }
       byDate[r.date]={...current,f:String(r.early),s:String(r.late),assignments};
     });
