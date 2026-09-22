@@ -1016,3 +1016,34 @@ textarea:focus-visible {
     display: none !important;
   }
 }
+
+/* Ambassador app family — isolated final harmonisation. */
+:root {
+  --ambassador-petrol:#1c777b; --ambassador-yellow:#f3cf24;
+  --text-primary:#141918; --text-secondary:#747d7a;
+  --border-subtle:#dce3e1; --surface:#fff; --surface-muted:#f6f8f7;
+  --disabled:#edf0ee; --disabled-text:#89918e;
+  --error:#a33e3a; --warning:#806600; --success:#1c777b;
+  --radius-small:8px; --radius-medium:12px; --radius-large:18px;
+  --ink:var(--text-primary); --muted:var(--text-secondary);
+  --line:var(--border-subtle); --petrol:var(--ambassador-petrol);
+  --yellow:var(--ambassador-yellow); --danger:var(--error);
+}
+button,input,select,textarea{font:inherit;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(28,119,123,.16)!important;outline-offset:2px!important}
+.topbar{background:rgba(255,255,255,.97);border-bottom:1px solid var(--border-subtle)!important;box-shadow:none!important}
+.title strong{color:var(--text-primary);font-size:20px;line-height:26px;font-weight:650}.title small{color:var(--text-secondary);font-size:12px;line-height:16px}
+.iconbtn{min-width:44px;min-height:44px;color:var(--ambassador-petrol);border-color:var(--border-subtle);border-radius:var(--radius-medium)}
+.mode button.active,.calcbtn,.savewide,.import-primary{color:#fff!important;background:var(--ambassador-petrol)!important;border-color:var(--ambassador-petrol)!important;box-shadow:none!important}
+.field input,.field select,.staffrow select,.editrow input{min-height:44px;border-color:var(--border-subtle);border-radius:var(--radius-medium);background:var(--surface)}
+.field label,.step{font-size:11px;line-height:15px;font-weight:650}.hint,.intro p{font-size:13px;line-height:18px;color:var(--text-secondary)}
+.calcbtn{min-height:48px;font-size:15px;font-weight:650;border-radius:var(--radius-medium)}
+.secondary,.addwide{min-height:44px;color:var(--text-primary);background:var(--surface);border-color:var(--border-subtle);border-radius:var(--radius-medium)}
+button:disabled{color:var(--disabled-text)!important;background:var(--disabled)!important;border-color:var(--disabled)!important;opacity:1!important}
+.drawerback{background:rgba(20,30,28,.22);backdrop-filter:blur(2px)}.drawer{border-color:var(--border-subtle);border-radius:var(--radius-large);box-shadow:0 24px 64px rgba(16,30,27,.18)}
+.drawerhead{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom-color:var(--border-subtle)}.drawer-title{font-size:20px;line-height:26px;font-weight:650}
+.settingsrow{min-height:56px}.setting-icon,.companion-app-icon{color:var(--ambassador-petrol)}
+.actionbar{background:var(--surface);border-top-color:var(--border-subtle);padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.result{border-color:var(--border-subtle);border-radius:var(--radius-medium);box-shadow:none}.resulthead{background:var(--surface-muted)}
+@media(max-width:560px){.title strong{font-size:18px}.drawer{max-height:calc(100dvh - 12px);border-radius:var(--radius-large) var(--radius-large) 0 0}.actionbar{padding-bottom:max(12px,env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
