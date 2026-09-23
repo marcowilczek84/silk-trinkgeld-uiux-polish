@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="silk-v13.css?v=24">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="silk-import.css?v=31">
+<link rel="stylesheet" href="sync.css?v=1">
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true">
@@ -149,19 +150,28 @@
 <button class="calcbtn" onclick="calculate()">Trinkgeld berechnen</button>
 </div>
 </main>
-<script>const DEFAULT_STAFF=["Sandra Porepp","Marco Wilczek","Sladjana Trninic","Manuela Ellmaier","Emily","Martin Georgiew","Sascha Mirabito","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao","Julia Lemaitre","Jeannine Grohmann"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];let STAFF=JSON.parse(localStorage.getItem('silk_staff')||'null')||DEFAULT_STAFF.slice(),SHIFTS=JSON.parse(localStorage.getItem('silk_shifts')||'null')||DEFAULT_SHIFTS.map(x=>({...x})),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
+<script src="supabase-config.js"></script>
+<script src="supabase-client.js?v=1"></script>
+<script src="storage-models.js?v=1"></script>
+<script src="local-repository.js?v=1"></script>
+<script src="sync-status.js?v=1"></script>
+<script src="cloud-repository.js?v=1"></script>
+<script src="legacy-migration.js?v=1"></script>
+<script src="sync-service.js?v=1"></script>
+<script>SilkLegacyMigration.backup()</script>
+<script>const DEFAULT_STAFF=["Sandra Porepp","Marco Wilczek","Sladjana Trninic","Manuela Ellmaier","Emily","Martin Georgiew","Sascha Mirabito","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao","Julia Lemaitre","Jeannine Grohmann"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];window.SILK_DEFAULT_SHIFTS=DEFAULT_SHIFTS.map(x=>({...x}));let STAFF=SilkLocalRepository.getStaff(DEFAULT_STAFF.slice()),SHIFTS=SilkLocalRepository.getShifts(DEFAULT_SHIFTS.map(x=>({...x}))),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
 const STAFF_NAME_MIGRATION={"Sandra":"Sandra Porepp","Marco":"Marco Wilczek","Sladjana":"Sladjana Trninic","Manuela":"Manuela Ellmaier","Martin":"Martin Georgiew","Sascha":"Sascha Mirabito","Julia":"Julia Lemaitre","Jeannine":"Jeannine Grohmann"};
 (function migrateStaffNames(){
   const rename=n=>STAFF_NAME_MIGRATION[n]||n;
   STAFF=[...new Set(STAFF.map(rename))];
-  localStorage.setItem('silk_staff',JSON.stringify(STAFF));
+  SilkLocalRepository.saveStaff(STAFF,{silent:true});
   try{
     const st=JSON.parse(localStorage.getItem(STORE)||'{}');
     if(st&&st.byDate){
       Object.values(st.byDate).forEach(day=>{
         if(Array.isArray(day.assignments)) day.assignments=day.assignments.map(a=>({...a,name:rename(a.name)}));
       });
-      localStorage.setItem(STORE,JSON.stringify(st));
+      SilkLocalRepository.saveState(st,{silent:true});
     }
   }catch(e){}
 })();
@@ -178,7 +188,7 @@ function renderEmployees(){employeeEditor.innerHTML=STAFF.map((n,i)=>`<div class
 </div>`).join('')}
 function addEmployee(){STAFF.push('Neuer Mitarbeiter');renderEmployees()}
 function removeEmployee(i){if(confirm('Mitarbeiter wirklich löschen?')){STAFF.splice(i,1);renderEmployees()}}
-function saveEmployees(){STAFF=STAFF.map((_,i)=>(document.getElementById('emp'+i)?.value||'').trim()).filter(Boolean);if(!STAFF.length)return alert('Mindestens ein Mitarbeiter ist erforderlich.');localStorage.setItem('silk_staff',JSON.stringify(STAFF));buildVisibleDays();backSettings();alert('Mitarbeiter gespeichert.')}
+function saveEmployees(){STAFF=STAFF.map((_,i)=>(document.getElementById('emp'+i)?.value||'').trim()).filter(Boolean);if(!STAFF.length)return alert('Mindestens ein Mitarbeiter ist erforderlich.');SilkLocalRepository.saveStaff(STAFF);buildVisibleDays();backSettings();alert('Mitarbeiter gespeichert.')}
 function renderShifts(){shiftEditorRows.innerHTML=SHIFTS.map((s,i)=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)">
 <div class="editrow">
 <input id="shn${i}" value="${esc(s.name)}">
@@ -197,7 +207,7 @@ function renderShifts(){shiftEditorRows.innerHTML=SHIFTS.map((s,i)=>`<div style=
 </div>`).join('')}
 function addShift(){SHIFTS.push({name:'NEU',f:.5,s:.5,color:'#eee'});renderShifts()}
 function removeShift(i){if(SHIFTS.length>1&&confirm('Dienst wirklich löschen?')){SHIFTS.splice(i,1);renderShifts()}}
-function saveShifts(){const n=SHIFTS.map((s,i)=>({name:(document.getElementById('shn'+i)?.value||'').trim().toUpperCase(),f:+(document.getElementById('shf'+i)?.value||0)/100,s:+(document.getElementById('shs'+i)?.value||0)/100,color:s.color||'#eee'})).filter(x=>x.name);if(new Set(n.map(x=>x.name)).size!==n.length)return alert('Jeder Dienstname darf nur einmal vorkommen.');const b=n.find(x=>Math.abs(x.f+x.s-1)>.001);if(b)return alert(`Bei ${b.name} müssen Früh und Spät zusammen 100 % ergeben.`);SHIFTS=n;rebuild();localStorage.setItem('silk_shifts',JSON.stringify(SHIFTS));buildVisibleDays();backSettings();alert('Dienste gespeichert.')}
+function saveShifts(){const n=SHIFTS.map((s,i)=>({name:(document.getElementById('shn'+i)?.value||'').trim().toUpperCase(),f:+(document.getElementById('shf'+i)?.value||0)/100,s:+(document.getElementById('shs'+i)?.value||0)/100,color:s.color||'#eee'})).filter(x=>x.name);if(new Set(n.map(x=>x.name)).size!==n.length)return alert('Jeder Dienstname darf nur einmal vorkommen.');const b=n.find(x=>Math.abs(x.f+x.s-1)>.001);if(b)return alert(`Bei ${b.name} müssen Früh und Spät zusammen 100 % ergeben.`);SHIFTS=n;rebuild();SilkLocalRepository.saveShifts(SHIFTS);buildVisibleDays();backSettings();alert('Dienste gespeichert.')}
 function dateIn(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function populatePeriodParts(prefix,iso){
  const d=new Date(iso+'T12:00:00');
@@ -218,7 +228,7 @@ function updatePeriodFromParts(){
  buildVisibleDays()
 }
 function initDates(){const n=new Date();singleDate.value=dateIn(n);setPeriodRange(dateIn(new Date(n.getFullYear(),n.getMonth(),1)),dateIn(n))}
-function syncPeriodLimits(){}function setMode(m){MODE=m;localStorage.setItem(MODEKEY,m);modeDay.classList.toggle('active',m==='day');modePeriod.classList.toggle('active',m==='period');dayPicker.classList.toggle('hidden',m!=='day');periodPicker.classList.toggle('hidden',m!=='period');daysTitle.textContent=m==='day'?'Tag erfassen':'Tage erfassen';buildVisibleDays();resultSection.classList.add('hidden')}
+function syncPeriodLimits(){}function setMode(m){MODE=m;SilkLocalRepository.saveMode(m);modeDay.classList.toggle('active',m==='day');modePeriod.classList.toggle('active',m==='period');dayPicker.classList.toggle('hidden',m!=='day');periodPicker.classList.toggle('hidden',m!=='period');daysTitle.textContent=m==='day'?'Tag erfassen':'Tage erfassen';buildVisibleDays();resultSection.classList.add('hidden')}
 function visibleDates(){
  if(MODE==='day')return[new Date((singleDate.value||dateIn(new Date()))+'T12:00:00')];
  const from=periodStart.value,to=periodEnd.value,err=document.getElementById('periodError');
@@ -228,7 +238,7 @@ function visibleDates(){
  if(count>93){err.textContent='Bitte höchstens 93 Tage auswählen.';err.classList.remove('hidden');return[]}
  err.classList.add('hidden');
  return Array.from({length:count},(_,i)=>new Date(a.getFullYear(),a.getMonth(),a.getDate()+i,12))
-}function getState(){try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){return{}}}
+}function getState(){return SilkLocalRepository.getState()}
 function opts(sel=''){return`<option value="">Nicht im Dienst</option>`+SHIFTS.map(s=>`<option value="${esc(s.name)}" ${s.name===sel?'selected':''}>${esc(s.name)}</option>`).join('')}
 function contrast(h){h=(h||'#fff').replace('#','');if(h.length!==6)return'#111';const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return(r*299+g*587+b*114)/1000>150?'#111':'#fff'}
 function styleShift(s){const x=SHIFTS.find(a=>a.name===s.value),c=x?.color||'#fff';s.style.backgroundColor=c;s.style.borderColor=x?c:'#dde0dc';s.style.color=contrast(c)}
@@ -261,8 +271,8 @@ function buildVisibleDays(){const st=getState();days.innerHTML='';visibleDates()
 </div>`);document.getElementById('day_'+k).querySelectorAll('select').forEach(styleShift)});updatePeriodTotal();saveState()}
 function toggleDay(k){const t=document.getElementById('day_'+k),w=t.classList.contains('open');document.querySelectorAll('.day.open').forEach(x=>x.classList.remove('open'));if(!w)t.classList.add('open')}
 function changeDay(k){sum=document.getElementById('sum_'+k);sum.textContent=chf((+document.getElementById('f_'+k).value||0)+(+document.getElementById('s_'+k).value||0));meta=document.getElementById('meta_'+k);meta.textContent=[...document.getElementById('day_'+k).querySelectorAll('select')].filter(x=>x.value).length+' aktiv';updatePeriodTotal();saveState();resultSection.classList.add('hidden')}
-function saveState(){const p=getState(),byDate={...(p.byDate||{})};document.querySelectorAll('.day').forEach(d=>{const k=d.id.slice(4);byDate[k]={f:document.getElementById('f_'+k)?.value||'',s:document.getElementById('s_'+k)?.value||'',assignments:[...d.querySelectorAll('select')].map(s=>({name:s.dataset.name,shift:s.value}))}});localStorage.setItem(STORE,JSON.stringify({version:4,mode:MODE,singleDate:singleDate.value,periodStart:periodStart.value,periodEnd:periodEnd.value,byDate}))}
-function loadState(){const s=getState();if(s.singleDate)singleDate.value=s.singleDate;if(s.periodStart&&s.periodEnd)setPeriodRange(s.periodStart,s.periodEnd);else if(s.periodMonth){const [y,m]=s.periodMonth.split('-').map(Number);setPeriodRange(dateIn(new Date(y,m-1,+s.periodFrom||1)),dateIn(new Date(y,m-1,+s.periodTo||new Date(y,m,0).getDate())))}setMode(s.mode||localStorage.getItem(MODEKEY)||'day')}
+function saveState(){const p=getState(),byDate={...(p.byDate||{})};document.querySelectorAll('.day').forEach(d=>{const k=d.id.slice(4);byDate[k]={f:document.getElementById('f_'+k)?.value||'',s:document.getElementById('s_'+k)?.value||'',assignments:[...d.querySelectorAll('select')].map(s=>({name:s.dataset.name,shift:s.value}))}});SilkLocalRepository.saveState({version:4,mode:MODE,singleDate:singleDate.value,periodStart:periodStart.value,periodEnd:periodEnd.value,byDate})}
+function loadState(){const s=getState();if(s.singleDate)singleDate.value=s.singleDate;if(s.periodStart&&s.periodEnd)setPeriodRange(s.periodStart,s.periodEnd);else if(s.periodMonth){const [y,m]=s.periodMonth.split('-').map(Number);setPeriodRange(dateIn(new Date(y,m-1,+s.periodFrom||1)),dateIn(new Date(y,m-1,+s.periodTo||new Date(y,m,0).getDate())))}setMode(s.mode||SilkLocalRepository.getMode('day'))}
 function calculate(){if(!visibleDates().length)return;saveState();let tf=0,ts=0,kf=0,ks=0,hf=0,hs=0;const totals={};STAFF.forEach(n=>totals[n]={name:n,amount:0,days:0,details:[]});const st=getState();visibleDates().forEach(d=>{const k=dateIn(d),x=st.byDate?.[k]||{},fr=+x.f||0,sp=+x.s||0;tf+=fr;ts+=sp;const kfg=fr*.3,ksg=sp*.3,sfg=fr*.7,ssg=sp*.7,shf=sfg*.025,shs=ssg*.025,khf=kfg*.025,khs=ksg*.025;hf+=shf+khf;hs+=shs+khs;kf+=kfg-khf;ks+=ksg-khs;let sf=sfg-shf,ss=ssg-shs;const seen=new Set(),people=[];(x.assignments||[]).filter(a=>a.name&&FACTOR[a.shift]).forEach(a=>{if(seen.has(a.name))return;seen.add(a.name);const q=FACTOR[a.shift];people.push({name:a.name,shift:a.shift,fw:q.f,sw:q.s,amount:0})});const e=people.find(p=>p.name==='Emily');if(e){const mx=Math.min(10,sf+ss);let ef=Math.min(mx*e.fw,sf),es=Math.min(mx*e.sw,ss),short=mx-ef-es;if(short>0){const add=Math.min(short,sf-ef);ef+=add;es+=Math.min(short-add,ss-es)}e.amount=ef+es;sf-=ef;ss-=es}const o=people.filter(p=>p.name!=='Emily'),af=o.reduce((a,p)=>a+p.fw,0),as=o.reduce((a,p)=>a+p.sw,0);o.forEach(p=>p.amount=(af?sf*p.fw/af:0)+(as?ss*p.sw/as:0));people.forEach(p=>{if(!totals[p.name])totals[p.name]={name:p.name,amount:0,days:0,details:[]};totals[p.name].amount+=p.amount;totals[p.name].days++;totals[p.name].details.push(new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit'}).format(d)+' · '+p.shift)})});const ps=Object.values(totals).filter(p=>p.days>0);result.innerHTML=`<div class="resulthead">
 <small>Trinkgeld gesamt</small>
 <strong>${chf(tf+ts)}</strong>
@@ -281,7 +291,8 @@ function calculate(){if(!visibleDates().length)return;saveState();let tf=0,ts=0,
 <span>Housekeeping gesamt</span>
 <b>${chf(hf+hs)}</b>
 </div>`;resultSection.classList.remove('hidden');resultSection.scrollIntoView({behavior:'smooth',block:'start'})}
-function resetCurrent(){if(!confirm('Neue Berechnung starten? Die aktuelle Eingabe wird zurückgesetzt.'))return;localStorage.removeItem(STORE);resultSection.classList.add('hidden');initDates();setMode('day')}initDates();loadState();</script>
+function resetCurrent(){if(!confirm('Neue Berechnung starten? Die aktuelle Eingabe wird zurückgesetzt.'))return;SilkLocalRepository.saveState({});resultSection.classList.add('hidden');initDates();setMode('day')}initDates();loadState();
+window.addEventListener('silk:cloud-applied',()=>{STAFF=SilkLocalRepository.getStaff(DEFAULT_STAFF.slice());SHIFTS=SilkLocalRepository.getShifts(DEFAULT_SHIFTS.map(x=>({...x})));rebuild();loadState();buildVisibleDays()});</script>
 <script>
 (() => {
   const splash = document.getElementById('appSplash');
@@ -306,5 +317,6 @@ function resetCurrent(){if(!confirm('Neue Berechnung starten? Die aktuelle Einga
 <script src="silk-v13.js?v=24">
 </script>
 <script src="jsQR.js?v=25"></script><script src="silk-import.js?v=33"></script>
+<script src="sync-bootstrap.js?v=1"></script>
 </body>
 </html>

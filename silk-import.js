@@ -81,7 +81,7 @@
       }
       byDate[r.date]={...current,f:String(r.early),s:String(r.late),assignments};
     });
-    localStorage.setItem(STORE,JSON.stringify({...state,byDate,periodStart:from,periodEnd:to,mode:'period'}));
+    SilkLocalRepository.saveState({...state,byDate,periodStart:from,periodEnd:to,mode:'period'});
     setPeriodRange(from,to);setMode('period');
     close();
     $('#days')?.scrollIntoView({behavior:'smooth',block:'start'});

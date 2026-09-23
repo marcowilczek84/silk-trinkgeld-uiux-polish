@@ -29,15 +29,11 @@
   };
 
   function readSaved() {
-    try {
-      return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
-    } catch (error) {
-      return [];
-    }
+    return SilkLocalRepository.getSettlements();
   }
 
   function writeSaved(items) {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(items));
+    SilkLocalRepository.saveSettlements(items);
   }
 
   function currentLabel() {
@@ -58,11 +54,25 @@
   window.saveCurrentCalculation = function () {
     if (resultSection.classList.contains('hidden') || !result.innerHTML.trim()) return;
     const items = readSaved();
+    const dates = visibleDates();
+    const structuredRows = [...result.querySelectorAll('.resrow')].map((row, sortOrder) => ({
+      displayName: row.querySelector('span')?.childNodes[0]?.textContent.trim() || '',
+      details: row.querySelector('small')?.textContent.trim() || '',
+      amountDisplay: row.querySelector('b')?.textContent.trim() || '',
+      amount: Number((row.querySelector('b')?.textContent || '').replace(/[^0-9,.-]/g, '').replace(',', '.')) || 0,
+      sortOrder
+    }));
     items.unshift({
       id: Date.now(),
       label: currentLabel(),
       savedAt: new Date().toISOString(),
-      html: result.innerHTML
+      html: result.innerHTML,
+      dataFormat: 'structured-v1',
+      periodStart: dates.length ? dateIn(dates[0]) : null,
+      periodEnd: dates.length ? dateIn(dates[dates.length - 1]) : null,
+      calculationVersion: 'silk-v13',
+      inputSnapshot: { state: getState(), staff: [...STAFF], shifts: SHIFTS.map(item => ({...item})) },
+      resultData: { totalDisplay: result.querySelector('.resulthead strong')?.textContent.trim() || '', lines: structuredRows }
     });
     writeSaved(items.slice(0, 50));
     const button = document.getElementById('saveCalculationButton');
