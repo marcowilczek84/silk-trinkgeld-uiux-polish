@@ -76,4 +76,6 @@
     const finalMarkup = panel.querySelector('.saved-list')?.innerHTML || '';
     panel.querySelector('.saved-list').innerHTML = `<h3 class="saved-section-title">Entwürfe</h3>${draftMarkup || '<p class="saved-empty">Noch keine Entwürfe.</p>'}<h3 class="saved-section-title">Gespeicherte Abrechnungen</h3>${finalItems.length ? finalMarkup : '<p class="saved-empty">Noch keine Abrechnung gespeichert.</p>'}`;
   };
+  const savedRow = [...document.querySelectorAll('.settingsrow')].find(row => row.textContent.includes('Gespeicherte Berechnungen'));
+  if (savedRow) savedRow.onclick = window.openSavedCalculations;
 })();
