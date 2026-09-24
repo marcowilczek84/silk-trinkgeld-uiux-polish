@@ -6,10 +6,28 @@
   let client, cloud, running = false, rerun = false, debounce, channel, refreshTimer;
   const deviceName = () => /iPad/.test(navigator.userAgent) ? 'iPad' : /iPhone/.test(navigator.userAgent) ? 'iPhone' : (navigator.platform || 'Browser');
   const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))).map(x => x.toString(16).padStart(2,'0')).join('');
+  const stableJson = value => JSON.stringify(value, function (_, item) {
+    if (!item || Array.isArray(item) || typeof item !== 'object') return item;
+    return Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]]));
+  });
   const showNotice = message => {
     let node = document.getElementById('silkSyncNotice'); if (!node) { node = document.createElement('div'); node.id = 'silkSyncNotice'; node.className = 'silk-sync-notice'; document.body.appendChild(node); }
     node.textContent = message;
   };
+  const draftFromRow = row => ({ id:row.id, cloudId:row.id, revision:row.revision,
+    dataFormat:'draft-v1', label:row.label, savedAt:row.saved_at,
+    periodStart:row.period_start, periodEnd:row.period_end, inputSnapshot:row.input_snapshot });
+  function mergeCloudDrafts(rows, removed=new Set(), prune=false) {
+    const items=local.getSettlements(), deletes=new Set([...removed,...local.getDraftDeletes().map(x=>x.id)]);
+    for (const row of rows) {
+      if (deletes.has(row.id) || local.getConflicts().some(c=>c.id==='draft:'+row.id)) continue;
+      const index=items.findIndex(x=>x.cloudId===row.id);
+      if (index<0) items.push(draftFromRow(row));
+      else if (Number(row.revision)>Number(items[index].revision) && !local.getOutbox().some(x=>x.entity==='settlements')) items[index]=draftFromRow(row);
+    }
+    const remoteIds=new Set(rows.map(row=>row.id));
+    local.saveSettlements(items.filter(item=>item.dataFormat!=='draft-v1'||(!deletes.has(item.cloudId) && (!prune || !item.revision || remoteIds.has(item.cloudId) || local.getConflicts().some(c=>c.id==='draft:'+item.cloudId)))),{silent:true});
+  }
   function pairingView(errorText = '') {
     let wrap = document.getElementById('silkPairing'); if (wrap) wrap.remove(); wrap = document.createElement('div'); wrap.id = 'silkPairing'; wrap.className = 'silk-pairing';
     wrap.innerHTML = `<form class="silk-pairing-card"><small>Restaurant Silk</small><h2>Gerät verbinden</h2><p>Einmalig den Verbindungscode eingeben. Die lokale App bleibt bis zur erfolgreichen Verbindung vollständig nutzbar.</p><label>Verbindungscode<input name="code" autocomplete="one-time-code" autocapitalize="characters" required></label><label>Gerätename<input name="device" value="${deviceName()}" maxlength="80" required></label><button type="submit">Verbinden</button><button type="button" class="silk-pairing-later">Später verbinden</button><div class="silk-pairing-error" role="alert">${errorText}</div></form>`;
@@ -22,10 +40,21 @@
   function renderConflicts(conflicts) {
     document.getElementById('silkConflictPanel')?.remove(); if (!conflicts.length) return;
     const panel = document.createElement('div'); panel.id = 'silkConflictPanel'; panel.className = 'silk-conflict-panel';
-    panel.innerHTML = `<div class="silk-conflict-card"><h2>Konflikt</h2><p>Unterschiedliche Werte werden nicht automatisch überschrieben.</p>${conflicts.map(c => `<section data-id="${c.id}"><strong>${c.date}</strong><small>Dieses Gerät: Früh ${c.local.f || 0} / Spät ${c.local.s || 0}<br>Cloud: Früh ${c.remote.f || 0} / Spät ${c.remote.s || 0}</small><div><button data-choice="local">${deviceName()} übernehmen</button><button data-choice="cloud">Cloud übernehmen</button><button data-choice="later">Später entscheiden</button></div></section>`).join('')}</div>`;
+    panel.innerHTML = `<div class="silk-conflict-card"><h2>Konflikt</h2><p>Unterschiedliche Werte werden nicht automatisch überschrieben.</p>${conflicts.map(c => `<section data-id="${c.id}"><strong>${c.type==='draft'?'Entwurf':c.date}</strong><small>${c.type==='draft'?'Dieser Entwurf wurde auf einem anderen Gerät geändert.':`Dieses Gerät: Früh ${c.local?.f||0} / Spät ${c.local?.s||0}<br>Cloud: Früh ${c.remote?.f||0} / Spät ${c.remote?.s||0}`}</small><div><button data-choice="local">${deviceName()} übernehmen</button><button data-choice="cloud">Cloud übernehmen</button><button data-choice="later">Später entscheiden</button></div></section>`).join('')}</div>`;
     panel.onclick = event => { const button = event.target.closest('[data-choice]'); if (!button) return; const section = button.closest('section'), conflict = local.getConflicts().find(c => c.id === section.dataset.id); if (!conflict) return;
-      const state = local.getState(); if (button.dataset.choice === 'cloud') { state.byDate = { ...(state.byDate || {}), [conflict.date]: conflict.remote }; local.applyCloudSnapshot({ state }); }
-      if (button.dataset.choice === 'local') local.enqueue('state', state);
+      const state = local.getState();
+      if (conflict.type==='draft') {
+        if (button.dataset.choice==='later') return;
+        const items=local.getSettlements().filter(x=>x.cloudId!==conflict.draftId);
+        if (button.dataset.choice==='cloud' && conflict.remote) items.push(draftFromRow(conflict.remote));
+        if (button.dataset.choice==='local' && conflict.local) { items.push({...conflict.local,revision:conflict.remote?.revision||null}); local.enqueue('settlements',items); }
+        if (button.dataset.choice==='local' && !conflict.local && conflict.remote) local.saveDraftDeletes([{id:conflict.draftId,revision:conflict.remote.revision},...local.getDraftDeletes().filter(x=>x.id!==conflict.draftId)]);
+        local.saveSettlements(items,{silent:true});
+        if (button.dataset.choice==='cloud') local.saveDraftDeletes(local.getDraftDeletes().filter(x=>x.id!==conflict.draftId));
+      } else {
+        if (button.dataset.choice === 'cloud') { state.byDate = { ...(state.byDate || {}), [conflict.date]: conflict.remote }; local.applyCloudSnapshot({ state }); }
+        if (button.dataset.choice === 'local') local.enqueue('state', state);
+      }
       if (button.dataset.choice !== 'later') { const remaining = local.getConflicts().filter(c => c.id !== conflict.id); local.saveConflicts(remaining); section.remove(); if (!remaining.length) panel.remove(); schedule(); }
     };
     document.body.appendChild(panel); status.set('conflict');
@@ -44,7 +73,7 @@
   }
   async function syncNow() {
     if (!cloud) { status.set('local'); return; }
-    if (running || !navigator.onLine) { if (running) rerun = true; status.set('pending'); return; }
+    if (running || !navigator.onLine) { if (running) rerun = true; status.set(navigator.onLine?'pending':'offline'); return; }
     running = true; status.set('connecting');
     try {
       const snapshot = await cloud.loadAll(), meta = local.getSyncMeta(), { staffRows, shiftRows } = await ensureMemberRows(snapshot, meta);
@@ -65,16 +94,45 @@
         for (const found of current) { const name = [...staffRows].find(([,s]) => s.id === found.staff_member_id)?.[0]; if (name && !wanted.has(name)) await cloud.deleteWithRevision('tip_assignments', found.id, found.revision, 'assignment:'+date+':'+name); }
       }
       for (const item of local.getSettlements()) {
+        if (item.dataFormat==='draft-v1') {
+          if (local.getConflicts().some(c=>c.id==='draft:'+item.cloudId)) continue;
+          const previousRevision=item.revision;
+          const row=snapshot.tip_drafts.find(x=>x.id===item.cloudId);
+          const values={label:item.label,period_start:item.periodStart,period_end:item.periodEnd,
+            saved_at:item.savedAt,input_snapshot:item.inputSnapshot};
+          if (!row) {
+            if (item.revision) throw new ConflictError('draft:'+item.cloudId,item,null);
+            const created=await cloud.insert('tip_drafts',{id:item.cloudId,workspace_id:cloud.workspaceId,...values});
+            item.revision=created.revision;
+          } else if (Date.parse(row.saved_at)!==Date.parse(item.savedAt) || stableJson(row.input_snapshot)!==stableJson(item.inputSnapshot)) {
+            if (item.revision && Number(row.revision)!==Number(item.revision)) throw new ConflictError('draft:'+item.cloudId,item,row);
+            const updated=await cloud.updateWithRevision('tip_drafts',row.id,row.revision,values,'draft:'+item.cloudId);
+            item.revision=updated.revision;
+          } else item.revision=row.revision;
+          const active=local.getActiveDraft();
+          if (active?.id===item.id && (active.revision==null || Number(active.revision)===Number(previousRevision))) local.saveActiveDraft({id:item.id,revision:item.revision});
+          continue;
+        }
         if (item.dataFormat === 'structured-v1') { if (!item.cloudId) { const row = await cloud.insert('tip_settlements', { id: uuid(), workspace_id: cloud.workspaceId, period_start:item.periodStart||null, period_end:item.periodEnd||null, label:item.label, calculation_version:item.calculationVersion||'silk-v13', input_snapshot:item.inputSnapshot||null, result:item.resultData||null, data_format:'structured-v1', source_device_installation_id:local.getDeviceId(), saved_at:item.savedAt }); item.cloudId=row.id; item.revision=row.revision;
           for (const line of item.resultData?.lines || []) { const lower=line.displayName.toLowerCase(), lineType=lower.includes('küche')?'kitchen':lower.includes('housekeeping')?'housekeeping':'employee', staffId=staffRows.get(line.displayName)?.id||null, amount=Number(String(line.amountDisplay||'').replace(/[^0-9,.-]/g,'').replace(',','.'))||0; await cloud.insert('tip_settlement_lines',{id:uuid(),workspace_id:cloud.workspaceId,settlement_id:row.id,line_type:lineType,staff_member_id:staffId,display_name:line.displayName,amount,details:line.details?[line.details]:[],sort_order:line.sortOrder||0}); }
         } }
         else { const sourceHash = await hash(JSON.stringify({ id:item.id,label:item.label,savedAt:item.savedAt,html:item.html })); if (!snapshot.tip_legacy_snapshots.some(row => row.source_hash === sourceHash)) await cloud.insert('tip_legacy_snapshots', { id:uuid(),workspace_id:cloud.workspaceId,legacy_id:item.id,label:item.label,saved_at:item.savedAt,legacy_html:item.html,source_device_installation_id:local.getDeviceId(),source_hash:sourceHash }); }
       }
+      const removedDrafts=new Set();
+      for (const pending of local.getDraftDeletes()) {
+        if (local.getConflicts().some(c=>c.id==='draft:'+pending.id)) continue;
+        const row=snapshot.tip_drafts.find(x=>x.id===pending.id);
+        if (row && Number(row.revision)!==Number(pending.revision)) throw new ConflictError('draft:'+pending.id,null,row);
+        if (row) await cloud.deleteWithRevision('tip_drafts',row.id,row.revision,'draft:'+pending.id);
+        removedDrafts.add(pending.id);
+        local.saveDraftDeletes(local.getDraftDeletes().filter(x=>x.id!==pending.id));
+      }
+      mergeCloudDrafts(snapshot.tip_drafts,removedDrafts);
       local.saveSettlements(local.getSettlements(), { silent:true }); meta.migrated = true; local.saveSyncMeta(meta);
       for (const item of local.getOutbox()) local.removeOutbox(item.mutationId);
       status.set(local.getConflicts().length ? 'conflict' : 'synced');
     } catch (error) {
-      if (error instanceof ConflictError) { const conflicts = local.getConflicts(); const date = error.entity.startsWith('day:') ? error.entity.slice(4) : null; if (!conflicts.some(c => c.id === error.entity)) conflicts.push({ id:error.entity,type:date?'day':'record',date,local:error.local,remote:error.remote }); local.saveConflicts(conflicts); renderConflicts(conflicts); }
+      if (error instanceof ConflictError) { const conflicts = local.getConflicts(); const date = error.entity.startsWith('day:') ? error.entity.slice(4) : null; if (!conflicts.some(c => c.id === error.entity)) conflicts.push({ id:error.entity,type:error.entity.startsWith('draft:')?'draft':date?'day':'record',draftId:error.entity.startsWith('draft:')?error.entity.slice(6):null,date,local:error.local,remote:error.remote }); local.saveConflicts(conflicts); renderConflicts(conflicts); }
       else { console.warn('SILK sync pending:', error); status.set('pending'); }
     } finally { running = false; if (rerun) { rerun = false; schedule(50); } }
   }
@@ -88,7 +146,9 @@
       snapshot.tip_assignments.forEach(row => { const date = dayById.get(row.tip_day_id), name = staffById.get(row.staff_member_id); if (date && name) meta.revisions['assignment:'+date+':'+name] = row.revision; });
       local.saveSyncMeta(meta);
       const currentSettlements=local.getSettlements(), settlementKeys=new Set(currentSettlements.map(x=>x.cloudId));
-      snapshot.tip_settlements.forEach(row=>{if(!settlementKeys.has(row.id))currentSettlements.push({id:row.legacy_id||Date.parse(row.saved_at),cloudId:row.id,revision:row.revision,label:row.label||'Abrechnung',savedAt:row.saved_at,html:row.legacy_html||'',dataFormat:row.data_format,periodStart:row.period_start,periodEnd:row.period_end,calculationVersion:row.calculation_version,inputSnapshot:row.input_snapshot,resultData:row.result})});
+      snapshot.tip_settlements.filter(row=>row.data_format!=='draft-v1').forEach(row=>{if(!settlementKeys.has(row.id))currentSettlements.push({id:row.legacy_id||Date.parse(row.saved_at),cloudId:row.id,revision:row.revision,label:row.label||'Abrechnung',savedAt:row.saved_at,html:row.legacy_html||'',dataFormat:row.data_format,periodStart:row.period_start,periodEnd:row.period_end,calculationVersion:row.calculation_version,inputSnapshot:row.input_snapshot,resultData:row.result})});
+      mergeCloudDrafts(snapshot.tip_drafts,new Set(),true);
+      currentSettlements.splice(0,currentSettlements.length,...local.getSettlements());
       local.applyCloudSnapshot({ state, staff:snapshot.tip_staff_members.map(r=>r.display_name), shifts:snapshot.tip_shift_types.map(r=>({name:r.code,f:Number(r.early_weight),s:Number(r.late_weight),color:r.color||'#eee'})), settlements:currentSettlements }); status.set('synced');
     } catch (_) { status.set('pending'); }
   }
@@ -112,7 +172,7 @@
     } catch (error) { console.warn('SILK cloud unavailable:', error); status.set('local'); showNotice('Cloud-Verbindung nicht verfügbar. Die App arbeitet lokal weiter; Daten wurden nicht verändert. '+(error.message||'')); }
   }
   global.addEventListener('silk:local-change', event => { local.enqueue(event.detail.entity, event.detail.payload); schedule(); });
-  global.addEventListener('online', () => schedule(0)); global.addEventListener('offline', () => status.set('pending'));
+  global.addEventListener('online', () => schedule(0)); global.addEventListener('offline', () => status.set('offline'));
   global.addEventListener('focus', () => refreshFromCloud());
   global.addEventListener('silk:conflicts', event => renderConflicts(event.detail || []));
   global.SilkSyncService = { init, syncNow, refreshFromCloud };

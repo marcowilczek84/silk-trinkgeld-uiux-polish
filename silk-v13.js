@@ -74,7 +74,7 @@
       inputSnapshot: { state: getState(), staff: [...STAFF], shifts: SHIFTS.map(item => ({...item})) },
       resultData: { totalDisplay: result.querySelector('.resulthead strong')?.textContent.trim() || '', lines: structuredRows }
     });
-    writeSaved(items.slice(0, 50));
+    writeSaved([...items.filter(item => item.dataFormat === 'draft-v1'), ...items.filter(item => item.dataFormat !== 'draft-v1').slice(0, 50)]);
     const button = document.getElementById('saveCalculationButton');
     if (button) {
       button.textContent = 'Gespeichert';
@@ -92,7 +92,7 @@
       panel.id = 'savedCalculations';
       drawer.appendChild(panel);
     }
-    const items = readSaved();
+    const items = readSaved().filter(item => item.dataFormat !== 'draft-v1');
     panel.classList.remove('hidden');
     panel.innerHTML = `<h3><button class="backlink" onclick="backFromSaved()">← Einstellungen</button></h3>
       <h3>Gespeicherte Berechnungen</h3>

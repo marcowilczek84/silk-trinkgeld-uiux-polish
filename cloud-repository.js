@@ -4,7 +4,7 @@
   class CloudRepository {
     constructor(client, workspaceId, deviceId) { this.client = client; this.workspaceId = workspaceId; this.deviceId = deviceId; }
     async loadAll() {
-      const tables = ['tip_staff_members','tip_shift_types','tip_days','tip_assignments','tip_settlements','tip_settlement_lines','tip_legacy_snapshots'];
+      const tables = ['tip_staff_members','tip_shift_types','tip_days','tip_assignments','tip_settlements','tip_settlement_lines','tip_legacy_snapshots','tip_drafts'];
       const results = await Promise.all(tables.map(table => this.client.from(table).select('*').eq('workspace_id', this.workspaceId)));
       const failed = results.find(result => result.error); if (failed) throw failed.error;
       return Object.fromEntries(tables.map((table, i) => [table, results[i].data || []]));
@@ -33,6 +33,7 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tip_staff_members', filter: `workspace_id=eq.${this.workspaceId}` }, p => onSignal('staff', p))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tip_shift_types', filter: `workspace_id=eq.${this.workspaceId}` }, p => onSignal('shift', p))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tip_settlements', filter: `workspace_id=eq.${this.workspaceId}` }, p => onSignal('settlement', p))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tip_drafts', filter: `workspace_id=eq.${this.workspaceId}` }, p => onSignal('draft', p))
         .subscribe();
     }
   }

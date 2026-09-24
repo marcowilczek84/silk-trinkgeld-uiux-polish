@@ -143,13 +143,15 @@
 </div>
 <div class="result-actions">
 <button class="secondary" onclick="window.print()">PDF / Drucken</button>
-<button class="secondary" onclick="resetCurrent()">Neue Berechnung</button>
+<button class="secondary" onclick="clearCurrentPeriod()">Neue Berechnung</button>
 </div>
 </section>
 <div class="actionbar">
+<div class="draft-actions"><button type="button" onclick="saveCurrentDraft()">Entwurf anlegen</button><button type="button" onclick="clearCurrentPeriod()">Zeitraum leeren</button></div>
 <button class="calcbtn" onclick="calculate()">Trinkgeld berechnen</button>
 </div>
 </main>
+<div id="clearPeriodDialog" class="draft-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="clearPeriodTitle"><div class="draft-dialog-card"><h2 id="clearPeriodTitle">Zeitraum leeren?</h2><p>Alle Eingaben im aktuellen Zeitraum werden entfernt. Mitarbeiter, Dienste, Entwürfe und gespeicherte Abrechnungen bleiben erhalten.</p><div><button type="button" onclick="closeClearPeriod()">Abbrechen</button><button type="button" class="draft-danger" onclick="confirmClearPeriod()">Zeitraum leeren</button></div></div></div>
 <script src="supabase-config.js"></script>
 <script src="supabase-client.js?v=1"></script>
 <script src="storage-models.js?v=1"></script>
@@ -316,6 +318,7 @@ window.addEventListener('silk:cloud-applied',()=>{STAFF=SilkLocalRepository.getS
 </script>
 <script src="silk-v13.js?v=24">
 </script>
+<link rel="stylesheet" href="draft-workflow.css?v=1"><script src="draft-workflow.js?v=1"></script>
 <script src="jsQR.js?v=25"></script><script src="silk-import.js?v=33"></script>
 <script src="sync-bootstrap.js?v=1"></script>
 </body>

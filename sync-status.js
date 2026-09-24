@@ -1,6 +1,6 @@
 (function (global) {
   'use strict';
-  const labels = { synced: 'Synchronisiert', pending: 'Offline · Synchronisierung ausstehend', conflict: 'Konflikt', local: 'Nur lokal', connecting: 'Verbinden …' };
+  const labels = { synced: 'Synchronisiert', pending: 'Synchronisierung ausstehend', offline: 'Offline', conflict: 'Konflikt', local: 'Nur lokal', connecting: 'Verbinden …' };
   let current = 'local';
   function ensure() {
     let node = document.getElementById('silkSyncStatus');
