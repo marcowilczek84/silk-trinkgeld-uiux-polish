@@ -6,7 +6,7 @@ const root = new URL('../', import.meta.url);
 const dist = new URL('../dist/', import.meta.url);
 await rm(dist, { recursive:true, force:true }); await mkdir(dist, { recursive:true });
 await build({ entryPoints:[new URL('../supabase-client-entry.js', import.meta.url).pathname], outfile:new URL('../dist/supabase-client.js', import.meta.url).pathname, bundle:true, format:'iife', platform:'browser', minify:true, target:['safari15'] });
-const allowed = new Set(['.html','.js','.css','.png','.webp','.webmanifest']);
+const allowed = new Set(['.html','.js','.css','.svg','.png','.webp','.webmanifest']);
 for (const entry of await readdir(root, { withFileTypes:true })) {
   if (!entry.isFile() || !allowed.has(extname(entry.name)) || entry.name === 'supabase-client-entry.js' || entry.name === 'supabase-config.js') continue;
   await cp(new URL('../'+entry.name, import.meta.url), new URL('../dist/'+entry.name, import.meta.url));
