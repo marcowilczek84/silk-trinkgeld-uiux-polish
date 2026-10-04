@@ -9,3 +9,7 @@ test('same value conflict and delete/edit conflict retain both alternatives',()=
  const r=merge({days:{one:{f:'10'}},settlements:{a:{id:'a',n:1}}},{days:{one:{f:'11'}},settlements:{}},{days:{one:{f:'12'}},settlements:{a:{id:'a',n:2}}});
  assert.equal(r.conflicts.length,2);assert.equal(r.conflicts[0].local,'11');assert.equal(r.conflicts[0].remote,'12');assert.equal(r.conflicts[1].remote.n,2);
 });
+test('finalization concurrent with an input edit remains a draft requiring renewed calculation',()=>{
+ const doc={period:{mode:'day',singleDate:'2026-09-01'},staff:['A'],shifts:[],days:{'2026-09-01':{f:'20',s:'0',assignments:{}}},work:{activeId:'draft',calculation:{}},settlements:{draft:{dataFormat:'final-v2',finalizedAt:'now',inputSnapshot:{mode:'day',periodStart:'2026-09-01',periodEnd:'2026-09-01',staff:['A'],shifts:[],byDate:{'2026-09-01':{f:'10',s:'0',assignments:[]}}}}}};
+ assert.deepEqual(globalThis.SilkSyncMerge.protectFinalization({settlements:{}},doc),['draft']);assert.equal(doc.settlements.draft.dataFormat,'draft-v2');assert.equal(doc.work.calculation,null);
+});

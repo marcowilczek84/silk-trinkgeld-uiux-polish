@@ -4,3 +4,6 @@ dist/
 .vercel/
 .vercel
 .env*
+
+supabase/.temp/
+.env.test*

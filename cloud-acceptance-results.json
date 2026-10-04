@@ -1,0 +1,40 @@
+{
+  "testedAt": "2026-10-04T11:22:43.762Z",
+  "environment": "Separate JSDOM application clients with independent Supabase sessions and local storage; real isolated Supabase workspace. Not a browser/device visual test.",
+  "workspace": "39192f45-10de-4bf8-8e52-969b65916182",
+  "results": [
+    {
+      "id": "A",
+      "result": "PASS",
+      "detail": "A speichert Teilentwurf; getrennter authentifizierter Client B lädt dieselben Werte, Zeitraum, Zuordnungen und Status."
+    },
+    {
+      "id": "B",
+      "result": "PASS",
+      "detail": "Änderung aus B kommt mit gleicher Entwurfs-ID in A an."
+    },
+    {
+      "id": "C",
+      "result": "PASS",
+      "detail": "Vollständiger Client-Neustart und Wiederöffnen erhalten Teilentwurf samt Zeitraum und Zuordnungen."
+    },
+    {
+      "id": "D",
+      "result": "PASS",
+      "detail": "Bearbeitung und Neuberechnung zeigen ungespeicherte Änderungen; bewusstes Speichern bestätigt aktuellen Entwurf."
+    },
+    {
+      "id": "E",
+      "result": "PASS",
+      "detail": "Bewusste Finalisierung wird mit gleicher Identität atomar als finale Abrechnung auf B sichtbar."
+    },
+    {
+      "id": "F",
+      "result": "PASS",
+      "detail": "Zeitnahe Änderungen an verschiedenen Tagen aus A und B bleiben beide erhalten."
+    }
+  ],
+  "completed": false,
+  "releaseGate": "NOT_VERIFIED — partial integration run; final browser acceptance pending",
+  "subsequentAttempt": "Blocked by execution-service network policy for the Supabase endpoint; no complete rerun of the final candidate."
+}
