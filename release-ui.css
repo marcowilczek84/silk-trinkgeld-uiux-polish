@@ -6,6 +6,8 @@
 #workStatus{margin:0 0 8px;font-size:12px;color:#596461}#workStatus[data-dirty="true"]{color:#141918;font-weight:600}
 .silk-sync-status{position:static;min-height:24px;padding:8px 0 0;border:0;border-radius:0;background:none;box-shadow:none;text-align:center;font-size:12px;font-weight:400;color:#596461}
 .silk-sync-status[data-status="conflict"],.silk-sync-status[data-status="error"]{color:#a33e3a}
+.silk-sync-status[role="button"]{cursor:pointer;min-height:44px}
+.silk-sync-status[role="button"]:focus-visible{outline:2px solid #1c777b;outline-offset:2px}
 .field label,.settingsrow small,.saved-open small,.saved-empty,.silk-pairing-card p,.silk-pairing-card label{font-size:12px!important;color:#596461}
 .iconbtn,.staffrow select,.mini,.backlink,.saved-delete,.secondary{min-height:44px!important}.iconbtn{min-width:44px}.staffrow select{font-size:13px}
 .drawer{display:flex;flex-direction:column;overflow:hidden!important;box-shadow:none!important}.drawerhead{flex:none}.drawer>#settingsHome,.drawer>#staffEditor,.drawer>#shiftEditor,.drawer>#savedCalculations{min-height:0;overflow:auto;flex:1}
