@@ -65,6 +65,10 @@
     table.innerHTML='<table><thead><tr><th>Datum</th><th>Früh</th><th>Spät</th><th>Tag</th></tr></thead><tbody>'+subset.map(r=>'<tr><th scope="row">'+r.date.slice(8)+'.'+r.date.slice(5,7)+'.'+r.date.slice(0,4)+'</th><td>'+money(r.early)+'</td><td>'+money(r.late)+'</td><td>'+money(r.early+r.late)+'</td></tr>').join('')+'</tbody><tfoot><tr><th colspan="3">Gesamtsumme zum Abgleichen</th><td>'+money(total)+'</td></tr></tfoot></table>';
   }
   function apply(){
+    if(window.SilkWorkflow)return SilkWorkflow.guard(applyConfirmed);
+    applyConfirmed();
+  }
+  function applyConfirmed(){
     const from=$('#silk-import-from').value,to=$('#silk-import-to').value,subset=rows.filter(r=>r.date>=from&&r.date<=to);
     if(!subset.length)return;
     saveState();
@@ -82,7 +86,8 @@
       byDate[r.date]={...current,f:String(r.early),s:String(r.late),assignments};
     });
     SilkLocalRepository.saveState({...state,byDate,periodStart:from,periodEnd:to,mode:'period'});
-    setPeriodRange(from,to);setMode('period');
+    SilkLocalRepository.saveWork({activeId:null,checkpoint:null,calculation:null});
+    loadState();
     close();
     $('#days')?.scrollIntoView({behavior:'smooth',block:'start'});
   }

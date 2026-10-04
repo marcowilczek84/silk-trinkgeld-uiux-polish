@@ -22,7 +22,7 @@
   const SAVED_KEY = 'silk_saved_calculations_v1';
   const originalCalculate = calculate;
 
-  chf = function (value) {
+  window.payoutCHF = function (value) {
     return 'CHF ' + Math.round(Number(value) || 0).toLocaleString('de-CH', {
       maximumFractionDigits: 0
     });

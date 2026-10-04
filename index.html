@@ -159,16 +159,17 @@
 <script src="sync-status.js?v=1"></script>
 <script src="cloud-repository.js?v=1"></script>
 <script src="legacy-migration.js?v=1"></script>
-<script src="sync-service.js?v=1"></script>
+<script src="sync-merge.js?v=2"></script>
+<script src="sync-service.js?v=2"></script>
 <script>SilkLegacyMigration.backup()</script>
-<script>const DEFAULT_STAFF=["Sandra Porepp","Marco Wilczek","Sladjana Trninic","Manuela Ellmaier","Emily","Martin Georgiew","Sascha Mirabito","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao","Julia Lemaitre","Jeannine Grohmann"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];window.SILK_DEFAULT_SHIFTS=DEFAULT_SHIFTS.map(x=>({...x}));let STAFF=SilkLocalRepository.getStaff(DEFAULT_STAFF.slice()),SHIFTS=SilkLocalRepository.getShifts(DEFAULT_SHIFTS.map(x=>({...x}))),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
+<script>const DEFAULT_STAFF=["Sandra Porepp","Marco Wilczek","Sladjana Trninic","Manuela Ellmaier","Emily","Martin Georgiew","Sascha Mirabito","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao","Julia Lemaitre","Jeannine Grohmann"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];window.SILK_DEFAULT_STAFF=DEFAULT_STAFF.slice();window.SILK_DEFAULT_SHIFTS=DEFAULT_SHIFTS.map(x=>({...x}));let STAFF=SilkLocalRepository.getStaff(DEFAULT_STAFF.slice()),SHIFTS=SilkLocalRepository.getShifts(DEFAULT_SHIFTS.map(x=>({...x}))),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
 const STAFF_NAME_MIGRATION={"Sandra":"Sandra Porepp","Marco":"Marco Wilczek","Sladjana":"Sladjana Trninic","Manuela":"Manuela Ellmaier","Martin":"Martin Georgiew","Sascha":"Sascha Mirabito","Julia":"Julia Lemaitre","Jeannine":"Jeannine Grohmann"};
 (function migrateStaffNames(){
   const rename=n=>STAFF_NAME_MIGRATION[n]||n;
   STAFF=[...new Set(STAFF.map(rename))];
   SilkLocalRepository.saveStaff(STAFF,{silent:true});
   try{
-    const st=JSON.parse(localStorage.getItem(STORE)||'{}');
+    const st=SilkLocalRepository.getState();
     if(st&&st.byDate){
       Object.values(st.byDate).forEach(day=>{
         if(Array.isArray(day.assignments)) day.assignments=day.assignments.map(a=>({...a,name:rename(a.name)}));
@@ -275,23 +276,23 @@ function toggleDay(k){const t=document.getElementById('day_'+k),w=t.classList.co
 function changeDay(k){sum=document.getElementById('sum_'+k);sum.textContent=chf((+document.getElementById('f_'+k).value||0)+(+document.getElementById('s_'+k).value||0));meta=document.getElementById('meta_'+k);meta.textContent=[...document.getElementById('day_'+k).querySelectorAll('select')].filter(x=>x.value).length+' aktiv';updatePeriodTotal();saveState();resultSection.classList.add('hidden')}
 function saveState(){const p=getState(),byDate={...(p.byDate||{})};document.querySelectorAll('.day').forEach(d=>{const k=d.id.slice(4);byDate[k]={f:document.getElementById('f_'+k)?.value||'',s:document.getElementById('s_'+k)?.value||'',assignments:[...d.querySelectorAll('select')].map(s=>({name:s.dataset.name,shift:s.value}))}});SilkLocalRepository.saveState({version:4,mode:MODE,singleDate:singleDate.value,periodStart:periodStart.value,periodEnd:periodEnd.value,byDate})}
 function loadState(){const s=getState();if(s.singleDate)singleDate.value=s.singleDate;if(s.periodStart&&s.periodEnd)setPeriodRange(s.periodStart,s.periodEnd);else if(s.periodMonth){const [y,m]=s.periodMonth.split('-').map(Number);setPeriodRange(dateIn(new Date(y,m-1,+s.periodFrom||1)),dateIn(new Date(y,m-1,+s.periodTo||new Date(y,m,0).getDate())))}setMode(s.mode||SilkLocalRepository.getMode('day'))}
-function calculate(){if(!visibleDates().length)return;saveState();let tf=0,ts=0,kf=0,ks=0,hf=0,hs=0;const totals={};STAFF.forEach(n=>totals[n]={name:n,amount:0,days:0,details:[]});const st=getState();visibleDates().forEach(d=>{const k=dateIn(d),x=st.byDate?.[k]||{},fr=+x.f||0,sp=+x.s||0;tf+=fr;ts+=sp;const kfg=fr*.3,ksg=sp*.3,sfg=fr*.7,ssg=sp*.7,shf=sfg*.025,shs=ssg*.025,khf=kfg*.025,khs=ksg*.025;hf+=shf+khf;hs+=shs+khs;kf+=kfg-khf;ks+=ksg-khs;let sf=sfg-shf,ss=ssg-shs;const seen=new Set(),people=[];(x.assignments||[]).filter(a=>a.name&&FACTOR[a.shift]).forEach(a=>{if(seen.has(a.name))return;seen.add(a.name);const q=FACTOR[a.shift];people.push({name:a.name,shift:a.shift,fw:q.f,sw:q.s,amount:0})});const e=people.find(p=>p.name==='Emily');if(e){const mx=Math.min(10,sf+ss);let ef=Math.min(mx*e.fw,sf),es=Math.min(mx*e.sw,ss),short=mx-ef-es;if(short>0){const add=Math.min(short,sf-ef);ef+=add;es+=Math.min(short-add,ss-es)}e.amount=ef+es;sf-=ef;ss-=es}const o=people.filter(p=>p.name!=='Emily'),af=o.reduce((a,p)=>a+p.fw,0),as=o.reduce((a,p)=>a+p.sw,0);o.forEach(p=>p.amount=(af?sf*p.fw/af:0)+(as?ss*p.sw/as:0));people.forEach(p=>{if(!totals[p.name])totals[p.name]={name:p.name,amount:0,days:0,details:[]};totals[p.name].amount+=p.amount;totals[p.name].days++;totals[p.name].details.push(new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit'}).format(d)+' · '+p.shift)})});const ps=Object.values(totals).filter(p=>p.days>0);result.innerHTML=`<div class="resulthead">
+function calculate(){if(!visibleDates().length)return;saveState();let tf=0,ts=0,kf=0,ks=0,hf=0,hs=0;const totals={};STAFF.forEach(n=>totals[n]={name:n,amount:0,days:0,details:[]});const st=getState();visibleDates().forEach(d=>{const k=dateIn(d),x=st.byDate?.[k]||{},fr=+x.f||0,sp=+x.s||0;tf+=fr;ts+=sp;const kfg=fr*.3,ksg=sp*.3,sfg=fr*.7,ssg=sp*.7,shf=sfg*.025,shs=ssg*.025,khf=kfg*.025,khs=ksg*.025;hf+=shf+khf;hs+=shs+khs;kf+=kfg-khf;ks+=ksg-khs;let sf=sfg-shf,ss=ssg-shs;const seen=new Set(),people=[];(x.assignments||[]).filter(a=>a.name&&FACTOR[a.shift]).forEach(a=>{if(seen.has(a.name))return;seen.add(a.name);const q=FACTOR[a.shift];people.push({name:a.name,shift:a.shift,fw:q.f,sw:q.s,amount:0})});const e=people.find(p=>p.name==='Emily');if(e){const mx=Math.min(10,sf+ss);let ef=Math.min(mx*e.fw,sf),es=Math.min(mx*e.sw,ss),short=mx-ef-es;if(short>0){const add=Math.min(short,sf-ef);ef+=add;es+=Math.min(short-add,ss-es)}e.amount=ef+es;sf-=ef;ss-=es}const o=people.filter(p=>p.name!=='Emily'),af=o.reduce((a,p)=>a+p.fw,0),as=o.reduce((a,p)=>a+p.sw,0);o.forEach(p=>p.amount=(af?sf*p.fw/af:0)+(as?ss*p.sw/as:0));people.forEach(p=>{if(!totals[p.name])totals[p.name]={name:p.name,amount:0,days:0,details:[]};totals[p.name].amount+=p.amount;totals[p.name].days++;totals[p.name].details.push(new Intl.DateTimeFormat('de-CH',{day:'2-digit',month:'2-digit'}).format(d)+' · '+p.shift)})});const ps=Object.values(totals).filter(p=>p.days>0);window.SilkCalculatedNumbers={total:tf+ts,lines:[...ps.map(p=>({name:p.name,amount:p.amount,payout:Math.round(p.amount),days:p.days,details:p.details})),{name:'Küche gesamt',amount:kf+ks,payout:Math.round(kf+ks)},{name:'Housekeeping gesamt',amount:hf+hs,payout:Math.round(hf+hs)}]};result.innerHTML=`<div class="resulthead">
 <small>Trinkgeld gesamt</small>
 <strong>${chf(tf+ts)}</strong>
 </div>${ps.map(p=>`<div class="resrow">
 <span>${esc(p.name)}<small>${p.days} Tag(e) · ${esc(p.details.join(' · '))}</small>
 </span>
-<b>${chf(p.amount)}</b>
+<b>${payoutCHF(p.amount)}</b>
 </div>`).join('')||`<div class="resrow">
 <span>Keine Mitarbeiter im Dienst</span>
 <b>CHF 0.00</b>
 </div>`}<div class="resrow">
 <span>Küche gesamt</span>
-<b>${chf(kf+ks)}</b>
+<b>${payoutCHF(kf+ks)}</b>
 </div>
 <div class="resrow">
 <span>Housekeeping gesamt</span>
-<b>${chf(hf+hs)}</b>
+<b>${payoutCHF(hf+hs)}</b>
 </div>`;resultSection.classList.remove('hidden');resultSection.scrollIntoView({behavior:'smooth',block:'start'})}
 function resetCurrent(){if(!confirm('Neue Berechnung starten? Die aktuelle Eingabe wird zurückgesetzt.'))return;SilkLocalRepository.saveState({});resultSection.classList.add('hidden');initDates();setMode('day')}initDates();loadState();
 window.addEventListener('silk:cloud-applied',()=>{STAFF=SilkLocalRepository.getStaff(DEFAULT_STAFF.slice());SHIFTS=SilkLocalRepository.getShifts(DEFAULT_SHIFTS.map(x=>({...x})));rebuild();loadState();buildVisibleDays()});</script>
@@ -320,6 +321,7 @@ window.addEventListener('silk:cloud-applied',()=>{STAFF=SilkLocalRepository.getS
 </script>
 <link rel="stylesheet" href="draft-workflow.css?v=1"><script src="draft-workflow.js?v=1"></script>
 <script src="jsQR.js?v=25"></script><script src="silk-import.js?v=33"></script>
-<script src="sync-bootstrap.js?v=1"></script>
+<link rel="stylesheet" href="release-ui.css?v=2"><script src="release-ui.js?v=2"></script>
+<script src="sync-bootstrap.js?v=2"></script>
 </body>
 </html>

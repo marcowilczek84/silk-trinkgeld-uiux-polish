@@ -5,42 +5,16 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 
 const root = new URL('../', import.meta.url);
 
-async function createApp() {
-  let html = await readFile(new URL('index.html', root), 'utf8');
-  for (const file of ['storage-models.js', 'local-repository.js', 'sync-status.js', 'cloud-repository.js', 'legacy-migration.js', 'sync-service.js', 'silk-v11.js', 'silk-v12.js', 'silk-v13.js']) {
-    const source = await readFile(new URL(file, root), 'utf8');
-    html = html.replace(new RegExp(`<script src="${file.replace('.', '\\.')}(?:\\?[^\"]*)?">\\s*</script>`), `<script>${source}</script>`);
-  }
-  html = html.replace(/<script src="jsQR[^>]*><\/script><script src="silk-import[^>]*><\/script>/, '');
-  const virtualConsole = new VirtualConsole();
-  virtualConsole.on('jsdomError', () => {});
-  const dom = new JSDOM(html, {
-    url: 'https://golden-master.invalid/',
-    runScripts: 'dangerously',
-    pretendToBeVisual: true,
-    virtualConsole
-  });
-  dom.window.HTMLElement.prototype.scrollIntoView = () => {};
-  dom.window.alert = () => {};
-  dom.window.confirm = () => true;
-  return dom;
-}
+import {app} from './app-helper.mjs';
 
 async function calculateFixture({ state, staff, shifts, mode, from, to }) {
-  const dom = await createApp();
+  const {dom} = await app();
   const { window } = dom;
-  window.localStorage.setItem('silk_staff', JSON.stringify(staff));
-  window.localStorage.setItem('silk_shifts', JSON.stringify(shifts));
-  window.localStorage.setItem('silk_v12_data', JSON.stringify(state));
+  window.SilkLocalRepository.saveStaff(staff);
+  window.SilkLocalRepository.saveShifts(shifts);
+  window.SilkLocalRepository.saveState({...state,mode,singleDate:from,periodStart:from,periodEnd:to||from});
   window.eval(`STAFF=${JSON.stringify(staff)};SHIFTS=${JSON.stringify(shifts)};rebuild();`);
-  if (mode === 'period') {
-    window.setPeriodRange(from, to);
-    window.setMode('period');
-  } else {
-    window.singleDate.value = from;
-    window.setMode('day');
-  }
-  window.buildVisibleDays();
+  window.loadState();
   window.calculate();
   const rows = [...window.document.querySelectorAll('#result .resrow')].map((row) => ({
     label: row.querySelector('span')?.childNodes[0]?.textContent.trim(),
@@ -68,7 +42,7 @@ test('golden master: day distribution including Emily cap, kitchen and housekeep
     } }
   });
   assert.deepEqual(actual, {
-    total: 'CHF 146',
+    total: 'CHF 145.50',
     rows: [
       { label: 'Emily', detail: '1 Tag(e) · 03.09. · MD', amount: 'CHF 10' },
       { label: 'Marco Wilczek', detail: '1 Tag(e) · 03.09. · F1', amount: 'CHF 68' },
@@ -88,7 +62,7 @@ test('golden master: multi-day weighted shifts and rounding display', async () =
     } }
   });
   assert.deepEqual(actual, {
-    total: 'CHF 341',
+    total: 'CHF 341.00',
     rows: [
       { label: 'Marco Wilczek', detail: '2 Tag(e) · 03.09. · F1 · 04.09. · MD', amount: 'CHF 137' },
       { label: 'Sandra Porepp', detail: '2 Tag(e) · 03.09. · SP1 · 04.09. · MD', amount: 'CHF 96' },

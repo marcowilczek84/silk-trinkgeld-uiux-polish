@@ -1,11 +1,11 @@
 (function (global) {
   'use strict';
-  const labels = { synced: 'Synchronisiert', pending: 'Synchronisierung ausstehend', offline: 'Offline', conflict: 'Konflikt', local: 'Nur lokal', connecting: 'Verbinden …' };
+  const labels = { synced: 'Synchronisiert', pending: 'Synchronisierung ausstehend', offline: 'Offline · Änderungen lokal erhalten', conflict: 'Konflikt', local: 'Lokal gespeichert · Gerät nicht verbunden', error: 'Synchronisierung fehlgeschlagen · lokal erhalten', connecting: 'Verbinden …' };
   let current = 'local';
   function ensure() {
     let node = document.getElementById('silkSyncStatus');
     if (!node && document.body) {
-      node = document.createElement('div'); node.id = 'silkSyncStatus'; node.className = 'silk-sync-status'; node.setAttribute('aria-live', 'polite'); document.body.appendChild(node);
+      node = document.createElement('div'); node.id = 'silkSyncStatus'; node.className = 'silk-sync-status'; node.setAttribute('aria-live', 'polite'); (document.querySelector('.actionbar') || document.body).appendChild(node);
     }
     return node;
   }

@@ -1,50 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { JSDOM, VirtualConsole } from 'jsdom';
+import {app} from './app-helper.mjs';
+function fixture(w){w.SilkLocalRepository.saveState({mode:'period',singleDate:'2026-09-01',periodStart:'2026-09-01',periodEnd:'2026-09-03',byDate:{'2026-09-01':{f:'12.40',s:'0',assignments:[{name:'Marco Wilczek',shift:'F1'}]}}});w.loadState();}
 
-async function app() {
-  const root=new URL('../',import.meta.url);
-  let html=await readFile(new URL('index.html',root),'utf8');
-  for (const file of ['storage-models.js','local-repository.js','sync-status.js','cloud-repository.js','legacy-migration.js','sync-service.js','silk-v11.js','silk-v12.js','silk-v13.js','draft-workflow.js']) {
-    const source=await readFile(new URL(file,root),'utf8');
-    html=html.replace(new RegExp(`<script src="${file.replace('.','\\.')}(?:\\?[^\"]*)?">\\s*</script>`),`<script>${source}</script>`);
-  }
-  html=html.replace(/<script src="jsQR[^>]*><\/script><script src="silk-import[^>]*><\/script>/,'');
-  const errors=[],virtualConsole=new VirtualConsole(); virtualConsole.on('jsdomError',error=>errors.push(error));
-  const dom=new JSDOM(html,{url:'https://draft-test.invalid/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole});
-  dom.window.HTMLElement.prototype.scrollIntoView=()=>{};
-  dom.window.confirm=()=>true;
-  return {dom,window:dom.window,errors};
-}
+test('partial draft restores exact inputs, staff, shifts and same identity after reload',async()=>{
+ const {dom,window:w,errors}=await app();fixture(w);
+ assert.equal(w.saveCurrentDraft(),true);const item=w.SilkLocalRepository.getSettlements()[0];
+ assert.equal(item.dataFormat,'draft-v2');assert.equal(w.SilkWorkflow.isDirty(),false);
+ w.document.getElementById('f_2026-09-01').value='13.15';w.changeDay('2026-09-01');assert.equal(w.SilkWorkflow.isDirty(),true);
+ assert.equal(w.document.getElementById('sum_2026-09-01').textContent,'CHF 13.15');assert.equal(w.periodTotalAmount.textContent,'CHF 13.15');
+ w.saveCurrentDraft();assert.equal(w.SilkLocalRepository.getSettlements().length,1);assert.equal(w.SilkLocalRepository.getSettlements()[0].id,item.id);
+ const storage=Object.fromEntries(Object.keys(w.localStorage).map(k=>[k,w.localStorage.getItem(k)]));dom.window.close();
+ const second=await app(storage),b=second.window;b.continueDraft(item.id);
+ assert.equal(b.periodStart.value,'2026-09-01');assert.equal(b.periodEnd.value,'2026-09-03');assert.equal(b.document.getElementById('f_2026-09-01').value,'13.15');assert.equal(b.document.querySelector('#day_2026-09-01 select[data-name="Marco Wilczek"]').value,'F1');assert.equal(b.document.getElementById('f_2026-09-02').value,'');
+ assert.deepEqual(errors,[]);assert.deepEqual(second.errors,[]);second.dom.window.close();
+});
 
-test('draft is separate, restores only selected period, and clearing leaves other data',async()=>{
-  const {dom,window:w,errors}=await app();
-  const repo=w.SilkLocalRepository;
-  w.singleDate.value='2026-09-23'; w.setMode('day');
-  const early=w.document.querySelector('[aria-label="Trinkgeld Frühdienst"]');
-  early.value='42.50'; early.dispatchEvent(new w.Event('input',{bubbles:true}));
-  w.document.querySelector('#day_2026-09-23 select').value='F1'; w.saveState();
-  const before=repo.getState();
-  repo.saveState({...before,byDate:{...before.byDate,'2026-09-22':{f:'9',s:'1',assignments:[]}}});
-  w.saveCurrentDraft();
-  const draft=repo.getSettlements().find(x=>x.dataFormat==='draft-v1');
-  assert.ok(draft?.cloudId);
-  assert.equal(draft.inputSnapshot.byDate['2026-09-23'].f,'42.50');
-  assert.equal(draft.inputSnapshot.byDate['2026-09-22'],undefined);
-  assert.ok(draft.inputSnapshot.staff.length && draft.inputSnapshot.shifts.length);
-  w.confirmClearPeriod();
-  assert.equal(repo.getState().byDate['2026-09-23'].f,'');
-  assert.ok(repo.getState().byDate['2026-09-23'].assignments.every(item=>!item.shift));
-  assert.equal(repo.getState().byDate['2026-09-22'].f,'9');
-  assert.equal(repo.getSettlements().find(x=>x.id===draft.id)?.id,draft.id);
-  w.continueDraft(draft.id);
-  assert.equal(repo.getState().byDate['2026-09-23'].f,'42.50');
-  w.openSavedCalculations();
-  assert.match(w.document.getElementById('savedCalculations').textContent,/Entwürfe/);
-  assert.match(w.document.getElementById('savedCalculations').textContent,/Gespeicherte Abrechnungen/);
-  w.deleteDraft(draft.id);
-  assert.equal(repo.getSettlements().filter(x=>x.dataFormat==='draft-v1').length,0);
-  assert.deepEqual(errors.map(x=>x.message),[]);
-  dom.window.close();
+test('finalization rejects incomplete period; complete result preserves draft identity and dirty state',async()=>{
+ const {dom,window:w,errors}=await app();fixture(w);w.saveCurrentDraft();const id=w.SilkLocalRepository.getSettlements()[0].id;
+ assert.equal(w.calculate(),false);assert.match(w.calculationError.textContent,/2 Tag/);
+ for(const date of ['2026-09-02','2026-09-03']){w.document.getElementById('f_'+date).value='0';w.document.getElementById('s_'+date).value='0';w.changeDay(date);}
+ assert.equal(w.calculate(),true);assert.equal(w.SilkWorkflow.isDirty(),true);assert.equal(w.saveCalculationButton.textContent,'Abrechnung finalisieren');
+ w.saveCurrentDraft();assert.equal(w.SilkWorkflow.isDirty(),false);w.calculate();w.saveCurrentCalculation();
+ const final=w.SilkLocalRepository.getSettlements();assert.equal(final.length,1);assert.equal(final[0].id,id);assert.equal(final[0].dataFormat,'final-v2');assert.equal(final[0].resultData.total,12.4);
+ assert.equal(w.saveCalculationButton.textContent,'Finalisiert');
+ w.document.getElementById('f_2026-09-01').value='14.10';w.changeDay('2026-09-01');assert.equal(w.SilkWorkflow.isDirty(),true);assert.equal(w.saveCalculationButton.textContent,'Abrechnung finalisieren');
+ assert.deepEqual(errors,[]);dom.window.close();
+});
+
+test('period navigation offers save discard back and editor cancel does not mutate staff',async()=>{
+ const {dom,window:w,errors}=await app();fixture(w);w.setMode('day');assert.ok(w.document.querySelector('#unsavedDialog[open]'));w.document.querySelector('[data-choice=back]').click();assert.equal(w.document.body.dataset.mode,'period');
+ w.openSettings();w.openEditor('staff');const before=w.SilkLocalRepository.getStaff();w.addEmployee();w.closeSettings();assert.ok(w.document.querySelector('#editorDecision[open]'));w.document.querySelector('#editorDecision [data-choice=discard]').click();assert.deepEqual(w.SilkLocalRepository.getStaff(),before);
+ assert.deepEqual(errors,[]);dom.window.close();
 });
