@@ -1,0 +1,18 @@
+/* DIGITAL 1.0 · settings/navigation only; accounting, inputs and tables untouched. */
+.topbar .iconbtn,.drawerhead .iconbtn{color:var(--ad-ink);background:transparent;border:0;box-shadow:none}
+.topbar .iconbtn svg,.drawerhead .iconbtn svg,
+#settingsHome .settingsrow svg{
+  width:var(--ad-nav-icon)!important;height:var(--ad-nav-icon)!important;flex:none;
+  fill:none;stroke:currentColor;stroke-width:var(--ad-icon-stroke)!important;stroke-linecap:round;stroke-linejoin:round;
+  background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important;
+}
+.topbar .iconbtn svg *,.drawerhead .iconbtn svg *,#settingsHome .settingsrow svg *{vector-effect:non-scaling-stroke}
+#settingsHome .settingsrow{display:grid!important;grid-template-columns:var(--ad-nav-icon) minmax(0,1fr) 16px!important;gap:var(--ad-nav-gap)!important;min-height:56px!important;padding:12px 8px!important;align-items:center;color:var(--ad-ink)!important;background:var(--ad-white);border:0;border-bottom:1px solid var(--ad-line);border-radius:0;box-shadow:none!important}
+#settingsHome :is(.setting-icon,.silk-import-row-icon){display:grid;place-items:center;width:var(--ad-nav-icon)!important;height:var(--ad-nav-icon)!important;color:inherit!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+#settingsHome .settingsrow > span:nth-child(2){min-width:0}
+#settingsHome .settingsrow strong{font-size:14px;font-weight:600;line-height:1.4}
+#settingsHome .settingsrow small{color:var(--ad-muted)!important;font-size:12px!important;line-height:1.4}
+#settingsHome :is(.setting-arrow,.silk-import-chevron){color:var(--ad-muted);font-size:20px;font-weight:400;text-align:right}
+.drawer .companion-app-link{gap:var(--ad-nav-gap);box-shadow:none}
+#settingsHome .settingsrow:active,.topbar .iconbtn:active{color:var(--ad-accent)!important;background:var(--ad-active)}
+@media(hover:hover){#settingsHome .settingsrow:hover,.topbar .iconbtn:hover{color:var(--ad-accent)!important;background:var(--ad-active)}}

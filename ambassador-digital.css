@@ -10,6 +10,10 @@
   --ad-active:#EDF6F6;--ad-yellow:#F3CF24;--ad-danger:#A33E3A;
   --ad-font:'Digital Sans','Noto Sans',system-ui,sans-serif;
   --ad-radius:4px;--ad-dialog-radius:8px;
+  --ad-nav-icon:20px;--ad-icon-stroke:1.75;--ad-nav-gap:12px;
+  --ad-selection-line:#D5DCDF;
+  --ad-selection-shadow:2px 3px 8px rgba(20,30,35,.07);
+  --ad-selection-shadow-pressed:1px 1px 3px rgba(20,30,35,.05);
   --ad-space-1:4px;--ad-space-2:8px;--ad-space-3:12px;--ad-space-4:16px;
   --ad-space-6:24px;--ad-space-8:32px;--ad-space-12:48px;
   color-scheme:light;
@@ -20,3 +24,4 @@ button,input,select,textarea{font-family:var(--ad-font)}
 :where(button,a,input,select,textarea,summary):focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}
 input,select,textarea{accent-color:var(--ad-accent)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
