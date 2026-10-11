@@ -6,9 +6,9 @@
 .header-logo{border:0!important;border-radius:0!important;filter:none!important;object-fit:contain!important}
 .panel h2,.drawer h3,.title strong,#settingsHome .settingsrow strong,.mode button,.draft-actions button,.calcbtn,.secondary,.savewide,.addwide{font-weight:500!important}
 .daysum,.resrow b,.resulthead strong{font-weight:600!important}
-.mode button{border:1px solid transparent!important;border-radius:4px!important;font-weight:500!important}
+.mode button{background:transparent!important;border:1px solid transparent!important;border-radius:4px!important;font-weight:500!important}
 .mode button.active{background:var(--ad-active)!important;border-color:var(--ad-nav-active-line)!important;color:var(--ad-accent)!important;box-shadow:none!important}
-.topbar .iconbtn{border:1px solid transparent}
-body:has(#drawer.open) .topbar .iconbtn{color:var(--ad-accent);background:var(--ad-active);border-color:var(--ad-nav-active-line);border-radius:4px;box-shadow:none}
+.topbar .iconbtn{border:1px solid transparent!important;background:transparent!important;color:var(--ad-ink)!important;box-shadow:none!important}
+body:has(#drawer.open) .topbar .iconbtn{color:var(--ad-accent)!important;background:var(--ad-active)!important;border-color:var(--ad-nav-active-line)!important;border-radius:4px!important;box-shadow:none!important}
 #settingsHome .settingsrow:hover{background:transparent;color:var(--ad-accent)!important}
 @media(max-width:699px){.app-splash .ad-start-brand .ad-silk-logo{width:168px;margin-bottom:24px}.app-splash .ad-start-brand .ad-app-icon{width:36px;height:36px;margin-bottom:14px}.app-splash .ad-start-brand .ad-app-name{font-size:34px}}
