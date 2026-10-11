@@ -1,14 +1,17 @@
-/* AMBASSADOR DIGITAL DESIGN SYSTEM 1.0
+/* AMBASSADOR DIGITAL DESIGN SYSTEM 1.1 – approved final direction
  * Canonical source: silk-service/design-system/ambassador-digital.css
  * Runtime copies are identical; app adapters contain only scoped presentation rules.
  */
 @font-face{font-family:'Digital Sans';src:url('digital-sans-400.woff') format('woff');font-weight:400;font-display:swap}
 @font-face{font-family:'Digital Sans';src:url('digital-sans-600.woff') format('woff');font-weight:600;font-display:swap}
+@font-face{font-family:'Digital Sans';src:url('digital-sans-500.woff') format('woff');font-weight:500;font-display:swap}
+@font-face{font-family:'Digital Serif';src:url('digital-serif-italic.woff') format('woff');font-style:italic;font-weight:400;font-display:swap}
 :root{
   --ad-white:#FFFFFF;--ad-accent:#1C777B;--ad-accent-hover:#155F63;
   --ad-ink:#202326;--ad-muted:#62686B;--ad-line:#E2E6E8;--ad-field:#B7C0C5;
   --ad-active:#EDF6F6;--ad-yellow:#F3CF24;--ad-danger:#A33E3A;
   --ad-font:'Digital Sans','Noto Sans',system-ui,sans-serif;
+  --ad-serif:'Digital Serif','Noto Serif',Georgia,serif;--ad-nav-active-line:#C5DEDF;
   --ad-radius:4px;--ad-dialog-radius:8px;
   --ad-nav-icon:20px;--ad-icon-stroke:1.75;--ad-nav-gap:12px;
   --ad-selection-line:#D5DCDF;
@@ -25,3 +28,10 @@ button,input,select,textarea{font-family:var(--ad-font)}
 input,select,textarea{accent-color:var(--ad-accent)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
+
+/* Shared launch hierarchy; operational layouts use scoped app adapters. */
+.ad-start-brand{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ad-start-brand .ad-silk-logo{display:block;width:clamp(168px,19vw,220px);height:auto;max-height:none;object-fit:contain;filter:none;border:0;border-radius:0;box-shadow:none;margin:0 0 32px}
+.ad-start-brand .ad-app-icon{display:block;width:44px;height:44px;flex:none;border:0;border-radius:0;background:transparent;box-shadow:none;padding:0;margin:0 0 16px}
+.ad-start-brand .ad-app-name{display:block;font-family:var(--ad-serif);font-style:italic;font-weight:400;font-synthesis:none;font-size:40px;line-height:1.2;letter-spacing:-.025em;color:var(--ad-ink);margin:0}
+@media(max-width:699px){.ad-start-brand .ad-silk-logo{width:168px;margin-bottom:24px}.ad-start-brand .ad-app-icon{width:36px;height:36px;margin-bottom:14px}.ad-start-brand .ad-app-name{font-size:34px}}
