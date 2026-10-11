@@ -1,6 +1,6 @@
 {
   "name": "SILK Trinkgeld",
-  "short_name": "Trinkgeld",
+  "short_name": "SILK Trinkgeld",
   "description": "Interne Trinkgeldabrechnung für SILK Restaurant & Bar",
   "lang": "de-CH",
   "start_url": "./",
@@ -9,6 +9,11 @@
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
-    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

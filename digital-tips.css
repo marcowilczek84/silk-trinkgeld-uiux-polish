@@ -1,0 +1,25 @@
+/* AMBASSADOR DIGITAL 1.0 — presentation only; accounting and sync untouched. */
+:root{--ink:var(--ad-ink);--muted:var(--ad-muted);--line:var(--ad-line);--line-strong:var(--ad-field);--soft:#fff;--soft2:#fff;--surface:#fff;--petrol:var(--ad-accent);--petrol-dark:var(--ad-accent-hover);--petrol-soft:var(--ad-active);--turquoise:var(--ad-accent);--turquoise-dark:var(--ad-accent-hover);--radius:var(--ad-radius)}
+body,button,input,select{font-family:var(--ad-font)}
+.topbar,.actionbar,.drawer,.daybody,.panel,.resulthead{background:#fff;box-shadow:none}
+.topbar{border-bottom:1px solid var(--ad-line)}
+.intro h1{font-size:clamp(26px,3vw,32px);font-weight:600;letter-spacing:-.035em;line-height:1.2}
+.title strong,.panel h2,.drawer h3,.daydate strong,.daysum,.resrow b{font-weight:600}
+.title small{color:var(--ad-muted)}
+.iconbtn{border:0;border-radius:var(--ad-radius);color:var(--ad-accent)}
+.iconbtn svg,.setting-icon svg{stroke-width:1.6}
+.mode{padding:0;background:#fff;border:0;border-bottom:1px solid var(--ad-line);border-radius:0;gap:16px}
+.mode button{border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;background:#fff!important;box-shadow:none!important;min-height:48px;font-weight:600}
+.mode button.active{border-bottom-color:var(--ad-accent)!important;color:var(--ad-accent)!important}
+.day,.result{border:0;border-top:1px solid var(--ad-line);border-bottom:1px solid var(--ad-line);border-radius:0;box-shadow:none}
+.dayhead{background:#fff!important;border-bottom:1px solid var(--ad-line);border-radius:0}
+.field input,.field select,.staffrow select,.editrow input,.shift-edit input{border:1px solid var(--ad-field);border-radius:var(--ad-radius);background:#fff;font-weight:400}
+.staffname{font-weight:400;font-size:13px}
+.staffrow{border-bottom-color:var(--ad-line)}
+.calcbtn,.secondary,.savewide,.addwide,.mini,.silk-import-btn,.draft-actions button{border-radius:var(--ad-radius)!important;font-weight:600;box-shadow:none!important}
+.calcbtn,.savewide{background:var(--ad-accent);color:#fff}
+.drawer,.release-dialog,.silk-pairing-card,.silk-conflict-card{border-radius:var(--ad-dialog-radius)!important;box-shadow:none!important;background:#fff}
+.silk-pairing-card input,.silk-pairing-card button,.release-dialog button{border-radius:var(--ad-radius)!important}
+.daysum,.resulthead strong,.resrow b,input[type=number]{font-variant-numeric:tabular-nums}
+.setting-icon,.companion-app-icon{border:0;box-shadow:none;background:transparent}
+@media(max-width:560px){.intro h1{font-size:26px}.field input,.field select,.staffrow select{font-size:16px}.title strong{font-size:14px}}

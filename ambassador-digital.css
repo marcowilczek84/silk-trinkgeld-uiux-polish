@@ -1,0 +1,22 @@
+/* AMBASSADOR DIGITAL DESIGN SYSTEM 1.0
+ * Canonical source: silk-service/design-system/ambassador-digital.css
+ * Runtime copies are identical; app adapters contain only scoped presentation rules.
+ */
+@font-face{font-family:'Digital Sans';src:url('digital-sans-400.woff') format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:'Digital Sans';src:url('digital-sans-600.woff') format('woff');font-weight:600;font-display:swap}
+:root{
+  --ad-white:#FFFFFF;--ad-accent:#1C777B;--ad-accent-hover:#155F63;
+  --ad-ink:#202326;--ad-muted:#62686B;--ad-line:#E2E6E8;--ad-field:#B7C0C5;
+  --ad-active:#EDF6F6;--ad-yellow:#F3CF24;--ad-danger:#A33E3A;
+  --ad-font:'Digital Sans','Noto Sans',system-ui,sans-serif;
+  --ad-radius:4px;--ad-dialog-radius:8px;
+  --ad-space-1:4px;--ad-space-2:8px;--ad-space-3:12px;--ad-space-4:16px;
+  --ad-space-6:24px;--ad-space-8:32px;--ad-space-12:48px;
+  color-scheme:light;
+}
+html,body{background:var(--ad-white);color:var(--ad-ink)}
+body{font-family:var(--ad-font);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:var(--ad-font)}
+:where(button,a,input,select,textarea,summary):focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}
+input,select,textarea{accent-color:var(--ad-accent)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
