@@ -33,3 +33,10 @@ test('period navigation offers save discard back and editor cancel does not muta
  w.openSettings();w.openEditor('staff');const before=w.SilkLocalRepository.getStaff();w.addEmployee();w.closeSettings();assert.ok(w.document.querySelector('#editorDecision[open]'));w.document.querySelector('#editorDecision [data-choice=discard]').click();assert.deepEqual(w.SilkLocalRepository.getStaff(),before);
  assert.deepEqual(errors,[]);dom.window.close();
 });
+
+test('Hub navigation retains the existing unsaved-work decision and Back preserves inputs',async()=>{
+ const {dom,window:w,errors}=await app();fixture(w);const before=JSON.stringify(w.SilkLocalRepository.getState());
+ const hub=w.document.querySelector('.topbar .ad-hub-link');assert.equal(hub.href,'https://ambassador-apps.vercel.app/');hub.click();
+ assert.ok(w.document.querySelector('#unsavedDialog[open]'));w.document.querySelector('#unsavedDialog [data-choice=back]').click();
+ assert.equal(w.document.querySelector('#unsavedDialog').open,false);assert.equal(JSON.stringify(w.SilkLocalRepository.getState()),before);assert.equal(w.location.origin,'https://silk-test.invalid');assert.equal(w.document.querySelector('.companion-app-link'),null);assert.deepEqual(errors,[]);dom.window.close();
+});

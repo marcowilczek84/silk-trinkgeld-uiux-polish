@@ -140,7 +140,7 @@
   setMode=function(mode){if(restoring||repo.isApplyingCloud()||mode===MODE)return rawSetMode(mode);showDecision(()=>{repo.saveWork({...repo.getWork(),activeId:null,checkpoint:null,calculation:null});rawSetMode(mode);updateWorkStatus();});};
   updatePeriodFromParts=function(){const selected={};for(const prefix of ['periodStart','periodEnd'])for(const part of ['Day','Month','Year'])selected[prefix+part]=document.getElementById(prefix+part).value;setPeriodRange(periodStart.value,periodEnd.value);showDecision(()=>{for(const [id,value] of Object.entries(selected))document.getElementById(id).value=value;repo.saveWork({activeId:null,checkpoint:null,calculation:null});rawParts();});};
   singleDate.onchange=()=>{const next=singleDate.value;singleDate.value=getState().singleDate||next;showDecision(()=>{singleDate.value=next;repo.saveWork({activeId:null,checkpoint:null,calculation:null});buildVisibleDays();});};
-  document.querySelector('.companion-app-link')?.addEventListener('click',e=>{e.preventDefault();const href=e.currentTarget.href;showDecision(()=>{location.href=href;});});
+  document.querySelector('.ad-hub-link')?.addEventListener('click',e=>{e.preventDefault();const href=e.currentTarget.href;showDecision(()=>{location.href=href;});});
   window.addEventListener('beforeunload',e=>{if(isDirty()){e.preventDefault();e.returnValue='';}});
   window.addEventListener('silk:local-change',refresh);
   window.addEventListener('silk:cloud-applied',()=>{paintDays();updateWorkStatus();if(document.getElementById('savedCalculations')&&!document.getElementById('savedCalculations').classList.contains('hidden'))openSavedCalculations();});

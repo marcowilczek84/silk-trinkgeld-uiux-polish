@@ -1,4 +1,4 @@
-/* AMBASSADOR DIGITAL DESIGN SYSTEM 1.1 – approved final direction
+/* AMBASSADOR DIGITAL DESIGN SYSTEM 1.3 – approved final direction
  * Canonical source: silk-service/design-system/ambassador-digital.css
  * Runtime copies are identical; app adapters contain only scoped presentation rules.
  */
@@ -31,7 +31,14 @@ input,select,textarea{accent-color:var(--ad-accent)}
 
 /* Shared launch hierarchy; operational layouts use scoped app adapters. */
 .ad-start-brand{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.ad-start-brand .ad-silk-logo{display:block;width:clamp(168px,19vw,220px);height:auto;max-height:none;object-fit:contain;filter:none;border:0;border-radius:0;box-shadow:none;margin:0 0 32px}
+.ad-start-brand .ad-silk-logo{display:block;width:clamp(168px,19vw,220px);height:128px;max-height:none;object-fit:contain;filter:none;border:0;border-radius:0;box-shadow:none;margin:0 0 32px}
 .ad-start-brand .ad-app-icon{display:block;width:44px;height:44px;flex:none;border:0;border-radius:0;background:transparent;box-shadow:none;padding:0;margin:0 0 16px}
-.ad-start-brand .ad-app-name{display:block;font-family:var(--ad-serif);font-style:italic;font-weight:400;font-synthesis:none;font-size:40px;line-height:1.2;letter-spacing:-.025em;color:var(--ad-ink);margin:0}
-@media(max-width:699px){.ad-start-brand .ad-silk-logo{width:168px;margin-bottom:24px}.ad-start-brand .ad-app-icon{width:36px;height:36px;margin-bottom:14px}.ad-start-brand .ad-app-name{font-size:34px}}
+.ad-start-brand .ad-app-name{display:block;font-family:var(--ad-serif);font-style:italic;font-weight:400;font-synthesis:none;font-size:36px;line-height:1.2;letter-spacing:0;color:var(--ad-ink);margin:0}
+@media(max-width:699px){.ad-start-brand .ad-silk-logo{width:168px;height:96px;margin-bottom:24px}.ad-start-brand .ad-app-icon{width:36px;height:36px;margin-bottom:14px}.ad-start-brand .ad-app-name{font-size:30px}}
+
+/* Shared header actions: the grid always leads to the existing central Hub. */
+.ad-header-actions{display:flex;align-items:center;gap:4px;flex:none;margin-left:auto}
+.ad-hub-link,.ad-menu-toggle{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;padding:0;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--ad-ink);box-shadow:none;text-decoration:none;cursor:pointer}
+.ad-hub-link svg,.ad-menu-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.ad-hub-link:hover,.ad-menu-toggle:hover{color:var(--ad-accent)}
+.ad-header-name{font-family:var(--ad-font);font-style:normal;font-weight:500;font-size:20px;line-height:1.2;letter-spacing:0;color:var(--ad-ink)}

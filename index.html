@@ -43,7 +43,7 @@
 </button>
 <button class="settingsrow" onclick="openEditor('shifts')">
 <span class="setting-icon" aria-hidden="true">
-<svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h3M11 12h9M4 18h8M16 18h4M14 3v6M7 9v6M12 15v6"/></svg>
+<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
 </span>
 <span class="setting-copy">
 <strong>Dienste</strong>
@@ -51,15 +51,6 @@
 </span>
 <span class="setting-arrow">›</span>
 </button>
-<a class="companion-app-link" href="https://ambassador-fruehstuecksliste.vercel.app/">
-<span class="companion-app-icon" aria-hidden="true">
-<img src="app-icon-breakfast.svg" width="42" height="42" alt="">
-</span>
-<span class="companion-app-copy">
-<small>Interne Zusatz-App</small>
-<strong>Ambassador Frühstück</strong>
-</span>
-</a>
 </div>
 <div id="staffEditor" class="hidden">
 <h3>
@@ -86,14 +77,14 @@
 <div class="topbar-inner">
 <img class="silk-logo header-logo" src="silk-wordmark.jpg" alt="SILK Restaurant &amp; Bar">
 <div class="title">
-<strong>SILK Trinkgeld</strong>
-<small>interne Abrechnung</small>
+<strong class="ad-header-name">Trinkgeld</strong>
 </div>
-<button class="iconbtn" onclick="openSettings()">
+<div class="ad-header-actions"><a class="ad-hub-link" href="https://ambassador-apps.vercel.app/" aria-label="Zum App-Hub" title="Zum App-Hub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg></a><button class="iconbtn ad-menu-toggle" onclick="openSettings()" aria-label="Menü öffnen" title="Menü">
 <svg viewBox="0 0 24 24">
 <path d="M4 6h10M18 6h2M4 12h3M11 12h9M4 18h8M16 18h4M14 3v6M7 9v6M12 15v6"/>
 </svg>
 </button>
+</div>
 </div>
 </header>
 <main id="app">
@@ -314,10 +305,10 @@ window.addEventListener('silk:cloud-applied',()=>{STAFF=SilkLocalRepository.getS
 </script>
 <script src="silk-v13.js?v=24">
 </script>
-<link rel="stylesheet" href="draft-workflow.css?v=1"><script src="draft-workflow.js?v=1"></script>
+<link rel="stylesheet" href="draft-workflow.css?v=1"><script src="draft-workflow.js?v=header-20261011"></script>
 <script src="jsQR.js?v=25"></script><script src="silk-import.js?v=33"></script>
 <link rel="stylesheet" href="release-ui.css?v=2"><script src="release-ui.js?v=2"></script>
 <script src="sync-bootstrap.js?v=2"></script>
-<link rel="stylesheet" href="ambassador-digital.css?v=1"><link rel="stylesheet" href="digital-tips.css?v=1"><link rel="stylesheet" href="final-brand.css?v=20261011-final"></body>
+<link rel="stylesheet" href="ambassador-digital.css?v=1.3"><link rel="stylesheet" href="digital-tips.css?v=1"><link rel="stylesheet" href="final-brand.css?v=20261011-header"></body>
 </html>
 

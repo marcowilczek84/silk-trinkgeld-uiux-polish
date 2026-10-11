@@ -1,8 +1,8 @@
 /* Approved brand hierarchy; all calculation and synchronization code unchanged. */
 .app-splash{padding:24px 20px 104px}
-.app-splash .ad-start-brand .ad-silk-logo{width:clamp(168px,19vw,220px);height:auto;margin:0 0 32px;border:0;border-radius:0;filter:none}
+.app-splash .ad-start-brand .ad-silk-logo{width:clamp(168px,19vw,220px);height:128px;object-fit:contain;margin:0 0 32px;border:0;border-radius:0;filter:none}
 .app-splash .ad-start-brand .ad-app-icon{width:44px;height:44px;margin:0 0 16px;border:0;border-radius:0;background:transparent;padding:0}
-.app-splash .ad-start-brand .ad-app-name{font-family:var(--ad-serif);font-style:italic;font-weight:400;font-size:40px;line-height:1.2;letter-spacing:-.025em;color:var(--ad-ink);margin:0}
+.app-splash .ad-start-brand .ad-app-name{font-family:var(--ad-serif);font-style:italic;font-weight:400;font-size:36px;line-height:1.2;letter-spacing:0;color:var(--ad-ink);margin:0}
 .header-logo{border:0!important;border-radius:0!important;filter:none!important;object-fit:contain!important}
 .panel h2,.drawer h3,.title strong,#settingsHome .settingsrow strong,.mode button,.draft-actions button,.calcbtn,.secondary,.savewide,.addwide{font-weight:500!important}
 .daysum,.resrow b,.resulthead strong{font-weight:600!important}
@@ -11,4 +11,14 @@
 .topbar .iconbtn{border:1px solid transparent!important;background:transparent!important;color:var(--ad-ink)!important;box-shadow:none!important}
 body:has(#drawer.open) .topbar .iconbtn{color:var(--ad-accent)!important;background:var(--ad-active)!important;border-color:var(--ad-nav-active-line)!important;border-radius:4px!important;box-shadow:none!important}
 #settingsHome .settingsrow:hover{background:transparent;color:var(--ad-accent)!important}
-@media(max-width:699px){.app-splash .ad-start-brand .ad-silk-logo{width:168px;margin-bottom:24px}.app-splash .ad-start-brand .ad-app-icon{width:36px;height:36px;margin-bottom:14px}.app-splash .ad-start-brand .ad-app-name{font-size:34px}}
+@media(max-width:699px){.app-splash .ad-start-brand .ad-silk-logo{width:168px;height:96px;margin-bottom:24px}.app-splash .ad-start-brand .ad-app-icon{width:36px;height:36px;margin-bottom:14px}.app-splash .ad-start-brand .ad-app-name{font-size:30px}}
+
+/* Short app identity with the same Hub and menu actions as the other apps. */
+.topbar-inner{grid-template-columns:auto minmax(0,1fr) auto;gap:12px}
+.topbar .header-logo{width:70px}
+.topbar .title{text-align:left;justify-self:start;min-width:0}
+.topbar .title .ad-header-name{font-family:var(--ad-font);font-style:normal;font-size:20px;font-weight:500!important;line-height:1.2;letter-spacing:0;white-space:nowrap}
+.topbar .ad-menu-toggle{width:44px;height:44px;padding:0}
+.topbar .ad-menu-toggle svg{width:20px;height:20px;stroke-width:1.75}
+@media(max-width:359px){.topbar-inner{gap:8px;padding-inline:12px}.topbar .header-logo{width:58px}.topbar .title .ad-header-name{font-size:18px}.ad-header-actions{gap:0}}
+@media(max-width:560px){.topbar .title .ad-header-name{font-size:18px}}
