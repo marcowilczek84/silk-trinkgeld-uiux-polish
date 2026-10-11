@@ -27,3 +27,4 @@ body,button,input,select{font-family:var(--ad-font)}
 html,body{min-width:0!important}
 .day,.result{border-radius:0!important;box-shadow:none!important;border-left:0!important;border-right:0!important}
 .dayhead{border-radius:0!important}
+@media(max-width:560px){.actionbar{margin-inline:0!important;padding-inline:0!important;max-width:100%!important}}
