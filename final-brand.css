@@ -22,3 +22,60 @@ body:has(#drawer.open) .topbar .iconbtn{color:var(--ad-accent)!important;backgro
 .topbar .ad-menu-toggle svg{width:20px;height:20px;stroke-width:1.75}
 @media(max-width:359px){.topbar-inner{gap:8px;padding-inline:12px}.topbar .header-logo{width:58px}.topbar .title .ad-header-name{font-size:18px}.ad-header-actions{gap:0}}
 @media(max-width:560px){.topbar .title .ad-header-name{font-size:18px}}
+
+
+/* Ambassador Digital · compact icon tiles in the settings drawer only.
+   The QR import control and all three regular menu rows share one treatment.
+   Do not touch navigation icons, dialogs, buttons or calculation logic. */
+#drawer #settingsHome > button.settingsrow{
+  display:grid!important;
+  grid-template-columns:40px minmax(0,1fr) 20px!important;
+  align-items:center!important;
+  column-gap:14px!important;
+  min-height:78px!important;
+  padding:13px 1px!important;
+  text-align:left!important;
+}
+#drawer #settingsHome > button.settingsrow > :is(.setting-icon,.silk-import-row-icon){
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  width:40px!important;
+  min-width:40px!important;
+  height:40px!important;
+  margin:0!important;
+  padding:0!important;
+  background:#edf5f5!important;
+  color:#176f73!important;
+  border:0!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+}
+#drawer #settingsHome > button.settingsrow > :is(.setting-icon,.silk-import-row-icon) svg{
+  display:block!important;
+  width:23px!important;
+  height:23px!important;
+  stroke:#176f73!important;
+  stroke-width:1.65!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+#drawer #settingsHome > button.settingsrow > :is(.setting-copy,span:nth-child(2)){
+  min-width:0!important;
+  text-align:left!important;
+}
+#drawer #settingsHome > button.settingsrow > :is(.setting-arrow,.silk-import-chevron){
+  justify-self:end!important;
+  text-align:right!important;
+  color:#84969b!important;
+  line-height:1!important;
+}
+@media(max-width:359px){
+  #drawer #settingsHome > button.settingsrow{
+    grid-template-columns:36px minmax(0,1fr) 18px!important;
+    column-gap:11px!important;
+  }
+  #drawer #settingsHome > button.settingsrow > :is(.setting-icon,.silk-import-row-icon){
+    width:36px!important;min-width:36px!important;height:36px!important;
+  }
+}
