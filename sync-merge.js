@@ -35,7 +35,7 @@
       if(item.dataFormat!=='final-v2'||base?.settlements?.[id]?.dataFormat==='final-v2')continue;
       const input=item.inputSnapshot,period=value.period;
       const from=period.mode==='day'?period.singleDate:period.periodStart,to=period.mode==='day'?period.singleDate:period.periodEnd;
-      const match=input&&input.mode===period.mode&&input.periodStart===from&&input.periodEnd===to&&equal(input.staff,value.staff)&&equal(input.shifts,value.shifts)&&Object.entries(input.byDate).every(([date,d])=>{
+      const match=input&&input.mode===period.mode&&input.periodStart===from&&input.periodEnd===to&&equal(input.staff,value.staff)&&equal(input.staffLabels||{},value.staffLabels||{})&&equal(input.shifts,value.shifts)&&Object.entries(input.byDate).every(([date,d])=>{
         const current=value.days[date]||{};return d.f===(current.f??'')&&d.s===(current.s??'')&&equal(Object.fromEntries((d.assignments||[]).filter(a=>a.shift).map(a=>[a.name,a.shift])),current.assignments||{});
       });
       if(match)continue;

@@ -71,17 +71,19 @@
   function applyConfirmed(){
     const from=$('#silk-import-from').value,to=$('#silk-import-to').value,subset=rows.filter(r=>r.date>=from&&r.date<=to);
     if(!subset.length)return;
+    let resolved;
+    try {resolved=subset.map(r=>({...r,assignments:SilkIdentity.resolveAssignments(r.assignments||[])}));}
+    catch(e){error(e);return;}
     saveState();
     const state=getState(),byDate={...(state.byDate||{})};
     const conflicts=subset.filter(r=>+byDate[r.date]?.f||+byDate[r.date]?.s);
     const hasSchedule=subset.some(r=>r.assignments?.length);
     if(conflicts.length&&!confirm(conflicts.length+' vorhandene Tagesbeträge ersetzen?'+(hasSchedule?' Enthaltene Mitarbeiterdienste aus dem QR-Code werden ebenfalls übernommen.':' Die Mitarbeiterdienste bleiben erhalten.')))return;
-    subset.forEach(r=>{
+    resolved.forEach(r=>{
       const current=byDate[r.date]||{};
       let assignments=current.assignments||[];
       if(r.assignments?.length){
-        const knownNames=new Set(typeof STAFF!=='undefined'?STAFF:[]),knownShifts=new Set(typeof SHIFTS!=='undefined'?SHIFTS.map(s=>s.name):[]);
-        assignments=r.assignments.map(a=>({name:a.name,shift:a.shift}));
+        assignments=r.assignments;
       }
       byDate[r.date]={...current,f:String(r.early),s:String(r.late),assignments};
     });

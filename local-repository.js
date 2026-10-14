@@ -31,6 +31,7 @@
     },
     getState: () => clone(read().state), saveState: (value, options) => change('state', value, options),
     getStaff: fallback => clone(read().staff ?? fallback ?? []), saveStaff: (value, options) => change('staff', value, options),
+    getStaffLabels: () => clone(read().staffLabels || {}), saveStaffLabels: (value, options) => change('staffLabels', value, options),
     getShifts: fallback => clone(read().shifts ?? fallback ?? []), saveShifts: (value, options) => change('shifts', value, options),
     getSettlements: () => clone(read().settlements), saveSettlements: (value, options) => change('settlements', value, options),
     getWork: () => clone(read().work), saveWork: (value, options) => change('work', value, options),
@@ -53,6 +54,7 @@
         repo.transaction(() => {
           if (snapshot.state) repo.saveState(snapshot.state, {silent:true});
           if (snapshot.staff) repo.saveStaff(snapshot.staff, {silent:true});
+          if (snapshot.staffLabels) repo.saveStaffLabels(snapshot.staffLabels, {silent:true});
           if (snapshot.shifts) repo.saveShifts(snapshot.shifts, {silent:true});
           if (snapshot.settlements) repo.saveSettlements(snapshot.settlements, {silent:true});
           if (snapshot.work) repo.saveWork(snapshot.work, {silent:true});
@@ -66,11 +68,11 @@
       const d = read(), s = d.state;
       return { format:2, period:{mode:s.mode || 'day', singleDate:s.singleDate || '', periodStart:s.periodStart || '', periodEnd:s.periodEnd || ''},
         days:Object.fromEntries(Object.entries(s.byDate || {}).filter(([,v]) => v.f !== '' || v.s !== '' || v.assignments?.some(a => a.shift)).map(([date,v]) => [date,{f:v.f ?? '',s:v.s ?? '',assignments:Object.fromEntries((v.assignments || []).filter(a => a.shift).map(a => [a.name,a.shift]))}])),
-        staff:repo.getStaff(global.SILK_DEFAULT_STAFF), shifts:repo.getShifts(global.SILK_DEFAULT_SHIFTS),
+        staff:repo.getStaff(global.SILK_DEFAULT_STAFF), staffLabels:repo.getStaffLabels(), shifts:repo.getShifts(global.SILK_DEFAULT_SHIFTS),
         settlements:Object.fromEntries(d.settlements.map(item => [String(item.id), item])), work:clone(d.work) };
     },
     applyDocument(d) {
-      repo.applyCloudSnapshot({state:{version:5,...d.period,byDate:Object.fromEntries(Object.entries(d.days || {}).map(([date,v]) => [date,{f:v.f,s:v.s,assignments:Object.entries(v.assignments || {}).map(([name,shift]) => ({name,shift}))}]))},staff:d.staff,shifts:d.shifts,settlements:Object.values(d.settlements || {}),work:d.work});
+      repo.applyCloudSnapshot({state:{version:5,...d.period,byDate:Object.fromEntries(Object.entries(d.days || {}).map(([date,v]) => [date,{f:v.f,s:v.s,assignments:Object.entries(v.assignments || {}).map(([name,shift]) => ({name,shift}))}]))},staff:d.staff,staffLabels:d.staffLabels||{},shifts:d.shifts,settlements:Object.values(d.settlements || {}),work:d.work});
     }
   };
   global.SilkLocalRepository = repo;

@@ -11,8 +11,9 @@
   }
   function set(status, detail) {
     current = status; const node = ensure(); if (!node) return;
-    node.dataset.status = status; node.textContent = detail || labels[status] || status;
-    const action = status === 'conflict' ? () => global.SilkSyncService?.showConflicts() : status === 'local' ? () => global.SilkSyncService?.pair() : null;
+    const preview = global.SILK_SUPABASE_CONFIG?.localOnly;
+    node.dataset.status = status; node.textContent = preview ? 'Test-Preview · Daten bleiben auf diesem Gerät' : detail || labels[status] || status;
+    const action = preview ? null : status === 'conflict' ? () => global.SilkSyncService?.showConflicts() : status === 'local' ? () => global.SilkSyncService?.pair() : null;
     node.setAttribute('role', action ? 'button' : 'status');
     node.tabIndex = action ? 0 : -1;
     if(action) node.setAttribute('aria-label', status === 'conflict' ? 'Synchronisationskonflikt prüfen' : 'Gerät mit gemeinsamem Stand verbinden');

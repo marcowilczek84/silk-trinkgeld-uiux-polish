@@ -8,7 +8,7 @@
   function snapshot() {
     const state=getState(),keys=dates();
     return {mode:MODE,singleDate:singleDate.value,periodStart:keys[0]||periodStart.value,periodEnd:keys.at(-1)||periodEnd.value,
-      byDate:Object.fromEntries(keys.map(key=>{const d=state.byDate?.[key]||{};return [key,{f:d.f??'',s:d.s??'',assignments:(d.assignments||[]).filter(a=>a.shift).map(a=>({...a})).sort((a,b)=>a.name.localeCompare(b.name))}];})),staff:[...STAFF],shifts:SHIFTS.map(x=>({...x}))};
+      byDate:Object.fromEntries(keys.map(key=>{const d=state.byDate?.[key]||{};return [key,{f:d.f??'',s:d.s??'',assignments:(d.assignments||[]).filter(a=>a.shift).map(a=>({...a})).sort((a,b)=>a.name.localeCompare(b.name))}];})),staff:[...STAFF],...(Object.keys(repo.getStaffLabels()).length?{staffLabels:repo.getStaffLabels()}:{}),shifts:SHIFTS.map(x=>({...x}))};
   }
   const fingerprint=()=>M.stable(snapshot());
   function isDirty(){const w=repo.getWork();return !!w.checkpoint && fingerprint()!==M.stable(w.checkpoint) || !w.checkpoint && Object.values(snapshot().byDate).some(d=>d.f!==''||d.s!==''||d.assignments.length);}
@@ -53,21 +53,23 @@
     pendingAction=action;
     let dialog=document.getElementById('unsavedDialog');
     if(!dialog){dialog=document.createElement('dialog');dialog.id='unsavedDialog';dialog.className='release-dialog';dialog.innerHTML='<h2>Ungespeicherte Änderungen</h2><p>Den aktuellen Stand als Entwurf speichern oder die Änderungen seit dem letzten Zwischenstand verwerfen?</p><div class="dialog-actions"><button data-choice="save">Speichern</button><button data-choice="discard">Verwerfen</button><button data-choice="back">Zurück</button></div>';document.body.appendChild(dialog);
-      dialog.onclick=e=>{const choice=e.target.dataset.choice;if(!choice)return;const next=pendingAction;pendingAction=null;if(choice==='save'&&!saveCurrentDraft())return;if(choice==='discard')discardWork();dialog.close();if(choice!=='back')next?.();};}
+      dialog.onclick=e=>{const choice=e.target.dataset.choice;if(!choice)return;const next=pendingAction;if(choice==='save'&&!saveCurrentDraft())return;if(choice==='discard'&&!discardWork())return;pendingAction=null;dialog.close();if(choice!=='back')next?.();};}
     dialog.showModal();
   }
   function restoreInputs(input) {
+    const problem=SilkIdentity.restoreProblem(input,STAFF,SHIFTS);
+    if(problem){alert(problem);return false;}
+    // A snapshot owns its inputs, never today's shared staff or shift catalogue.
     repo.transaction(()=>{
-      repo.saveStaff(input.staff||STAFF);repo.saveShifts(input.shifts||SHIFTS);
       repo.saveState({...getState(),mode:input.mode,singleDate:input.singleDate,periodStart:input.periodStart,periodEnd:input.periodEnd,byDate:{...getState().byDate,...input.byDate}});
     });
-    STAFF=repo.getStaff();SHIFTS=repo.getShifts();rebuild();restoring=true;try{loadState();}finally{restoring=false;}resultSection.classList.add('hidden');updateWorkStatus();
+    restoring=true;try{loadState();}finally{restoring=false;}resultSection.classList.add('hidden');updateWorkStatus();return true;
   }
   function discardWork() {
     const work=repo.getWork();
-    if(work.checkpoint)restoreInputs(work.checkpoint);
-    else {const st=getState();for(const key of dates())st.byDate[key]={f:'',s:'',assignments:[]};repo.saveState(st);loadState();}
-    repo.saveWork({...work,calculation:null});updateWorkStatus();
+    if(work.checkpoint&&!restoreInputs(work.checkpoint))return false;
+    if(!work.checkpoint){const st=getState();for(const key of dates())st.byDate[key]={f:'',s:'',assignments:[]};repo.saveState(st);loadState();}
+    repo.saveWork({...work,checkpoint:work.checkpoint?snapshot():null,calculation:null});updateWorkStatus();return true;
   }
   window.saveCurrentDraft=function() {
     saveState();const keys=dates();if(!keys.length)return false;
@@ -78,12 +80,20 @@
     repo.transaction(()=>{repo.saveSettlements([...items.filter(x=>String(x.id)!==String(id)),item]);repo.saveWork({...work,activeId:id,checkpoint:input});});
     updateWorkStatus();return true;
   };
-  window.continueDraft=function(id){showDecision(()=>{
+  window.continueDraft=function(id){
+    const selected=repo.getSettlements().find(x=>String(x.id)===String(id)&&x.dataFormat?.startsWith('draft'));
+    if(!selected?.inputSnapshot)return false;
+    const problem=SilkIdentity.restoreProblem(selected.inputSnapshot,STAFF,SHIFTS);
+    if(problem){alert(problem);return false;}
+    showDecision(()=>{
     const item=repo.getSettlements().find(x=>String(x.id)===String(id)&&x.dataFormat?.startsWith('draft'));if(!item?.inputSnapshot)return;
     const input=item.inputSnapshot;
-    repo.transaction(()=>{repo.saveWork({activeId:item.id,checkpoint:input,calculation:null});restoreInputs(input);});
+    // Recheck after a Save/Discard decision: another device may have changed lists.
+    const latestProblem=SilkIdentity.restoreProblem(input,STAFF,SHIFTS);
+    if(latestProblem){alert(latestProblem);return;}
+    repo.transaction(()=>{restoreInputs(input);repo.saveWork({activeId:item.id,checkpoint:snapshot(),calculation:null});});
     closeSettings();updateWorkStatus();
-  });};
+  });return true;};
   window.deleteDraft=function(id){if(!confirm('Diesen Entwurf löschen?'))return;
     const remove=()=>{repo.transaction(()=>{repo.saveSettlements(repo.getSettlements().filter(x=>String(x.id)!==String(id)));if(String(repo.getWork().activeId)===String(id))repo.saveWork({activeId:null,checkpoint:null,calculation:null});});openSavedCalculations();updateWorkStatus();};
     if(String(repo.getWork().activeId)===String(id))showDecision(remove);else remove();
@@ -131,7 +141,7 @@
   window.confirmClearPeriod=function(){repo.transaction(()=>{const st=getState();for(const key of dates())delete st.byDate[key];repo.saveState(st);repo.saveWork({activeId:null,checkpoint:null,calculation:null});});loadState();closeClearPeriod();refresh();};
   const previousBuild=buildVisibleDays;
   buildVisibleDays=function(){previousBuild();paintDays();updateWorkStatus();};
-  function paintDays(){for(const day of document.querySelectorAll('.day')){const key=day.id.slice(4),status=validateDay(getState().byDate?.[key]||{});day.dataset.status=status.key;const meta=document.getElementById('meta_'+key);meta.textContent=(status.key==='complete'?'✓ ':status.key==='review'?'! ':'')+status.label;day.querySelectorAll('select').forEach(s=>s.setAttribute('aria-label','Dienst für '+s.dataset.name));}}
+  function paintDays(){for(const day of document.querySelectorAll('.day')){const key=day.id.slice(4),status=validateDay(getState().byDate?.[key]||{});day.dataset.status=status.key;const meta=document.getElementById('meta_'+key);meta.textContent=(status.key==='complete'?'✓ ':status.key==='review'?'! ':'')+status.label;day.querySelectorAll('select').forEach(s=>s.setAttribute('aria-label','Dienst für '+SilkIdentity.staffLabel(s.dataset.name)));}}
   const previousChange=changeDay;
   changeDay=function(key){previousChange(key);updatePeriodTotal();paintDays();updateWorkStatus();};
   // Save/Discard/Back before changing the selected period. Restore controls while asking.
