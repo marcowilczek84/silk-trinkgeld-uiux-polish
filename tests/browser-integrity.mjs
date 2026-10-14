@@ -6,11 +6,13 @@ const targetURL=new URL(target);
 assert.notEqual(targetURL.hostname,'silk-trinkgeld-uiux-polish.vercel.app','Never run fixtures on production');
 const output=process.env.QA_OUTPUT || '/tmp/silk-integrity-qa';
 await mkdir(output,{recursive:true});
-const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH}:{}),args:JSON.parse(process.env.CHROMIUM_ARGS||'[]')});
+const proxyURL=process.env.QA_PROXY_URL?new URL(process.env.QA_PROXY_URL):null;
+const proxy=proxyURL?{server:proxyURL.origin,...(proxyURL.username?{username:decodeURIComponent(proxyURL.username),password:decodeURIComponent(proxyURL.password)}:{})}:undefined;
+const browser=await chromium.launch({headless:true,proxy,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH}:{}),args:JSON.parse(process.env.CHROMIUM_ARGS||'[]')});
 const results=[];
 try {
  for(const [width,height] of [[393,852],[375,812],[1024,768],[1194,834],[1440,900]]){
-  const context=await browser.newContext({viewport:{width,height},hasTouch:width<1300,locale:'de-CH',timezoneId:'Europe/Zurich'});
+  const context=await browser.newContext({ignoreHTTPSErrors:process.env.QA_IGNORE_HTTPS_ERRORS==='1',viewport:{width,height},hasTouch:width<1300,locale:'de-CH',timezoneId:'Europe/Zurich'});
   const outbound=[];
   await context.route(/^https?:/,route=>{
    const u=new URL(route.request().url());
@@ -51,4 +53,4 @@ try {
  }
  await writeFile(output+'/browser-results.json',JSON.stringify({target:targetURL.origin==='null'?'local-dist':targetURL.origin,browser:browser.version(),results},null,2));
  console.log(JSON.stringify({viewports:results.length,passed:true,target:targetURL.origin==='null'?'local-dist':targetURL.origin}));
-} finally {await browser.close();}
+} catch(error) {console.error(String(error.message).replace(/([?&]_vercel_share=)[^\s"']+/g,'$1[redacted]'));process.exitCode=1;} finally {await browser.close();}

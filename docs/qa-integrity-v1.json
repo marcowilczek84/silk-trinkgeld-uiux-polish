@@ -2,9 +2,9 @@
   "base_commit": "16fab0e23fa58a0fb59d4c8b4c7aa66dbbb79440",
   "branch": "tips-data-integrity-v1-20261014",
   "node_tests": {
-    "passed": 32,
+    "passed": 33,
     "failed": 0,
-    "new_regressions": 23
+    "new_regressions": 24
   },
   "original_baseline": {
     "F01": "REPRODUCED",
@@ -102,5 +102,6 @@
   "production_data_writes": false,
   "database_migrations": false,
   "production_deployments": false,
-  "live_cloud_integration": "NOT_RUN - isolated preview"
+  "live_cloud_integration": "NOT_RUN - isolated preview",
+  "import_alias_error": "PASS - visible error; no data mutations"
 }

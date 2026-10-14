@@ -46,7 +46,7 @@
   }
   function stop(){scanGeneration++;if(frame)cancelAnimationFrame(frame);frame=0;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}const video=$('#silk-qr-video');if(video)video.srcObject=null}
   function close(){stop();$('#silk-import-modal')?.remove()}
-  function error(e){$('#silk-import-error').textContent=e.message||String(e)}
+  function error(e){const node=$('#silk-import-error');if(node.closest('.hidden'))$('#silk-import-preview').prepend(node);node.textContent=e.message||String(e)}
   function preview(list){
     stop();rows=list;
     $('#silk-import-input').classList.add('hidden');$('#silk-import-preview').classList.remove('hidden');

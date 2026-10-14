@@ -1,9 +1,9 @@
 import {readFile} from 'node:fs/promises';
 import {JSDOM,VirtualConsole} from 'jsdom';
-export async function app(storage={}) {
+export async function app(storage={},options={}) {
  const root=new URL('../',import.meta.url);let html=await readFile(new URL('index.html',root),'utf8');
  for(const match of [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?">\s*<\/script>/g)]) {
-   const file=match[1];if(['supabase-config.js','supabase-client.js','sync-bootstrap.js','jsQR.js','silk-import.js'].includes(file)){html=html.replace(match[0],'');continue;}
+   const file=match[1];if(['supabase-config.js','supabase-client.js','sync-bootstrap.js','jsQR.js'].includes(file)||(file==='silk-import.js'&&!options.withImport)){html=html.replace(match[0],'');continue;}
    const source=await readFile(new URL(file,root),'utf8');html=html.replace(match[0],()=>'<script>'+source+'</script>');
  }
  const errors=[],virtualConsole=new VirtualConsole();virtualConsole.on('jsdomError',e=>errors.push(e.message));

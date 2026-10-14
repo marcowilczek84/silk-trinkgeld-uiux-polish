@@ -32,7 +32,7 @@ Keine Änderung an Service/Küche/Housekeeping, Früh-/Spätgewichten, Emily-Bet
 
 ## Prüfungen
 
-- 32 Node/JSDOM-Tests, davon 23 neue Regressionstests. Die bisherigen neun Tests bleiben grün.
+- 33 Node/JSDOM-Tests, davon 24 neue Regressionstests. Die bisherigen neun Tests bleiben grün.
 - Neue F01/F02-Tests auf dem ursprünglichen Stand: beide erwartungsgemäss fehlgeschlagen; mit Korrektur bestanden.
 - Golden Master: unveränderte CHF-Ergebnisse, Emily-Pauschale, Küche, Housekeeping und Rundung.
 - Weitere Fälle: versteckte Tage/Monatswechsel, Reload, Cloud-Dokument-Roundtrip, unveränderte Archive, Altentwürfe, Konflikte, Löschschutz, Speicherfehler, Importauflösung.

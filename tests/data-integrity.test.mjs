@@ -113,3 +113,9 @@ test('two-client merge keeps a rename and an independent duty change',async()=>{
 test('legacy checkpoint without optional labels does not become dirty on reload',async()=>{
  const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();const storage=stored(w),doc=JSON.parse(storage.silk_document_v2);delete doc.work.checkpoint.staffLabels;for(const item of doc.settlements)delete item.inputSnapshot.staffLabels;storage.silk_document_v2=JSON.stringify(doc);close(c);const b=await app(storage);assert.equal(b.window.SilkWorkflow.isDirty(),false);close(b);
 });
+test('ambiguous import reports a visible error in preview and leaves assignments intact',async()=>{
+ const c=await app({}, {withImport:true}),w=c.window;fixture(w);rename(w,'staff',0,'Aktuelle Person');w.saveCurrentDraft();
+ w.document.querySelector('.silk-import-row').click();const payload={v:1,type:'silk-tip',rows:[['2026-10-02',100,0]],schedule:[['2026-10-02','Test A','F1'],['2026-10-02','Aktuelle Person','SP1']]};
+ w.document.getElementById('silk-qr-text').value=JSON.stringify(payload);w.document.getElementById('silk-qr-paste').click();const before=JSON.stringify(w.SilkLocalRepository.document());w.document.getElementById('silk-import-apply').click();
+ const error=w.document.getElementById('silk-import-error');assert.match(error.textContent,/mehrfach/);assert.equal(error.closest('.hidden'),null);assert.equal(JSON.stringify(w.SilkLocalRepository.document()),before);close(c);
+});
