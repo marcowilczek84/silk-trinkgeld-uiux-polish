@@ -94,15 +94,17 @@
     repo.transaction(()=>{restoreInputs(input);repo.saveWork({activeId:item.id,checkpoint:snapshot(),calculation:null});});
     closeSettings();updateWorkStatus();
   });return true;};
-  window.deleteDraft=function(id){if(!confirm('Diesen Entwurf löschen?'))return;
+  window.deleteDraft=function(id){if(!repo.getSettlements().some(x=>String(x.id)===String(id)&&x.dataFormat?.startsWith('draft')))return false;if(!confirm('Diesen Entwurf löschen?'))return;
     const remove=()=>{repo.transaction(()=>{repo.saveSettlements(repo.getSettlements().filter(x=>String(x.id)!==String(id)));if(String(repo.getWork().activeId)===String(id))repo.saveWork({activeId:null,checkpoint:null,calculation:null});});openSavedCalculations();updateWorkStatus();};
     if(String(repo.getWork().activeId)===String(id))showDecision(remove);else remove();
   };
   window.saveCurrentCalculation=function(){
     if(!validateAll())return;
     const work=repo.getWork();if(work.calculation?.fingerprint!==fingerprint()){alert('Die Eingaben haben sich geändert. Bitte zuerst neu berechnen.');return;}
-    if(!confirm('Diese geprüfte Abrechnung jetzt finalisieren? Sie wird als abgeschlossene Abrechnung gespeichert.'))return;
     const existing=repo.getSettlements().find(x=>String(x.id)===String(work.activeId));
+    // A repeated click/replayed action must not create a second archived result.
+    if(existing?.dataFormat==='final-v2'&&SilkSyncMerge.equal(existing.inputSnapshot,snapshot())){updateWorkStatus();return;}
+    if(!confirm('Diese geprüfte Abrechnung jetzt finalisieren? Sie wird als abgeschlossene Abrechnung gespeichert.'))return;
     const id=existing?.dataFormat?.startsWith('draft')?existing.id:SilkStorageModels.uuid(),now=new Date().toISOString(),input=snapshot();
     const item={id,dataFormat:'final-v2',label:input.periodStart+' – '+input.periodEnd,periodStart:input.periodStart,periodEnd:input.periodEnd,savedAt:now,finalizedAt:now,inputSnapshot:input,resultData:work.calculation.numbers,html:result.innerHTML};
     repo.transaction(()=>{repo.saveSettlements([...repo.getSettlements().filter(x=>String(x.id)!==String(id)),item]);repo.saveWork({activeId:id,checkpoint:input,calculation:work.calculation});});
@@ -118,14 +120,14 @@
     settingsHome.classList.add('hidden');staffEditor.classList.add('hidden');shiftEditor.classList.add('hidden');
     let panel=document.getElementById('savedCalculations');if(!panel){panel=document.createElement('div');panel.id='savedCalculations';drawer.appendChild(panel);}panel.classList.remove('hidden');
     const items=repo.getSettlements().sort((a,b)=>String(b.savedAt).localeCompare(String(a.savedAt)));
-    const group=(title,list,draft)=>`<h3>${title}</h3><div class="saved-list">${list.map(x=>`<div class="saved-item"><button class="saved-open" data-open="${esc(x.id)}" data-draft="${draft}"><strong>${esc(x.label)}</strong><small>${draft?'Entwurf':x.dataFormat==='final-v2'?'Finalisiert':'Ergebnis-Archiv'} · ${esc(stamp(x.savedAt))}</small></button><button class="saved-delete" data-delete="${esc(x.id)}" aria-label="${draft?'Entwurf':'Gespeicherte Abrechnung'} löschen">Löschen</button></div>`).join('')||'<p class="saved-empty">Noch keine Einträge.</p>'}</div>`;
+    const group=(title,list,draft)=>`<h3>${title}</h3><div class="saved-list">${list.map(x=>`<div class="saved-item"><button class="saved-open" data-open="${esc(x.id)}" data-draft="${draft}"><strong>${esc(x.label)}</strong><small>${draft?'Entwurf':x.dataFormat==='final-v2'?'Finalisiert':'Ergebnis-Archiv'} · ${esc(stamp(x.savedAt))}</small></button>${draft?`<button class="saved-delete" data-delete="${esc(x.id)}" aria-label="Entwurf löschen">Löschen</button>`:''}</div>`).join('')||'<p class="saved-empty">Noch keine Einträge.</p>'}</div>`;
     panel.innerHTML='<button class="backlink" onclick="backFromSaved()">← Einstellungen</button>'+group('Entwürfe',items.filter(x=>x.dataFormat?.startsWith('draft')),true)+group('Finalisierte Abrechnungen',items.filter(x=>x.dataFormat==='final-v2'),false)+group('Bisheriges Ergebnis-Archiv',items.filter(x=>!x.dataFormat?.startsWith('draft')&&x.dataFormat!=='final-v2'),false);
     panel.onclick=e=>{const b=e.target.closest('button');if(b?.dataset.delete){const item=repo.getSettlements().find(x=>String(x.id)===b.dataset.delete);item?.dataFormat?.startsWith('draft')?deleteDraft(b.dataset.delete):deleteSavedCalculation(b.dataset.delete);}if(b?.dataset.open)b.dataset.draft==='true'?continueDraft(b.dataset.open):restoreSavedCalculation(b.dataset.open);};
   };
   window.deleteSavedCalculation=function(id){
-    if(!confirm('Diese gespeicherte Abrechnung löschen?'))return;
-    const remove=()=>{repo.transaction(()=>{repo.saveSettlements(repo.getSettlements().filter(x=>String(x.id)!==String(id)));if(String(repo.getWork().activeId)===String(id))repo.saveWork({activeId:null,checkpoint:null,calculation:null});});openSavedCalculations();updateWorkStatus();};
-    if(String(repo.getWork().activeId)===String(id))showDecision(remove);else remove();
+    const item=repo.getSettlements().find(x=>String(x.id)===String(id));
+    if(item?.dataFormat?.startsWith('draft'))return deleteDraft(id);
+    alert('Abgeschlossene Abrechnungen sind geschützt und bleiben im Archiv erhalten.');return false;
   };
   window.addEventListener('silk:finalization-stale',()=>{let node=document.getElementById('calculationError');if(!node){node=document.createElement('p');node.id='calculationError';node.className='period-error';node.setAttribute('role','alert');document.querySelector('.actionbar').prepend(node);}node.textContent='Finalisierung nicht übernommen: Der gemeinsame Stand wurde inzwischen geändert. Der Entwurf bleibt erhalten. Bitte prüfen und neu berechnen.';node.classList.remove('hidden');});
   window.restoreSavedCalculation=function(id){const item=repo.getSettlements().find(x=>String(x.id)===String(id));if(!item)return;

@@ -1,4 +1,4 @@
-import {chromium} from 'playwright';
+import {chromium,webkit} from 'playwright';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 const target=process.env.BASE_URL || new URL('../dist/index.html',import.meta.url).href;
@@ -8,11 +8,14 @@ const output=process.env.QA_OUTPUT || '/tmp/silk-integrity-qa';
 await mkdir(output,{recursive:true});
 const proxyURL=process.env.QA_PROXY_URL?new URL(process.env.QA_PROXY_URL):null;
 const proxy=proxyURL?{server:proxyURL.origin,...(proxyURL.username?{username:decodeURIComponent(proxyURL.username),password:decodeURIComponent(proxyURL.password)}:{})}:undefined;
-const browser=await chromium.launch({headless:true,proxy,...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH}:{}),args:JSON.parse(process.env.CHROMIUM_ARGS||'[]')});
+const engine=process.env.QA_BROWSER==='webkit'?webkit:chromium;
+const executable=engine===webkit?process.env.WEBKIT_EXECUTABLE_PATH:process.env.CHROMIUM_EXECUTABLE_PATH;
+const browser=await engine.launch({headless:true,proxy,...(executable?{executablePath:executable}:{}),args:engine===chromium?JSON.parse(process.env.CHROMIUM_ARGS||'[]'):[]});
 const results=[];
 try {
  for(const [width,height] of [[393,852],[375,812],[1024,768],[1194,834],[1440,900]]){
-  const context=await browser.newContext({ignoreHTTPSErrors:process.env.QA_IGNORE_HTTPS_ERRORS==='1',viewport:{width,height},hasTouch:width<1300,locale:'de-CH',timezoneId:'Europe/Zurich'});
+  const context=await browser.newContext({ignoreHTTPSErrors:process.env.QA_IGNORE_HTTPS_ERRORS==='1',viewport:{width,height},hasTouch:width<1300,isMobile:width<1300,locale:'de-CH',timezoneId:'Europe/Zurich'});
+  if(process.env.QA_CAMERA_DENIED==='1')await context.addInitScript(()=>{if(navigator.mediaDevices)navigator.mediaDevices.getUserMedia=()=>Promise.reject(new DOMException('QA camera permission denied','NotAllowedError'));});
   const outbound=[];
   await context.route(/^https?:/,route=>{
    const u=new URL(route.request().url());
@@ -51,6 +54,6 @@ try {
   results.push({viewport:[width,height],rename:true,reload:true,oldDraft:true,archiveUnchanged:true,import:true,changedWeightBlocked:true,horizontalOverflow:false,pageErrors:errors,blockedExternalHosts:[...new Set(outbound)],dialogCount:dialogs.length});
   await context.close();
  }
- await writeFile(output+'/browser-results.json',JSON.stringify({target:targetURL.origin==='null'?'local-dist':targetURL.origin,browser:browser.version(),results},null,2));
+ await writeFile(output+'/browser-results.json',JSON.stringify({target:targetURL.origin==='null'?'local-dist':targetURL.origin,engine:engine===webkit?'webkit':'chromium',cameraPermission:process.env.QA_CAMERA_DENIED==='1'?'simulated denied':'default',browser:browser.version(),results},null,2));
  console.log(JSON.stringify({viewports:results.length,passed:true,target:targetURL.origin==='null'?'local-dist':targetURL.origin}));
 } catch(error) {console.error(String(error.message).replace(/([?&]_vercel_share=)[^\s"']+/g,'$1[redacted]'));process.exitCode=1;} finally {await browser.close();}

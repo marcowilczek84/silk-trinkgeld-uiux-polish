@@ -1,7 +1,7 @@
 (function (global) {
   'use strict';
   const repo = global.SilkLocalRepository, ui = global.SilkSyncStatus, M = global.SilkSyncMerge;
-  let client, cloud, running=false, again=false, timer, channel, initialized=false,stopped=false,refreshTimer;
+  let client, cloud, running=false, again=false, timer, channel, initialized=false,stopped=false,refreshTimer,blockedMessage=null;
   const deviceName=() => /iPad/.test(navigator.userAgent)?'iPad':/iPhone/.test(navigator.userAgent)?'iPhone':'Browser';
   const escape=value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function schedule(delay=450) { if(stopped)return;clearTimeout(timer); timer=setTimeout(syncNow,delay); }
@@ -63,6 +63,7 @@
   }
   async function syncNow() {
     if(stopped)return false;
+    if(blockedMessage){ui.set('blocked',blockedMessage);return false;}
     if(!cloud?.workspaceId){ui.set('local');return false;}
     if(!navigator.onLine){ui.set('offline');return false;}
     if(repo.getConflicts().length){ui.set('conflict');return false;}
@@ -102,6 +103,10 @@
       ui.set('pending','Weitere Änderungen eingegangen · erneuter Abgleich');again=true;return false;
     } catch(error) {
       if(stopped)return false;console.warn('SILK sync:',error.code||error.name);
+      if(/SILK_(UPDATE_REQUIRED|ROLLOUT_PAUSED|ARCHIVE_PROTECTED|INVALID_DOCUMENT)/.test(error.message||'')){
+        blockedMessage=error.message.includes('UPDATE_REQUIRED')?'Diese App-Version ist veraltet. Bitte zuerst lokale Eingaben sichern und SILK neu laden.':error.message.includes('ROLLOUT_PAUSED')?'Versionswechsel läuft. Änderungen bleiben lokal erhalten. Bitte nach der Freigabe neu laden.':error.message.includes('ARCHIVE_PROTECTED')?'Synchronisierung angehalten: Eine abgeschlossene Abrechnung wurde verändert. Lokale Eingaben bleiben erhalten; bitte den Stand prüfen.':'Synchronisierung angehalten: Der Datenstand muss geprüft werden. Lokale Eingaben bleiben erhalten.';
+        again=false;clearTimeout(timer);ui.set('blocked',blockedMessage);return false;
+      }
       if(!navigator.onLine)ui.set('offline');else showError('Synchronisierung fehlgeschlagen · lokal erhalten');
       return false;
     } finally {running=false;if(again){again=false;schedule(200);}}
@@ -136,6 +141,6 @@
   global.addEventListener('silk:local-change',()=>{repo.enqueue('document');schedule();});
   global.addEventListener('online',()=>schedule(0));global.addEventListener('offline',()=>ui.set(cloud?.workspaceId?'offline':'local'));
   global.addEventListener('focus',()=>schedule(0));
-  async function stop(){stopped=true;clearTimeout(timer);clearInterval(refreshTimer);await channel?.unsubscribe();while(running)await new Promise(resolve=>setTimeout(resolve,25));}
+  async function stop(){stopped=true;clearTimeout(timer);clearInterval(refreshTimer);await channel?.unsubscribe();while(running)await new Promise(resolve=>{setTimeout(resolve,25);});}
   global.SilkSyncService={init,stop,syncNow,refreshFromCloud:syncNow,showConflicts:renderConflicts,pair:()=>cloud?pairingView():init()};
 })(window);

@@ -119,3 +119,17 @@ test('ambiguous import reports a visible error in preview and leaves assignments
  w.document.getElementById('silk-qr-text').value=JSON.stringify(payload);w.document.getElementById('silk-qr-paste').click();const before=JSON.stringify(w.SilkLocalRepository.document());w.document.getElementById('silk-import-apply').click();
  const error=w.document.getElementById('silk-import-error');assert.match(error.textContent,/mehrfach/);assert.equal(error.closest('.hidden'),null);assert.equal(JSON.stringify(w.SilkLocalRepository.document()),before);close(c);
 });
+
+test('repeated finalization is idempotent and preserves the first archived bytes',async()=>{
+ const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();w.calculate();w.saveCurrentCalculation();
+ const before=JSON.stringify(w.SilkLocalRepository.getSettlements());w.saveCurrentCalculation();
+ assert.equal(JSON.stringify(w.SilkLocalRepository.getSettlements()),before);close(c);
+});
+
+test('archive delete controls and both delete entrypoints cannot remove final records',async()=>{
+ const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();w.calculate();w.saveCurrentCalculation();
+ const item=w.SilkLocalRepository.getSettlements()[0],before=JSON.stringify(w.SilkLocalRepository.document());
+ assert.equal(w.deleteDraft(item.id),false);assert.equal(w.deleteSavedCalculation(item.id),false);
+ assert.equal(JSON.stringify(w.SilkLocalRepository.document()),before);w.openSavedCalculations();
+ assert.equal(w.document.querySelector('[data-delete]'),null);close(c);
+});
