@@ -5,11 +5,12 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
-    "lint": "eslint assignment-identity.js local-repository.js release-ui.js draft-workflow.js sync-merge.js sync-status.js silk-import.js scripts/*.mjs tests/*.test.mjs tests/app-helper.mjs tests/browser-integrity.mjs sync-service.js supabase-client-entry.js tests/cloud-integrity.mjs tests/browser-cloud-integrity.mjs",
+    "lint": "eslint assignment-identity.js local-repository.js release-ui.js draft-workflow.js sync-merge.js sync-status.js silk-import.js scripts/*.mjs tests/*.test.mjs tests/app-helper.mjs tests/browser-integrity.mjs sync-service.js supabase-client-entry.js tests/cloud-integrity.mjs tests/browser-cloud-integrity.mjs professional-workspace.js tests/workspace-fixture.mjs tests/browser-workspace.mjs",
     "typecheck": "tsc -p tsconfig.integrity.json",
     "test:browser": "node tests/browser-integrity.mjs",
     "test:cloud": "node tests/cloud-integrity.mjs",
-    "test:browser:cloud": "node tests/browser-cloud-integrity.mjs"
+    "test:browser:cloud": "node tests/browser-cloud-integrity.mjs",
+    "test:workspace": "node tests/browser-workspace.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4"
