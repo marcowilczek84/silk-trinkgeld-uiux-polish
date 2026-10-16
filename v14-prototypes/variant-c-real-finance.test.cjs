@@ -12,6 +12,7 @@ function check(i){
  assert.ok(out.lines.every(l=>l.payoutCents%100===0));
  assert.deepEqual(out.lines.map(l=>l.claim),raw.lines.map(l=>l.claim));
  assert.equal(safe.canFinalize,false);assert.equal(safe.previewOnly,true);
+ assert.equal(safe.candidatePayoutCents,raw.inputCents);assert.equal(safe.serverFinalizationRequired,true);
  assert.equal(safe.exactCalculationVersion,'silk-exact-1');
  const fractions={service:[273n,400n],kitchen:[117n,400n],housekeeping:[1n,40n]};
  for(const [group,[p,q]] of Object.entries(fractions)){
