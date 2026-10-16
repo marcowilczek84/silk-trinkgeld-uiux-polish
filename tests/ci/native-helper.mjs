@@ -68,7 +68,7 @@ export async function reset(h){
  await h.admin.query('insert into private.tip_c2_gate values($1,true)',[target]);
  for(const k of ['a','b'])await h.admin.query('insert into private.tip_c2_operators values($1,$2,true,true)',[target,h.users[k].id]);
 }
-export async function concurrent(h,requests){
+export async function concurrent(h,requests,beforeRelease=async()=>{}){
  const lock=new pg.Client({connectionString:h.cfg.db,application_name:'silk-ci-lock-holder'});await lock.connect();
  await lock.query('begin');await lock.query('select * from public.tip_workspace_state where workspace_id=$1 for update',[target]);
  const pending=requests.map(f=>f());let waiters=[];
@@ -78,6 +78,7 @@ export async function concurrent(h,requests){
    if(waiters.length>=requests.length)break;await new Promise(r=>setTimeout(r,50));
   }
   assert.ok(waiters.length>=requests.length,'distinct native backend transactions must overlap under lock');
+  await beforeRelease();
  }finally{await lock.query('commit');await lock.end();}
  const results=await Promise.all(pending);return {results,backendCount:new Set(waiters.map(x=>x.pid)).size};
 }

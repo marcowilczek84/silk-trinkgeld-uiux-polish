@@ -103,6 +103,12 @@ test('C2 native Supabase isolated acceptance',async t=>{
     assert.ok(!events.some(x=>Number(x.revision)===Number(next.revision)),'revoked member must not receive later row');assert.equal(forbidden.length,0);
    }finally{await good.removeAllChannels();await bad.removeAllChannels();}
   });
+  await check('rights revoked while an RPC waits for its row lock prevent the pending mutation',async()=>{
+   const before=await h.row();
+   const {results:r}=await concurrent(h,[()=>h.rpc('tip_write_workspace_v14',{p_expected_revision:1,p_payload:documentFor(input('999'))},token())],async()=>h.admin.query('update public.tip_workspace_members set active=false where user_id=$1',[h.users.a.id]));
+   assert.equal(r[0].status,403,'queued write must recheck membership after acquiring its lock');
+   assert.deepEqual((await h.row()).payload,before.payload);
+  });
   await check('old client protocol, direct writes and legacy finalization remain blocked',async()=>{
    const before=await h.row();for(const protocol of [null,'2','3']){
     const r=await h.rpc('tip_write_workspace_v14',{p_expected_revision:1,p_payload:documentFor(input('999'))},token(),{protocol});assert.equal(r.status,403);assert.match(r.body.message,/UPDATE_REQUIRED/);

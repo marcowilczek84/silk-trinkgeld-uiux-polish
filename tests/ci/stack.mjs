@@ -17,6 +17,14 @@ await mkdir(dir,{recursive:true,mode:0o700});
 const command=process.argv[2];
 const docker=args=>execFileSync('docker',args,{encoding:'utf8',maxBuffer:8*1024*1024});
 const compose=args=>['compose','--project-name','silk-c2-ci','-f',config,...args];
+async function diagnosticLogs(){
+ let masks=[];try{masks=(await readFile(dir+'/stack.env','utf8')).split('\n').filter(x=>/^[A-Z_]*(KEY|PASSWORD|SECRET|TOKEN)[A-Z_]*=/.test(x)).map(x=>x.slice(x.indexOf('=')+1)).filter(x=>x.length>5);}catch{}
+ for(const service of ['db','supavisor','auth','rest','realtime'])try{
+  let log=docker(compose(['logs','--no-color','--tail','45',service]));for(const secret of masks)log=log.split(secret).join('[REDACTED]');
+  log=log.replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g,'[REDACTED JWT]').replace(/(postgres(?:ql)?:\/\/[^: /]+:)[^@\s]+@/g,'$1[REDACTED]@');
+  console.log('SANITIZED SERVICE '+service+'\n'+log);
+ }catch{}
+}
 async function run(exe,args,options={}){await new Promise((resolve,reject)=>{const child=spawn(exe,args,{stdio:'inherit',...options});child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error(exe+' exited '+code)));});}
 if(command==='prepare'){
  const env=Object.fromEntries((await readFile(source+'/.env.example','utf8')).split('\n').filter(x=>/^[A-Z_]+=/.test(x)).map(x=>{const i=x.indexOf('=');return [x.slice(0,i),x.slice(i+1)];}));
@@ -44,7 +52,7 @@ if(command==='prepare'){
  console.log('Prepared synthetic-only complete Supabase stack: internal network, loopback endpoints, no cloud credentials.');
 }else if(command==='start'){
  await run('docker',compose(['pull','--quiet']));
- await run('docker',compose(['up','-d','--wait','--wait-timeout','240']));
+ try{await run('docker',compose(['up','-d','--wait','--wait-timeout','240']));}catch(e){await diagnosticLogs();throw e;}
  const net=JSON.parse(docker(['network','inspect','silk-c2-ci-internal']))[0];assert.equal(net.Internal,true);
  console.log('PASS: all configured Supabase services ready; Docker network is internal.');
 }else if(command==='build'){
