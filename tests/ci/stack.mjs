@@ -58,7 +58,7 @@ if(command==='prepare'){
  try{await run('docker',compose(['up','-d','--wait','--wait-timeout','240']));}catch(e){await diagnosticLogs();throw e;}
  // The custom disposable database is owned by supabase_admin. Give the fixture
  // installer its normal schema/publication ownership, never API users.
- docker(compose(['exec','-T','db','psql','-U','supabase_admin','-d','silk_c2_test_ci','-v','ON_ERROR_STOP=1','-c','GRANT CREATE ON DATABASE silk_c2_test_ci TO postgres; ALTER PUBLICATION supabase_realtime OWNER TO postgres;']));
+ docker(compose(['exec','-T','db','psql','-U','supabase_admin','-d','silk_c2_test_ci','-v','ON_ERROR_STOP=1','-c','GRANT CREATE ON DATABASE silk_c2_test_ci TO postgres; GRANT USAGE,CREATE ON SCHEMA public TO postgres; GRANT USAGE ON SCHEMA auth TO postgres; GRANT REFERENCES ON auth.users TO postgres; ALTER PUBLICATION supabase_realtime OWNER TO postgres;']));
  const net=JSON.parse(docker(['network','inspect','silk-c2-ci-internal']))[0];assert.equal(net.Internal,true);
  const ip=name=>JSON.parse(docker(['inspect',name]))[0].NetworkSettings.Networks['silk-c2-ci-internal'].IPAddress;
  const api=ip('supabase-envoy'),db=ip('supabase-db');
