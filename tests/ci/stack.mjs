@@ -40,6 +40,8 @@ if(command==='prepare'){
  c.services.rest.image='postgrest/postgrest:v16.4';
  c.services.realtime.image='supabase/realtime:v2.143.4';
  c.services.storage.image='supabase/storage-api:v1.82.1';
+ // Stay within the standard runner's descriptor limit; no privilege escalation.
+ c.services.supavisor.environment.RLIMIT_NOFILE='1024';
  c.services.db.ports=[{target:5432,published:'54322',host_ip:'127.0.0.1',protocol:'tcp'}];
  c.services['api-gw'].ports=[{target:8000,published:'54321',host_ip:'127.0.0.1',protocol:'tcp'}];
  c.services.mailpit={image:'axllent/mailpit:v1.30.2',networks:{default:null},environment:{MP_SMTP_DISABLE_RDNS:'true'},healthcheck:{test:['CMD','/mailpit','readyz'],interval:'5s',timeout:'3s',retries:10}};
