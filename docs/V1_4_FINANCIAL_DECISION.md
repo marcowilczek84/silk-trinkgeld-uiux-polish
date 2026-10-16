@@ -1,4 +1,4 @@
-# V1.4 — Fachliche Rundungsentscheidung erforderlich
+> **Entscheidung des Projektinhabers am 16.10.2026:** Variante **C** verbindlich gewählt: ausschliesslich ganze Franken, Rundungsfranken innerhalb derselben Abrechnung verteilen, keine persönlichen Restkonten. **Status:** isolierter Prototyp auf Branch `tips-v14-variant-c-net-correction-prep-20261016`; NICHT aktiviert. Der folgende Text dokumentiert die zuvor geprüften Alternativen und die ursprünglich offene Entscheidung. Rappenreste im Gesamteingang sowie die Tie-Break-Freigabe sind weiterhin gesondert zu klären.\n\n# V1.4 — Fachliche Rundungsentscheidung erforderlich
 
 Der Code berechnet Ansprüche exakt als Rappenbrüche. Verbindliche Auszahlung ist bis zur Entscheidung nur möglich, wenn die bisherige Einzelrundung auf ganze Franken exakt mit dem Eingang übereinstimmt. Über- UND Unterdeckung bleiben gesperrt. Vorhandene Archive werden niemals neu berechnet.
 
