@@ -12,7 +12,8 @@
     "test:browser:cloud": "node tests/browser-cloud-integrity.mjs",
     "test:workspace": "node tests/browser-workspace.mjs",
     "test:integrity:v14": "node --test tests/v14-*.test.mjs",
-    "test:browser:v14": "node tests/browser-v14.mjs"
+    "test:browser:v14": "node tests/browser-v14.mjs",
+    "test:variant-c": "node --test v14-prototypes/*.test.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4"
