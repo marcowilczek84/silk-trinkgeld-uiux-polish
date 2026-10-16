@@ -42,7 +42,7 @@ if(command==='prepare'){
  c.services.storage.image='supabase/storage-api:v1.82.1';
  c.services.db.ports=[{target:5432,published:'54322',host_ip:'127.0.0.1',protocol:'tcp'}];
  c.services['api-gw'].ports=[{target:8000,published:'54321',host_ip:'127.0.0.1',protocol:'tcp'}];
- c.services.mailpit={image:'public.ecr.aws/supabase/mailpit:v1.30.2',networks:{default:null},environment:{MP_SMTP_DISABLE_RDNS:'true'},healthcheck:{test:['CMD','/mailpit','readyz'],interval:'5s',timeout:'3s',retries:10}};
+ c.services.mailpit={image:'axllent/mailpit:v1.30.2',networks:{default:null},environment:{MP_SMTP_DISABLE_RDNS:'true'},healthcheck:{test:['CMD','/mailpit','readyz'],interval:'5s',timeout:'3s',retries:10}};
  // The complete stack includes Functions; its synthetic handler has no remote imports.
  await writeFile(source+'/volumes/functions/main/index.ts',"Deno.serve(() => new Response(JSON.stringify({syntheticOnly:true}),{headers:{'content-type':'application/json'}}));\n");
  for(const service of Object.values(c.services))for(const value of Object.values(service.environment||{}))assert.ok(!/https?:\/\/[^/]*\.supabase\.(co|com)/.test(String(value)),'Cloud URL rejected');
