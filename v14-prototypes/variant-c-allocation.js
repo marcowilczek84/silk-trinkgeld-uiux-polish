@@ -1,6 +1,6 @@
-/* SILK Trinkgeld V1.4 — Whole CHF Hamilton allocation.
- * Independent reference implementation. No production wiring.
- * The original rational cents from silk-exact-1 remain the source of truth.
+/* SILK V1.4 Variant C — all tips distributed in whole CHF in the SAME period.
+ * Exact cent claims remain unchanged. Round the complete period amount once;
+ * distribute via largest remainder. This candidate is NEVER a final receipt.
  */
 (function(global){
  'use strict';
@@ -11,6 +11,7 @@
  const compare=(a,b)=>a[0]*b[1]<b[0]*a[1]?-1:a[0]*b[1]>b[0]*a[1]?1:0;
  const floorFranc=a=>a[0]/(a[1]*100n);
  const fractFranc=a=>rat(a[0]%(a[1]*100n),a[1]*100n);
+ const asSafeNumber=n=>{if(n>BigInt(Number.MAX_SAFE_INTEGER)||n<BigInt(Number.MIN_SAFE_INTEGER))throw Error('SILK_C_INTEGER_OVERFLOW');return Number(n);};
  function allocateWholeFranc(items,budget,order){
    if(budget<0n)throw Error('SILK_C_INVALID_BUDGET');
    const entries=items.map(e=>({...e,whole:floorFranc(e.claim),frac:fractFranc(e.claim)}));
@@ -22,13 +23,13 @@
    return entries;
  }
  function allocate({inputCents,lines}){
-   if(!Number.isSafeInteger(inputCents))throw Error('SILK_C_INVALID_TOTAL');
+   if(!Number.isSafeInteger(inputCents)||inputCents<0)throw Error('SILK_C_INVALID_TOTAL');
    const total=BigInt(inputCents);
-   if(total<0n)throw Error('SILK_C_INVALID_TOTAL');
-   if(total%100n!==0n)throw Error('SILK_C_FRACTIONAL_TOTAL_UNRESOLVED');
+   const payoutTarget=((total+50n)/100n)*100n; // round once per complete period
    if(!Array.isArray(lines)||lines.length===0)throw Error('SILK_C_NO_RECIPIENTS');
    const seen=new Set();const items=lines.map(e=>{
-     if(!e.id||seen.has(e.id))throw Error('SILK_C_DUPLICATE_RECIPIENT');seen.add(e.id);
+     if(typeof e.id!=='string'||!e.id||seen.has(e.id))throw Error('SILK_C_DUPLICATE_RECIPIENT');seen.add(e.id);
+     if(!e.claim||!/^\d+$/.test(String(e.claim.numerator))||!/^\d+$/.test(String(e.claim.denominator)))throw Error('SILK_C_INVALID_CLAIM');
      const claim=rat(BigInt(e.claim.numerator),BigInt(e.claim.denominator));
      const category=e.id==='kitchen'?'kitchen':e.id==='housekeeping'?'housekeeping':e.id.startsWith('staff:')?'service':null;
      if(!category)throw Error('SILK_C_INVALID_RECIPIENT');
@@ -37,24 +38,35 @@
    if(compare(items.reduce((s,e)=>plus(s,e.claim),ZERO),rat(total))!==0)throw Error('SILK_C_CLAIMS_NOT_BALANCED');
    const poolNames=['service','kitchen','housekeeping'];
    const pools=poolNames.map((id,i)=>({id,order:i,claim:items.filter(x=>x.category===id).reduce((s,e)=>plus(s,e.claim),ZERO)}));
-   const distributedPools=allocateWholeFranc(pools,total/100n,(a,b)=>a.order-b.order);
+   const distributedPools=allocateWholeFranc(pools,payoutTarget/100n,(a,b)=>a.order-b.order);
    const allocated=[];
    for(const pool of distributedPools){
      const recipients=items.filter(x=>x.category===pool.id);
      if(!recipients.length){if(pool.whole!==0n)throw Error('SILK_C_EMPTY_POOL');continue;}
      const assigned=allocateWholeFranc(recipients,pool.whole,(a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
      allocated.push(...assigned.map(e=>({
-       ...e.source,category:e.category,basePayoutCents:Number(floorFranc(e.claim)*100n),
-       roundingBonusCents:Number((e.bonus||0n)*100n),payoutCents:Number(e.whole*100n),payout:Number(e.whole),
-       allocationPolicy:'silk-whole-chf-c-1',tieBreakId:e.id
+       ...e.source,category:e.category,basePayoutCents:asSafeNumber(floorFranc(e.claim)*100n),
+       roundingBonusCents:asSafeNumber((e.bonus||0n)*100n),payoutCents:asSafeNumber(e.whole*100n),payout:asSafeNumber(e.whole),
+       allocationPolicy:'silk-whole-chf-c-2',tieBreakId:e.id
      })));
    }
    const byId=new Map(allocated.map(x=>[x.id,x]));
    const result=lines.map(x=>byId.get(x.id));
+   if(result.some(x=>!x))throw Error('SILK_C_ALLOCATION_MISSING');
    const payout=result.reduce((s,x)=>s+BigInt(x.payoutCents),0n);
-   if(payout!==total)throw Error('SILK_C_PAYOUT_NOT_BALANCED');
-   return {version:'silk-whole-chf-c-1',policy:'whole-chf-largest-remainder',inputCents:Number(total),payoutCents:Number(payout),residualCents:0,canFinalize:true,lines:result,
-     categories:distributedPools.map(p=>({id:p.id,payoutCents:Number(p.whole*100n),basePayoutCents:Number(floorFranc(p.claim)*100n),roundingBonusCents:Number((p.bonus||0n)*100n)}))};
+   if(payout!==payoutTarget)throw Error('SILK_C_PAYOUT_NOT_BALANCED');
+   const adjustment=payout-total;
+   return {version:'silk-whole-chf-c-2',policy:'whole-chf-largest-remainder-half-up',
+     inputCents:asSafeNumber(total),roundedPayoutTargetCents:asSafeNumber(payoutTarget),
+     candidatePayoutCents:asSafeNumber(payout),payoutCents:asSafeNumber(payout),
+     roundingAdjustmentCents:asSafeNumber(adjustment),cashDifferenceCents:asSafeNumber(total-payout),
+     cashReconciliationRequired:adjustment!==0n,
+     cashReconciliationStatus:adjustment===0n?'not-required':'pending',
+     cashReconciliationEvidence:null,allocationReady:true,canFinalize:false,previewOnly:true,
+     lines:result,
+     categories:distributedPools.map(p=>({id:p.id,payoutCents:asSafeNumber(p.whole*100n),
+       basePayoutCents:asSafeNumber(floorFranc(p.claim)*100n),
+       roundingBonusCents:asSafeNumber((p.bonus||0n)*100n)}))};
  }
  global.SilkVariantC={allocate};
 })(typeof window==='undefined'?globalThis:window);
