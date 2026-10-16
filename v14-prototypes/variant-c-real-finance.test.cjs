@@ -7,12 +7,13 @@ const money=x=>Math.floor(x/100)+'.'+String(x%100).padStart(2,'0');
 const sample=(f,s,people,assignments)=>({shifts,staff:people,byDate:{'2035-01-01':{f:money(f),s:money(s),assignments}}});
 function check(i){
  const raw=finance.calculate(i),out=c.allocate(raw),safe=preview(i);
- assert.equal(out.payoutCents,raw.inputCents);
- assert.equal(out.lines.reduce((sum,l)=>sum+l.payoutCents,0),raw.inputCents);
+ assert.equal(out.payoutCents,Math.floor((raw.inputCents+50)/100)*100);
+ assert.equal(out.lines.reduce((sum,l)=>sum+l.payoutCents,0),out.payoutCents);
+ assert.equal(out.roundingAdjustmentCents,out.payoutCents-raw.inputCents);
  assert.ok(out.lines.every(l=>l.payoutCents%100===0));
  assert.deepEqual(out.lines.map(l=>l.claim),raw.lines.map(l=>l.claim));
  assert.equal(safe.canFinalize,false);assert.equal(safe.previewOnly,true);
- assert.equal(safe.candidatePayoutCents,raw.inputCents);assert.equal(safe.serverFinalizationRequired,true);
+ assert.equal(safe.candidatePayoutCents,out.payoutCents);assert.equal(safe.serverFinalizationRequired,true);
  assert.equal(safe.exactCalculationVersion,'silk-exact-1');
  const fractions={service:[273n,400n],kitchen:[117n,400n],housekeeping:[1n,40n]};
  for(const [group,[p,q]] of Object.entries(fractions)){
@@ -31,7 +32,7 @@ test('CHF 1000: exact source claims and whole-franc category distribution',()=>{
 test('Emily cap and subfranc historical case preserved',()=>{
  const i=sample(10450,4100,['Emily','A','B'],[{name:'Emily',shift:'MD'},{name:'A',shift:'F1'},{name:'B',shift:'SP1'}]);
  assert.equal(finance.calculate(i).lines.find(x=>x.name==='Emily').amount,10);
- assert.throws(()=>preview(i),/FRACTIONAL_TOTAL_UNRESOLVED/);
+ const cents=preview(i);assert.equal(cents.payoutCents,14600);assert.equal(cents.roundingAdjustmentCents,50);assert.equal(cents.cashReconciliationStatus,'pending');
  i.byDate['2035-01-02']={f:'14.50',s:'0.00',assignments:i.byDate['2035-01-01'].assignments};
  const r=check(i);assert.equal(r.lines.find(x=>x.name==='Emily').payoutCents,2000);
 });
