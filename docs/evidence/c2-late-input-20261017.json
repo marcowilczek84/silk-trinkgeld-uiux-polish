@@ -1,0 +1,49 @@
+{
+  "appCommit": "a5df93a425360a0a35056890bee03432b29fffa8",
+  "run": "https://github.com/marcowilczek84/silk-trinkgeld-uiux-polish/actions/runs/38981810075",
+  "unitTests": {
+    "passed": 4,
+    "failed": 0
+  },
+  "build": "cloud-free",
+  "browsers": [
+    {
+      "engine": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": [
+        393,
+        852
+      ],
+      "blankEqualsZero": true,
+      "draftSaveReload": true,
+      "untouchedDayStillMissing": true,
+      "actualEditGuard": true,
+      "revertedEditClean": true,
+      "invalidNumericTokenBlocked": true,
+      "cloudRequests": 0,
+      "pageErrors": [],
+      "physicalDevices": false,
+      "hostedCloud": false
+    },
+    {
+      "engine": "webkit",
+      "version": "26.5",
+      "viewport": [
+        393,
+        852
+      ],
+      "blankEqualsZero": true,
+      "draftSaveReload": true,
+      "untouchedDayStillMissing": true,
+      "actualEditGuard": true,
+      "revertedEditClean": true,
+      "invalidNumericTokenBlocked": true,
+      "cloudRequests": 0,
+      "pageErrors": [],
+      "physicalDevices": false,
+      "hostedCloud": false
+    }
+  ],
+  "sqlAndFinancialCoreUnchanged": true,
+  "previousIPhoneChecks": "Laut Marco bestanden; Nachricht 17.10.2026 01:26 Europe/Zurich."
+}

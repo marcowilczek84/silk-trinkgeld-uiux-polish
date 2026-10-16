@@ -1,6 +1,6 @@
 # C2 – vorbereitete Veröffentlichung, keine Aktivierung
 
-Aktueller App-Kandidat: `d22900d696bc40afb3978aaff635d142615c8e14`. Die drei beauftragten Bedienkorrekturen wurden nach Übergabestand `06e139b8` ergänzt; C2, Finanz-/Serverlogik, SQL und Release-Nachweise bleiben unverändert. Details und gezielte Nachweise: `docs/C2_UI_REVIEW_20261017.md`. Release-Dateien liegen im bestehenden Branch `tips-v14-c-whole-chf-complete-period-20261016`.
+Aktueller App-Kandidat: `a5df93a425360a0a35056890bee03432b29fffa8`. Die drei beauftragten Bedienkorrekturen wurden nach Übergabestand `06e139b8` ergänzt und laut Marco am iPhone bestätigt. Anschliessend wurde nur das leere Spät-Trinkgeldfeld bei erfasstem Frühbetrag als Null erlaubt; C2, Finanz-/Serverlogik, SQL und Release-Nachweise bleiben unverändert. Details und gezielte Nachweise: `docs/C2_UI_REVIEW_20261017.md` und `docs/C2_LATE_INPUT_20261017.md`. Release-Dateien liegen im bestehenden Branch `tips-v14-c-whole-chf-complete-period-20261016`.
 
 ## Zielabgleich vom 17.10.2026, Schweizer Zeit
 
@@ -14,7 +14,7 @@ Aktueller App-Kandidat: `d22900d696bc40afb3978aaff635d142615c8e14`. Die drei bea
 - RLS ist für alle vorhandenen Trinkgeld-Tabellen aktiv. `tip_workspace_state` erlaubt Mitgliedern SELECT und gezielte Spaltenschreibrechte; Mitgliedschaft wird serverseitig anhand `auth.uid()` und `active=true` geprüft. Realtime-Publikation enthält den Workspace-State.
 - Sieben aktive gekoppelte anonyme Auth-Gerätezugänge, alle Rolle `member`, darunter alte Testgeräte, `MacIntel` und `iPhone`. Kein benannter Abschlussverantwortlicher und keine automatische Übernahme als C2-Operator. Identität des tatsächlich gewählten Arbeitsgeräts vor Aktivierung prüfen, keine pauschalen Rechte an alle sieben.
 
-Aktuelle cloudfreie Preview: https://silk-trinkgeld-uiux-polish-ikmzgt8m3-restaurant-silk.vercel.app/ (`dpl_3d4KpjeD2TbdpxCKRZDuyfWuan57`, READY, App `d22900d6`). URL/Schlüssel leer, `localOnly=true`, `c2AppApproved=false`. Production am 17.10.2026 erneut lesend identisch bestätigt.
+Aktuelle cloudfreie Preview: https://silk-trinkgeld-uiux-polish-837yolp8c-restaurant-silk.vercel.app/ (`dpl_7tZZwaR1j9JPtdRgRLkxg7Ex6xAi`, READY, App `a5df93a4`). URL/Schlüssel leer, `localOnly=true`, `c2AppApproved=false`. Production am 17.10.2026 erneut lesend identisch bestätigt.
 
 ## Exakter SQL-Umfang
 
@@ -65,7 +65,7 @@ Kein DROP von C2-Daten, keine Entfernung des Versionsschutzes, keine Rücksicher
 
 ## Freigabeantrag
 
-- **App separat:** Veröffentlichung des korrigierten App-Kandidaten `d22900d696bc40afb3978aaff635d142615c8e14` mit der vorgesehenen Production-Konfiguration und dem App-Freigabeflag.
+- **App separat:** Veröffentlichung des korrigierten App-Kandidaten `a5df93a425360a0a35056890bee03432b29fffa8` mit der vorgesehenen Production-Konfiguration und dem App-Freigabeflag.
 - **SQL separat:** Das oben benannte atomare Installationspaket inklusive gezielter RPC-Rechte, anschliessender Gate-/Operator-Konfiguration nur für das eindeutig bestätigte Gerät und dem vorbereiteten sicheren Pausenverfahren.
 - **Betriebliches Verfahren:** Fehlbeträge aus Aufrundungen aus der bestehenden Betriebskasse ergänzen; Abrundungsreste dort belassen. Je Periode Herkunft/Verbleib belegen und ausdrücklich bestätigen. Tatsächliche Auszahlung anschliessend gesondert bestätigen. Keine neue Kassenverwaltung oder persönlichen Überträge.
 

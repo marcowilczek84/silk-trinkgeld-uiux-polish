@@ -1,11 +1,13 @@
 # Kurzer echter Bediencheck vor Aktivierung
 
-App-Kandidat mit den letzten Bedienkorrekturen: `d22900d696bc40afb3978aaff635d142615c8e14`.
+App-Kandidat mit den letzten Bedienkorrekturen: `a5df93a425360a0a35056890bee03432b29fffa8`.
 
-## Sofort am iPhone/iPad: Eingabe und Berechnung
+Die drei nachstehenden iPhone-Prüfpunkte zu `d22900d6` sind laut Marco bestanden (Rückmeldung vom 17.10.2026). Der neue Kandidat erlaubt zusätzlich ein leeres Spätfeld bei erfasstem Frühbetrag; Nachweis: `docs/C2_LATE_INPUT_20261017.md`. Keine Wiederholung dieser drei bestandenen Punkte verlangt.
+
+## Übernommener iPhone/iPad-Check: Eingabe und Berechnung
 
 Geprüfte, isolierte Preview (gegebenenfalls mit Marcos bestehender Vercel-Anmeldung):
-https://silk-trinkgeld-uiux-polish-ikmzgt8m3-restaurant-silk.vercel.app/
+https://silk-trinkgeld-uiux-polish-837yolp8c-restaurant-silk.vercel.app/
 
 Diese konkrete Preview hat **keine Supabase-URL, keinen Schlüssel und keine Abschlussfreigabe**. Nicht mit Production verbinden. Vorhandene lokale Preview-Eingaben erhalten; einen leeren zukünftigen Testtag verwenden.
 
