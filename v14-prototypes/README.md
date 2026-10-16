@@ -1,3 +1,29 @@
+# V1.4 Variante C2 — NEW decision superseding earlier cents blockers
+
+**Owner's current rule (16.10.2026):** The entire period's incoming tips are rounded **once** to whole CHF (half-up: 0.00–0.49 down; 0.50–0.99 up). Distribute that exact rounded budget in full across Service, Kitchen, Housekeeping, then Service employees using largest fractional remainder of the **original exact claims**. No employee residual accounts, no carryover to another period, no silent percentage change. All earlier references below to *blocking fractional-CHF period totals* document a superseded draft rule.
+
+**Cash/financial caveat:** The signed amount `roundedPayoutTargetCents - originalInputCents` is a documented **same-period rounding adjustment**, *not* evidence that physical coins were distributed or funded. Positive deltas require source-of-funds reconciliation; negative deltas require evidence how remaining cash was handled. Without approved cash evidence the posting/finalization remains blocked. Original source amount, payout and signed adjustment must satisfy `input + adjustment = payout`.
+
+**Status:** reference JS + PostgreSQL proposal, **not deployed or RPC-activated**. Javascript candidate explicitly returns `canFinalize=false`. SQL proposal does not modify finalization RPC, tables, triggers, grants, histories or production.
+
+## Development step 4 (16 October 2026)
+
+- New independent GitHub branch: `tips-v14-c-whole-chf-complete-period-20261016`.
+- New reference policy/version: `silk-whole-chf-c-2`.
+- Client: whole-period half-up, exact-claims Hamilton distribution in two steps, deterministic group priority Service → Kitchen → Housekeeping and stable person ID for ties, payout in whole CHF, explicit `roundingAdjustmentCents`, `cashDifferenceCents`, `cashReconciliationStatus`, and `previewOnly` safety flags.
+- SQL: staged `variant-c-postgres-PREPARED-NOT-APPLIED.sql` now rounds the whole period once **but calculates the shares from original cent claims** (critical). The staged synthetic acceptance script adds 11 cents-edge cases to the previous examples, zero amount, Emily, stable ties and CHF 341.
+- Corrections: signed recipient deltas between new target and verified original cash payouts; a separate test confirms CHF 1’801.10 corrected to CHF 1’801.90 requires only CHF 1 extra net payout and no second full payout. Still **calculation-only** until new secured idempotent server correction flow approved.
+- Independently executed in a local Node runtime: 34 reference tests passed, 0 failed, including 5,000 randomized cents cases and 2,000 weighted financial cases. **Full inherited 84 V1.4 tests NOT rerun** and prepared PostgreSQL SQL NOT executed; GitHub test files added for reproducibility.
+
+### Next release gates
+1. Run real JS ↔ PostgreSQL parity tests in an **independent SILK staging database** (not the Display/Neon project), including 14/30 staff, Emily and mixed shifts; do not claim success from static SQL alone.
+2. Implement and test locked, idempotent server-side linked net-correction *posting*; original receipts immutable; actual paid movements verified.
+3. Resolve operational cash reconciliation process and source-of-funds/audit for both positive and negative cents adjustments, before enabling C2 finalization.
+4. Run full 84+ regression suite, browser & actual-device tests, member JWT/RLS and cloud PostgREST tests; backup/restore and old-client rollout compatibility.
+5. Obtain explicit separate approvals for hosted staging use, final SQL migration and Production deploy. No Production change is authorized.
+
+---
+
 # V1.4 Variante C — isolated preparation (16.10.2026)
 
 **Status:** User chose whole-CHF distribution C. Prototype JavaScript modules and tests only. They are NOT integrated into the live financial core, finalized receipts, UI, RPCs, SQL migration or a deployment. Production and historical periods remain unchanged.
