@@ -1,6 +1,6 @@
 -- SILK Trinkgeld V1.4 Variant C — STAGING PROPOSAL ONLY / NOT APPLIED
 -- DEPENDENCY: docs/production/v14-integrity-PREPARED-NOT-APPLIED.sql
--- Provides exact whole-CHF candidate arithmetic, NOT an authorized finalization RPC.
+-- Provides exact whole-CHF candidate arithmetic with one gross-period rounding, NOT a finalization RPC.
 -- Never execute in production until a separate reviewed/approved release.
 -- SQL preview only: no tables, exposed RPCs, triggers, write calls or history migrations.
 -- The following DDL must only be run after isolated staging approval.
@@ -69,7 +69,7 @@ CREATE OR REPLACE FUNCTION private.tip_finance_variant_c_candidate(p_input jsonb
 RETURNS jsonb
 LANGUAGE plpgsql STABLE SET search_path='' AS $$
 DECLARE
-  v_exact jsonb; v_total numeric; v_francs numeric; v_pools jsonb;
+  v_exact jsonb; v_total numeric; v_target_cents numeric; v_adjustment numeric; v_francs numeric; v_pools jsonb;
   v_service jsonb:='[]'; v_kitchen jsonb:='[]'; v_housekeeping jsonb:='[]';
   v_service_claim numeric[]:=ARRAY[0,1]::numeric[];
   v_kitchen_claim numeric[]:=ARRAY[0,1]::numeric[];
@@ -86,16 +86,15 @@ BEGIN
   IF v_total IS NULL OR v_total<0 OR v_total<>trunc(v_total) THEN
     RAISE EXCEPTION 'SILK_C_INVALID_TOTAL';
   END IF;
-  IF mod(v_total,100)<>0 THEN
-    RAISE EXCEPTION 'SILK_C_FRACTIONAL_TOTAL_UNRESOLVED';
-  END IF;
-  v_francs:=v_total/100;
+  v_target_cents:=div(v_total+50,100)*100; -- one rounding for the entire period
+  v_francs:=v_target_cents/100;
+  v_adjustment:=v_target_cents-v_total;
   -- Original V1.4 fractions: service 70% * 97.5%; kitchen 30% * 97.5%; HK 2.5%.
   v_pools:=private.tip_c_allocate_whole(
     jsonb_build_array(
-      jsonb_build_object('id','service','n',v_francs*273,'d',400,'rank',0),
-      jsonb_build_object('id','kitchen','n',v_francs*117,'d',400,'rank',1),
-      jsonb_build_object('id','housekeeping','n',v_francs,'d',40,'rank',2)
+      jsonb_build_object('id','service','n',v_total*273,'d',40000,'rank',0),
+      jsonb_build_object('id','kitchen','n',v_total*117,'d',40000,'rank',1),
+      jsonb_build_object('id','housekeeping','n',v_total,'d',4000,'rank',2)
     ),v_francs);
 
   FOR v_line IN SELECT value FROM jsonb_array_elements(v_exact->'lines') LOOP
@@ -147,8 +146,8 @@ BEGIN
     v_cat_d:=CASE WHEN v_name='housekeeping' THEN 40 ELSE 400 END;
     v_result_categories:=v_result_categories||jsonb_build_array(
       jsonb_build_object('id',v_name,'payoutCents',v_target*100,
-        'basePayoutCents',div(v_francs*v_cat_n,v_cat_d)*100,
-        'roundingBonusCents',(v_target-div(v_francs*v_cat_n,v_cat_d))*100));
+        'basePayoutCents',div(v_total*v_cat_n,v_cat_d*100)*100,
+        'roundingBonusCents',(v_target-div(v_total*v_cat_n,v_cat_d*100))*100));
   END LOOP;
 
   FOR v_line IN SELECT value FROM jsonb_array_elements(v_exact->'lines') LOOP
@@ -164,17 +163,24 @@ BEGIN
       jsonb_build_object('category',v_group,'payoutCents',v_pay*100,
         'payout',v_pay,'basePayoutCents',v_base*100,
         'roundingBonusCents',(v_pay-v_base)*100,
-        'allocationPolicy','silk-whole-chf-c-1','tieBreakId',v_id));
+        'allocationPolicy','silk-whole-chf-c-2','tieBreakId',v_id));
   END LOOP;
-  IF v_paid<>v_total THEN RAISE EXCEPTION 'SILK_C_PAYOUT_NOT_BALANCED';END IF;
+  IF v_paid<>v_target_cents THEN RAISE EXCEPTION 'SILK_C_PAYOUT_NOT_BALANCED';END IF;
   RETURN v_exact||jsonb_build_object(
-    'version','silk-whole-chf-c-1',
+    'version','silk-whole-chf-c-2',
     'exactCalculationVersion',v_exact->>'version',
-    'policy','whole-chf-largest-remainder',
+    'policy','whole-chf-largest-remainder-half-up',
     'inputCents',v_total,
-    'candidatePayoutCents',v_total,
-    'payoutCents',v_total,
-    'residualCents',0,
+    'roundedPayoutTargetCents',v_target_cents,
+    'candidatePayoutCents',v_target_cents,
+    'payoutCents',v_target_cents,
+    'roundingAdjustmentCents',v_adjustment,
+    'cashDifferenceCents',-v_adjustment,
+    'residualCents',-v_adjustment,
+    'cashReconciliationRequired',(v_adjustment<>0),
+    'cashReconciliationStatus',CASE WHEN v_adjustment=0 THEN 'not-required' ELSE 'pending' END,
+    'cashReconciliationEvidence',NULL,
+    'allocationReady',true,
     'canFinalize',false,
     'previewOnly',true,
     'serverFinalizationRequired',true,
