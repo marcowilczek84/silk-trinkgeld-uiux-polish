@@ -60,9 +60,11 @@ jobs:
       - name: Build integrated local candidate
         run: node tests/ci/stack.mjs build
       - name: Install browser for integrated candidate
-        run: npx playwright install --with-deps chromium
-      - name: Real API browser flow (emulation only)
+        run: npx playwright install --with-deps chromium webkit
+      - name: Chromium real API operator flow (emulation only)
         run: node tests/ci/browser.mjs
+      - name: WebKit real API operator flow (emulation only)
+        run: QA_BROWSER=webkit node tests/ci/browser.mjs
       - name: Sanitized version and test evidence
         if: always()
         run: node tests/ci/stack.mjs report

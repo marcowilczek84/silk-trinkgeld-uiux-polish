@@ -41,7 +41,7 @@
     if(!ack.checked)throw Error('Bitte den tatsächlichen Stand ausdrücklich bestätigen.');
     const evidence=delta?{adjustmentCents:delta,kind:delta>0?'funding':'remainder',reference:reference.value.trim()}:null;
     if(evidence&&evidence.reference.length<5)throw Error('Bitte eine nachvollziehbare Belegreferenz eintragen.');
-    const receipt=await g.SilkC2.finalizeSynthetic(checked,evidence);
+    const receipt=await g.SilkC2.finalize(checked,evidence);
     status.textContent='Abschluss gespeichert. Auszahlung noch nicht bestätigt. Beleg '+receipt.id;
     button(ui.actions,'Beleg öffnen',()=>{dialog.close();g.restoreSavedCalculation(receipt.id);});
    },g.SilkC2.permitted(checked.permissions,'canFinalize'));
@@ -101,13 +101,14 @@
  }
  function renderRecovery(){
   let host=document.getElementById('c2PendingNotice');const p=pending();
-  if(!p){host?.remove();return;}if(host)return;
-  host=node('section');host.id='c2PendingNotice';host.className='c2-pending';document.getElementById('app').prepend(host);
+  if(!p){host?.remove();return;}const destination=document.querySelector('dialog[open]')||document.getElementById('app');if(host){if(host.parentElement!==destination)destination.prepend(host);return;}
+  host=node('section');host.id='c2PendingNotice';host.className='c2-pending';destination.prepend(host);
   node('strong','Bestätigung ungeklärt',host);const status=message(host,'Die letzte Serverantwort fehlt. Nicht erneut auszahlen. Zuerst den vorhandenen Auftrag prüfen.');
   node('p','Anfrage '+p.id,host);
   const retry=button(host,'Bestätigung erneut prüfen',async()=>{retry.disabled=true;try{const result=await g.SilkSyncService.resumeC2();host.remove();document.getElementById('c2CloseDialog')?.close();document.getElementById('archiveDialog')?.close();if(result){const id=result.id||p.request.args.p_receipt_id;g.restoreSavedCalculation(id);}}catch(e){status.textContent=errorText(e);}finally{retry.disabled=false;if(!pending())host.remove();}});
  }
  for(const event of ['silk:sync-complete','silk:c2-pending','silk:writer-ready'])g.addEventListener(event,()=>{if(g.SilkC2.enabled())renderRecovery();});
+ document.addEventListener('close',()=>{if(g.SilkC2.enabled())renderRecovery();},true);
  g.addEventListener('beforeunload',event=>{if(document.querySelector('.c2-confirmation[data-dirty="true"]:not([data-saved="true"])')){event.preventDefault();event.returnValue='';}});
  document.addEventListener('input',event=>{const form=event.target.closest('.c2-confirmation');if(form)form.dataset.dirty='true';});
  g.SilkC2UI={openFinalization,renderLedger,roundingText};
