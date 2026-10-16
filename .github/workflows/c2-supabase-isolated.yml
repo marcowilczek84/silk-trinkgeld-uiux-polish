@@ -9,6 +9,8 @@ on:
       - 'v14-prototypes/**'
       - 'package*.json'
       - '*.js'
+      - '*.css'
+      - 'index.html'
       - 'tests/*.mjs'
       - 'scripts/**'
   workflow_dispatch:

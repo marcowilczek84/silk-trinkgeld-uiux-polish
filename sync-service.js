@@ -188,11 +188,11 @@
   }
   async function c2Mutation(name,args,revision,workspaceResult){
     global.SilkWriteCoordinator.assertWritable();
-    if(!global.SilkC2?.testMode())throw Error('SILK_C2_ACCEPTANCE_REQUIRED');
+    if(!global.SilkC2?.writesEnabled())throw Error('SILK_C2_ACCEPTANCE_REQUIRED');
     if(!navigator.onLine||!cloud?.workspaceId||repo.getConflicts().length||global.SilkWriteCoordinator.hasFailure())throw Error('Verbindung oder konfliktfreier Speicherstand fehlt.');
     const key='silk_c2_pending_'+cloud.workspaceId,request={name,args},before=repo.document();
     let pending=global.SilkStorageModels.parse(localStorage.getItem(key),null);
-    if(pending&&!M.equal(pending.request,request))throw Error('Vorherige Testbuchung ungeklärt. Zuerst dieselbe Anfrage erneut prüfen.');
+    if(pending&&!M.equal(pending.request,request))throw Error('Vorherige Bestätigung ungeklärt. Zuerst dieselbe Anfrage erneut prüfen.');
     if(!pending){pending={id:global.SilkStorageModels.uuid(),request,revision};localStorage.setItem(key,JSON.stringify(pending));}
     try{
       const call=client.rpc(name,{...args,p_workspace_id:cloud.workspaceId,p_expected_revision:pending.revision,p_id:pending.id});
@@ -203,17 +203,19 @@
         if(merged.conflicts.length)rememberConflict(data.payload,data.revision,merged);
         else repo.applyDocument(merged.value,{base:data.payload,revision:data.revision});
       }
-      localStorage.removeItem(key);return workspaceResult?data.payload.settlements[pending.id]:data;
+      localStorage.removeItem(key);global.dispatchEvent(new CustomEvent('silk:c2-pending'));return workspaceResult?data.payload.settlements[pending.id]:data;
     }catch(error){
-      if(/^(22|23|40001|42501|P0001)/.test(error.code||''))localStorage.removeItem(key);
-      else throw Error('Testbuchung noch nicht bestätigt. Nicht erneut auszahlen. Dieselbe Anfrage erneut prüfen oder nach Neuladen fortsetzen.');
+      if(/^(22|23|40001|42501|P0001)/.test(error.code||'')&&!(pending.uncertain&&error.code==='42501'))localStorage.removeItem(key);
+      else {pending.uncertain=true;localStorage.setItem(key,JSON.stringify(pending));global.dispatchEvent(new CustomEvent('silk:c2-pending'));if(error.code==='42501')throw error;throw Error('Bestätigung ungeklärt. Nicht erneut auszahlen. Mit „Bestätigung erneut prüfen“ dieselbe Anfrage fortsetzen.');}
+      global.dispatchEvent(new CustomEvent('silk:c2-pending'));
       throw error;
     }
   }
+  function pendingC2(){const id=repo.getWorkspace()?.id;return id?global.SilkStorageModels.parse(localStorage.getItem('silk_c2_pending_'+id),null):null;}
   async function resumeC2(){
     if(!cloud?.workspaceId)throw Error('Keine Serververbindung.');
     const p=global.SilkStorageModels.parse(localStorage.getItem('silk_c2_pending_'+cloud.workspaceId),null);
     if(!p)return null;return c2Mutation(p.request.name,p.request.args,p.revision,p.request.name==='tip_c2_finalize');
   }
-  global.SilkSyncService={init,stop,syncNow,finalize,c2Request,c2Mutation,resumeC2,refreshFromCloud:syncNow,showConflicts:renderConflicts,pair:()=>cloud?pairingView():init()};
+  global.SilkSyncService={init,stop,syncNow,finalize,c2Request,c2Mutation,resumeC2,pendingC2,refreshFromCloud:syncNow,showConflicts:renderConflicts,pair:()=>cloud?pairingView():init()};
 })(window);

@@ -19,6 +19,6 @@ for(const file of ['variant-c-allocation.js','variant-c-calculation-adapter.js']
 const localOnly = !localApi && ( process.env.VERCEL_ENV === 'preview' || process.env.SILK_LOCAL_ONLY === '1');
 const url = localApi || (localOnly ? '' : process.env.SILK_SUPABASE_URL || '');
 const publishableKey = localOnly ? '' : process.env.SILK_SUPABASE_PUBLISHABLE_KEY || '';
-await writeFile(new URL('../dist/supabase-config.js', import.meta.url), `window.SILK_SUPABASE_CONFIG=${JSON.stringify({url,publishableKey,localOnly,c2Candidate:true,c2LocalTest:!!localApi})};\n`);
+await writeFile(new URL('../dist/supabase-config.js', import.meta.url), `window.SILK_SUPABASE_CONFIG=${JSON.stringify({url,publishableKey,localOnly,c2Candidate:true,c2LocalTest:!!localApi,c2AppApproved:!localApi&&!localOnly&&process.env.SILK_C2_APP_APPROVAL==='approved-c2'})};\n`);
 if (localOnly) console.info('Isolated preview: Supabase disabled.');
 else if (!url || !publishableKey) console.warn('Supabase configuration missing; local-only fallback will be used.');

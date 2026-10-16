@@ -1,8 +1,8 @@
--- C2 STEP 5: ISOLATED ACCEPTANCE CANDIDATE, NOT A PRODUCTION MIGRATION.
--- Apply after v14-integrity and variant-c-postgres proposals ONLY to disposable synthetic DB.
+-- C2 RELEASE CANDIDATE, PREPARED ONLY: separate SQL production approval required.
+-- Verified in disposable synthetic DB. Apply after v14-integrity and variant-c-postgres only after release checks.
 -- No historical backfill. No gate/operator rows are inserted. Real finalization stays locked.
 BEGIN;
-CREATE TABLE private.tip_c2_gate(workspace_id uuid PRIMARY KEY REFERENCES public.tip_workspaces(id), synthetic_only boolean NOT NULL CHECK(synthetic_only));
+CREATE TABLE private.tip_c2_gate(workspace_id uuid PRIMARY KEY REFERENCES public.tip_workspaces(id), synthetic_only boolean NOT NULL DEFAULT true, sql_approval_ref text, approved_at timestamptz, CHECK(synthetic_only OR (sql_approval_ref IS NOT NULL AND length(btrim(sql_approval_ref))>=8 AND approved_at IS NOT NULL)));
 CREATE TABLE private.tip_c2_operators(workspace_id uuid REFERENCES public.tip_workspaces(id), actor uuid, can_finalize boolean NOT NULL DEFAULT false, can_confirm_cash boolean NOT NULL DEFAULT false, PRIMARY KEY(workspace_id,actor));
 CREATE TABLE private.tip_c2_chains(workspace_id uuid REFERENCES public.tip_workspaces(id),root_id text,revision bigint NOT NULL DEFAULT 0,baseline_confirmed boolean NOT NULL DEFAULT false,latest_id text NOT NULL,PRIMARY KEY(workspace_id,root_id));
 CREATE TABLE private.tip_c2_cash(workspace_id uuid,root_id text,event_id uuid,recipient_id text,amount_cents bigint NOT NULL CHECK(amount_cents%100=0),kind text NOT NULL CHECK(kind IN ('baseline','payout','refund')),evidence_ref text NOT NULL,confirmed_by uuid NOT NULL,confirmed_at timestamptz NOT NULL DEFAULT clock_timestamp(),PRIMARY KEY(workspace_id,event_id,recipient_id),FOREIGN KEY(workspace_id,root_id) REFERENCES private.tip_c2_chains(workspace_id,root_id));
@@ -18,12 +18,18 @@ REVOKE ALL ON private.tip_c2_gate,private.tip_c2_operators,private.tip_c2_chains
 CREATE FUNCTION private.tip_c2_immutable() RETURNS trigger LANGUAGE plpgsql SET search_path='' AS $$ BEGIN RAISE EXCEPTION 'SILK_C2_APPEND_ONLY';END $$;
 CREATE TRIGGER tip_c2_cash_immutable BEFORE UPDATE OR DELETE ON private.tip_c2_cash FOR EACH ROW EXECUTE FUNCTION private.tip_c2_immutable();
 CREATE TRIGGER tip_c2_operations_immutable BEFORE UPDATE OR DELETE ON private.tip_c2_operations FOR EACH ROW EXECUTE FUNCTION private.tip_c2_immutable();
+-- No gate rows are created. App builds separately require their explicit release flag.
+CREATE FUNCTION private.tip_c2_permissions(w uuid) RETURNS jsonb LANGUAGE sql STABLE SET search_path='' AS $$
+ SELECT jsonb_build_object('enabled',coalesce(g.workspace_id IS NOT NULL AND (NOT g.synthetic_only OR current_database() ~ '^silk_c2_test_[a-z0-9_]+$' OR position('PGlite' in version())>0),false),
+ 'syntheticOnly',coalesce(g.synthetic_only,true),'canFinalize',coalesce(o.can_finalize,false),'canConfirmCash',coalesce(o.can_confirm_cash,false))
+ FROM (SELECT w AS id) source LEFT JOIN private.tip_c2_gate g ON g.workspace_id=source.id LEFT JOIN private.tip_c2_operators o ON o.workspace_id=source.id AND o.actor=auth.uid();
+$$;
 CREATE FUNCTION private.tip_c2_authorize(w uuid,operation text) RETURNS void LANGUAGE plpgsql SET search_path='' AS $$
+DECLARE permissions jsonb;
 BEGIN
- PERFORM private.tip_v14_access(w);
- -- A client flag/JWT claim cannot enable settlement. Only local synthetic databases can pass.
- IF (current_database() !~ '^silk_c2_test_[a-z0-9_]+$' AND position('PGlite' in version())=0) OR NOT EXISTS(SELECT 1 FROM private.tip_c2_gate WHERE workspace_id=w AND synthetic_only) THEN RAISE EXCEPTION 'SILK_C2_ACCEPTANCE_REQUIRED' USING ERRCODE='42501';END IF;
- IF NOT EXISTS(SELECT 1 FROM private.tip_c2_operators WHERE workspace_id=w AND actor=auth.uid() AND CASE WHEN operation='cash' THEN can_confirm_cash ELSE can_finalize END) THEN RAISE EXCEPTION 'SILK_C2_ROLE_REQUIRED' USING ERRCODE='42501';END IF;
+ PERFORM private.tip_v14_access(w);permissions:=private.tip_c2_permissions(w);
+ IF NOT (permissions->>'enabled')::boolean THEN RAISE EXCEPTION 'SILK_C2_ACCEPTANCE_REQUIRED' USING ERRCODE='42501';END IF;
+ IF NOT (permissions->>(CASE WHEN operation='cash' THEN 'canConfirmCash' ELSE 'canFinalize' END))::boolean THEN RAISE EXCEPTION 'SILK_C2_ROLE_REQUIRED' USING ERRCODE='42501';END IF;
 END $$;
 CREATE FUNCTION private.tip_c2_validate(r public.tip_workspace_state,p_input jsonb) RETURNS void LANGUAGE plpgsql SET search_path='' AS $$
 DECLARE period jsonb;firstday date;lastday date;e record;assignments jsonb;
@@ -54,7 +60,7 @@ BEGIN
  IF root_id IS NOT NULL THEN
   previous:=payload->'settlements'->(net->>'previousReceiptId')->'resultData';
   IF previous->>'version'='silk-whole-chf-c-2' THEN
-   IF previous->>'cashReconciliationStatus' NOT IN ('not-required','synthetic-confirmed') THEN RAISE EXCEPTION 'SILK_CASH_BASELINE_UNVERIFIED';END IF;
+   IF previous->>'cashReconciliationStatus' NOT IN ('not-required','synthetic-confirmed','confirmed') THEN RAISE EXCEPTION 'SILK_CASH_BASELINE_UNVERIFIED';END IF;
    prior:=(previous->>'roundingAdjustmentCents')::numeric::bigint;
   ELSIF (previous->>'inputCents')::numeric IS DISTINCT FROM (previous->>'payoutCents')::numeric OR previous->>'inputCents' IS NULL THEN
    RAISE EXCEPTION 'SILK_CASH_BASELINE_UNVERIFIED';
@@ -74,13 +80,13 @@ BEGIN
   IF coalesce(root->>'dataFormat','') NOT IN ('final-v3','final-v4-c2') OR root ? 'correctionOf' OR root->>'periodStart' IS DISTINCT FROM p_input->>'periodStart' OR root->>'periodEnd' IS DISTINCT FROM p_input->>'periodEnd' THEN RAISE EXCEPTION 'SILK_C2_INVALID_ROOT';END IF;
   correction:=private.tip_c2_net(p_workspace_id,p_root_id,candidate);
  END IF;
- RETURN jsonb_build_object('revision',r.revision,'candidate',candidate,'netCorrection',correction,'cashReconciliationDueCents',private.tip_c2_cash_due(r.payload,p_root_id,correction,candidate),'realFinalizationAllowed',false);
+ RETURN jsonb_build_object('revision',r.revision,'candidate',candidate,'netCorrection',correction,'cashReconciliationDueCents',private.tip_c2_cash_due(r.payload,p_root_id,correction,candidate),'permissions',private.tip_c2_permissions(p_workspace_id),'realFinalizationAllowed',(private.tip_c2_permissions(p_workspace_id)->>'enabled')::boolean AND NOT (private.tip_c2_permissions(p_workspace_id)->>'syntheticOnly')::boolean AND (private.tip_c2_permissions(p_workspace_id)->>'canFinalize')::boolean);
 END $$;
 -- Older clients must not bypass the C2 release gate by calling the V1.4 endpoint.
 CREATE OR REPLACE FUNCTION public.tip_finalize_workspace_v14(p_workspace_id uuid,p_expected_revision bigint,p_id uuid,p_input jsonb) RETURNS public.tip_workspace_state LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN PERFORM private.tip_v14_access(p_workspace_id);RAISE EXCEPTION 'SILK_C2_ACCEPTANCE_REQUIRED' USING ERRCODE='42501';END $$;
 CREATE FUNCTION public.tip_c2_finalize(p_workspace_id uuid,p_expected_revision bigint,p_id uuid,p_input jsonb,p_root_id text DEFAULT NULL,p_chain_revision bigint DEFAULT NULL,p_reason text DEFAULT NULL,p_cash_evidence jsonb DEFAULT NULL) RETURNS public.tip_workspace_state LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
-DECLARE r public.tip_workspace_state;req jsonb;op private.tip_c2_operations;finance jsonb;net jsonb;receipt jsonb;root jsonb;e record;chain private.tip_c2_chains;adjustment bigint;cash jsonb;now_at timestamptz:=clock_timestamp();
+DECLARE r public.tip_workspace_state;req jsonb;op private.tip_c2_operations;finance jsonb;net jsonb;receipt jsonb;root jsonb;e record;chain private.tip_c2_chains;adjustment bigint;cash jsonb;now_at timestamptz:=clock_timestamp();synthetic boolean;
 BEGIN
  PERFORM private.tip_c2_authorize(p_workspace_id,'finalize');
  IF p_id IS NULL THEN RAISE EXCEPTION 'SILK_C2_REQUEST_ID_REQUIRED';END IF;
@@ -88,6 +94,7 @@ BEGIN
  IF NOT FOUND THEN RAISE EXCEPTION 'SILK_ADOPTION_REQUIRED';END IF;
  -- Recheck current rights after a potentially blocking lock, including retries.
  PERFORM private.tip_c2_authorize(p_workspace_id,'finalize');
+ synthetic:=(private.tip_c2_permissions(p_workspace_id)->>'syntheticOnly')::boolean;
  req:=jsonb_build_object('type','finalize','input',p_input,'rootId',p_root_id,'reason',p_reason,'cashEvidence',p_cash_evidence,'chainRevision',p_chain_revision);
  SELECT * INTO op FROM private.tip_c2_operations WHERE workspace_id=p_workspace_id AND request_id=p_id;
  IF FOUND THEN IF op.request IS DISTINCT FROM req THEN RAISE EXCEPTION 'SILK_IDEMPOTENCY_CONFLICT';END IF;RETURN r;END IF;
@@ -111,12 +118,12 @@ BEGIN
  -- Reconciliation is explicit evidence on this target, never inferred from the calculated delta.
  IF adjustment<>0 THEN
   IF jsonb_typeof(p_cash_evidence) IS DISTINCT FROM 'object' OR p_cash_evidence->>'adjustmentCents' IS DISTINCT FROM adjustment::text OR length(trim(coalesce(p_cash_evidence->>'reference','')))<5 OR p_cash_evidence->>'kind' IS DISTINCT FROM (CASE WHEN adjustment>0 THEN 'funding' ELSE 'remainder' END) THEN RAISE EXCEPTION 'SILK_CASH_EVIDENCE_REQUIRED';END IF;
-  cash:=p_cash_evidence||jsonb_build_object('confirmedBy',auth.uid(),'confirmedAt',now_at,'syntheticOnly',true,'targetAdjustmentCents',finance->'roundingAdjustmentCents');
+  cash:=p_cash_evidence||jsonb_build_object('confirmedBy',auth.uid(),'confirmedAt',now_at,'syntheticOnly',synthetic,'targetAdjustmentCents',finance->'roundingAdjustmentCents');
  ELSE
   IF p_cash_evidence IS NOT NULL THEN RAISE EXCEPTION 'SILK_CASH_EVIDENCE_UNEXPECTED';END IF;cash:=NULL;
  END IF;
- finance:=finance||jsonb_build_object('previewOnly',false,'canFinalize',false,'cashReconciliationStatus',CASE WHEN adjustment=0 THEN 'not-required' ELSE 'synthetic-confirmed' END,'cashReconciliationEvidence',cash,'cashReconciliationDueCents',adjustment);
- receipt:=jsonb_build_object('id',p_id,'dataFormat','final-v4-c2','syntheticOnly',true,'label','TEST · '||(p_input->>'periodStart')||' – '||(p_input->>'periodEnd'),'periodStart',p_input->>'periodStart','periodEnd',p_input->>'periodEnd','savedAt',now_at,'finalizedAt',now_at,'finalizedBy',auth.uid(),'serverRevision',r.revision+1,'inputSnapshot',p_input,'resultData',finance,'paymentStatus','not-confirmed','automaticPayoutAllowed',false);
+ finance:=finance||jsonb_build_object('previewOnly',false,'canFinalize',false,'cashReconciliationStatus',CASE WHEN adjustment=0 THEN 'not-required' WHEN synthetic THEN 'synthetic-confirmed' ELSE 'confirmed' END,'cashReconciliationEvidence',cash,'cashReconciliationDueCents',adjustment);
+ receipt:=jsonb_build_object('id',p_id,'dataFormat','final-v4-c2','syntheticOnly',synthetic,'label',(CASE WHEN synthetic THEN 'TEST · ' ELSE '' END)||(p_input->>'periodStart')||' – '||(p_input->>'periodEnd'),'periodStart',p_input->>'periodStart','periodEnd',p_input->>'periodEnd','savedAt',now_at,'finalizedAt',now_at,'finalizedBy',auth.uid(),'serverRevision',r.revision+1,'inputSnapshot',p_input,'resultData',finance,'paymentStatus','not-confirmed','automaticPayoutAllowed',false);
  IF p_root_id IS NOT NULL THEN
   receipt:=receipt||jsonb_build_object('correctionOf',p_root_id,'correctionReason',p_reason,'netCorrection',net);
   UPDATE private.tip_c2_chains SET revision=revision+1,latest_id=p_id::text WHERE workspace_id=p_workspace_id AND root_id=p_root_id;
@@ -161,7 +168,7 @@ BEGIN
   INSERT INTO private.tip_c2_cash(workspace_id,root_id,event_id,recipient_id,amount_cents,kind,evidence_ref,confirmed_by) VALUES(p_workspace_id,p_root_id,p_id,line->>'id',amount,p_kind,trim(p_evidence_ref),auth.uid());
  END LOOP;
  UPDATE private.tip_c2_chains SET revision=revision+1,baseline_confirmed=true WHERE workspace_id=p_workspace_id AND root_id=p_root_id;
- result:=private.tip_c2_net(p_workspace_id,p_root_id,target)||jsonb_build_object('syntheticOnly',true,'eventId',p_id,'evidenceRef',trim(p_evidence_ref),'confirmedBy',auth.uid());
+ result:=private.tip_c2_net(p_workspace_id,p_root_id,target)||jsonb_build_object('syntheticOnly',(private.tip_c2_permissions(p_workspace_id)->>'syntheticOnly')::boolean,'eventId',p_id,'evidenceRef',trim(p_evidence_ref),'confirmedBy',auth.uid());
  INSERT INTO private.tip_c2_operations VALUES(p_workspace_id,p_id,req,result,auth.uid(),clock_timestamp());RETURN result;
 END $$;
 CREATE FUNCTION public.tip_c2_ledger(p_workspace_id uuid,p_expected_revision bigint,p_root_id text) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
@@ -173,13 +180,13 @@ BEGIN
  root:=r.payload->'settlements'->p_root_id;
  IF coalesce(root->>'dataFormat','') NOT IN ('final-v3','final-v4-c2') OR root ? 'correctionOf' THEN RAISE EXCEPTION 'SILK_C2_INVALID_ROOT';END IF;
  SELECT * INTO chain FROM private.tip_c2_chains WHERE workspace_id=p_workspace_id AND root_id=p_root_id;
- RETURN jsonb_build_object('rootFinalId',p_root_id,'revision',r.revision,'chainRevision',coalesce(chain.revision,0),'baselineConfirmed',coalesce(chain.baseline_confirmed,false),'latestReceiptId',coalesce(chain.latest_id,p_root_id),
+ RETURN jsonb_build_object('permissions',private.tip_c2_permissions(p_workspace_id),'rootFinalId',p_root_id,'revision',r.revision,'chainRevision',coalesce(chain.revision,0),'baselineConfirmed',coalesce(chain.baseline_confirmed,false),'latestReceiptId',coalesce(chain.latest_id,p_root_id),
   'movements',coalesce((SELECT jsonb_agg(jsonb_build_object('eventId',event_id,'recipientId',recipient_id,'amountCents',amount_cents,'kind',kind,'evidenceRef',evidence_ref,'confirmedBy',confirmed_by,'confirmedAt',confirmed_at) ORDER BY confirmed_at,event_id,recipient_id) FROM private.tip_c2_cash WHERE workspace_id=p_workspace_id AND root_id=p_root_id),'[]'::jsonb),
   'confirmations',coalesce((SELECT jsonb_agg(result||jsonb_build_object('confirmedAt',created_at) ORDER BY created_at,request_id) FROM private.tip_c2_operations WHERE workspace_id=p_workspace_id AND request->>'type'='cash' AND request->>'rootId'=p_root_id),'[]'::jsonb));
 END $$;
 REVOKE ALL ON FUNCTION public.tip_c2_ledger(uuid,bigint,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.tip_c2_ledger(uuid,bigint,text) TO authenticated;
-REVOKE ALL ON FUNCTION private.tip_c2_immutable(),private.tip_c2_authorize(uuid,text),private.tip_c2_validate(public.tip_workspace_state,jsonb),private.tip_c2_net(uuid,text,jsonb),private.tip_c2_cash_due(jsonb,text,jsonb,jsonb) FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION private.tip_c2_permissions(uuid),private.tip_c2_immutable(),private.tip_c2_authorize(uuid,text),private.tip_c2_validate(public.tip_workspace_state,jsonb),private.tip_c2_net(uuid,text,jsonb),private.tip_c2_cash_due(jsonb,text,jsonb,jsonb) FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON FUNCTION public.tip_c2_preview(uuid,bigint,jsonb,text),public.tip_c2_finalize(uuid,bigint,uuid,jsonb,text,bigint,text,jsonb),public.tip_c2_confirm_cash(uuid,bigint,uuid,text,bigint,text,text,jsonb,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.tip_c2_preview(uuid,bigint,jsonb,text),public.tip_c2_finalize(uuid,bigint,uuid,jsonb,text,bigint,text,jsonb),public.tip_c2_confirm_cash(uuid,bigint,uuid,text,bigint,text,text,jsonb,text) TO authenticated;
 COMMIT;

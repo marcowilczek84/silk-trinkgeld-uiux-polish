@@ -80,7 +80,7 @@
     const table=document.createElement('table');table.className='workspace-table';
     const caption=document.createElement('caption');caption.textContent='Berechnete Anteile und Auszahlungen';table.append(caption);
     const head=document.createElement('thead'),header=document.createElement('tr');
-    ['Mitarbeiter / Bereich','Dienste','Anteil (CHF)','Auszahlung (CHF)'].forEach((x,i)=>{const th=cell(header,'th',x,i>1?'numeric':'');th.scope='col';});head.append(header);table.append(head);
+    ['Mitarbeiter / Bereich','Dienste','Anteil (CHF)','Berechnet (CHF)'].forEach((x,i)=>{const th=cell(header,'th',x,i>1?'numeric':'');th.scope='col';});head.append(header);table.append(head);
     const tbody=document.createElement('tbody');
     for(const line of numbers.lines){const row=document.createElement('tr');if(line.days===undefined)row.className='workspace-total-row';
       const name=line.days===undefined?line.name:window.SilkIdentity.staffLabel(line.name);
@@ -89,8 +89,8 @@
     }table.append(tbody);presentation.append(table);
     const rounded=numbers.lines.reduce((sum,line)=>sum+line.payout,0);
     const note=document.createElement('div');note.className='workspace-rounding';
-    cell(note,'span','Auszahlung gesamt');cell(note,'strong',numbers.canFinalize?money(rounded):'Nicht freigegeben');
-    const help=document.createElement('p');help.textContent=window.SilkC2?.enabled()?'C2-Kandidat: '+money(numbers.payoutCents/100)+' · Gesamtsumme einmal kaufmännisch auf ganze Franken gerundet; Verteilung nach grössten exakten Resten. Kassenrundungsbetrag: '+money(numbers.roundingAdjustmentCents/100)+'. Kein bestätigter Kassenausgleich. Echte Finalisierung bis zur Abnahme gesperrt.':numbers.canFinalize?'Summengleiche Rundung auf ganze Franken · exakte Rappenrechnung.':'Die bisherige Einzelrundung würde '+money(numbers.candidatePayoutCents/100)+' ergeben. Differenz zum Eingang: '+money(numbers.residualCents/100)+'. Finalisierung bis zur Entscheidung über die Restbetragsverteilung gesperrt.';note.append(help);presentation.append(note);
+    cell(note,'span','Berechnete Auszahlung gesamt');cell(note,'strong',window.SilkC2?.enabled()?money(numbers.payoutCents/100):numbers.canFinalize?money(rounded):'Nicht freigegeben');
+    const help=document.createElement('p');help.textContent=window.SilkC2?.enabled()?'Gesamtsumme einmal auf ganze Franken gerundet, nach grössten exakten Resten verteilt. '+SilkC2UI.roundingText(numbers.roundingAdjustmentCents)+' Berechnet, noch nicht als Auszahlung bestätigt.':numbers.canFinalize?'Summengleiche Rundung auf ganze Franken · exakte Rappenrechnung.':'Die bisherige Einzelrundung würde '+money(numbers.candidatePayoutCents/100)+' ergeben. Differenz zum Eingang: '+money(numbers.residualCents/100)+'. Finalisierung bis zur Entscheidung über die Restbetragsverteilung gesperrt.';note.append(help);presentation.append(note);
     const rules=document.createElement('p');rules.className='workspace-rule-note';rules.textContent='Ausgangsverteilung: Service 70 % · Küche 30 %. Housekeeping: je 2,5 % vom jeweiligen Anteil. Sonderregeln und Schichtgewichtungen bleiben berücksichtigt.';presentation.append(rules);
     resultSection.classList.add('workspace-projected');
   }

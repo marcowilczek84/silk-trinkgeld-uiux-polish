@@ -77,3 +77,19 @@ test('C2 overpayment separate, no automatic withholding; confirmed refund reduce
 });
 
 test('C2 tied Unicode IDs preserve the approved JavaScript order, independent of database collation',async()=>{const db=await c2db();try{await db.exec('reset role');const i=input('1.50',['😀','\ue000','Ä','Z']);const sql=(await db.query('select private.tip_finance_variant_c_candidate($1) result',[i])).rows[0].result;assert.deepEqual(normalize(sql),normalize(context.SilkVariantCPreview.preview(i)));const items=['staff:😀','staff:\ue000'].map(id=>({id,n:1,d:2}));assert.deepEqual((await db.query('select private.tip_c_allocate_whole($1,1) result',[items])).rows[0].result,{'staff:😀':1,'staff:\ue000':0});}finally{await db.close();}});
+
+// Release-path semantics are exercised only against a disposable synthetic fixture.
+test('C2 production path stays closed without explicit server approval; gated receipt and cash evidence remain immutable',async()=>{
+ const db=await c2db({gate:false});try{
+  await db.exec('reset role');await assert.rejects(db.query('insert into private.tip_c2_gate(workspace_id,synthetic_only) values($1,false)',[target]),/check constraint/);
+  await actor(db,member);assert.equal((await preview(db,input())).realFinalizationAllowed,false);
+  await db.exec('reset role');await db.query("insert into private.tip_c2_gate values($1,false,'SYNTHETIC-RELEASE-APPROVAL',now())",[target]);await actor(db,member);
+  const i=input('1000.50',['A']);await store(db,i);assert.equal((await preview(db,i)).realFinalizationAllowed,true);
+  const r=await finish(db,i,id(91)),receipt=r.payload.settlements[id(91)];assert.equal(receipt.syntheticOnly,false);assert.equal(receipt.label.includes('TEST'),false);assert.equal(receipt.resultData.cashReconciliationStatus,'confirmed');assert.equal(receipt.paymentStatus,'not-confirmed');
+  const proof=await cash(db,id(91),id(92),receipt.resultData.lines.map(x=>({id:x.id,amountCents:x.payoutCents})));assert.equal(proof.syntheticOnly,false);
+  const changed=input('1000.90',['A']);await store(db,changed);assert.equal((await preview(db,changed,id(91))).cashReconciliationDueCents,-40);
+  await db.exec('reset role');await db.query('delete from private.tip_c2_gate where workspace_id=$1',[target]);await actor(db,member);
+  await assert.rejects(finish(db,changed,id(93),{root:id(91),chain:1,reason:'Synthetic release rollback',cash:{adjustmentCents:-40,kind:'remainder',reference:'SYNTHETIC-RELEASE-REMAINDER'}}),/ACCEPTANCE_REQUIRED/);
+  assert.deepEqual((await row(db)).payload.settlements[id(91)],receipt);
+ }finally{await db.close();}
+});

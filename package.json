@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
-    "lint": "eslint assignment-identity.js local-repository.js release-ui.js draft-workflow.js sync-merge.js sync-status.js silk-import.js scripts/*.mjs tests/*.test.mjs tests/app-helper.mjs tests/browser-integrity.mjs sync-service.js supabase-client-entry.js tests/cloud-integrity.mjs tests/browser-cloud-integrity.mjs professional-workspace.js tests/workspace-fixture.mjs tests/browser-workspace.mjs write-coordinator.js financial-core.js tests/browser-v14.mjs tests/v14-db-helper.mjs c2-integration.js tests/c2-db-helper.mjs tests/c2-http-harness.mjs tests/browser-c2.mjs",
+    "lint": "eslint assignment-identity.js local-repository.js release-ui.js draft-workflow.js sync-merge.js sync-status.js silk-import.js scripts/*.mjs tests/*.test.mjs tests/app-helper.mjs tests/browser-integrity.mjs sync-service.js supabase-client-entry.js tests/cloud-integrity.mjs tests/browser-cloud-integrity.mjs professional-workspace.js tests/workspace-fixture.mjs tests/browser-workspace.mjs write-coordinator.js financial-core.js tests/browser-v14.mjs tests/v14-db-helper.mjs c2-integration.js c2-workflow-ui.js tests/c2-db-helper.mjs tests/c2-http-harness.mjs tests/browser-c2.mjs",
     "typecheck": "tsc -p tsconfig.integrity.json",
     "test:browser": "node tests/browser-integrity.mjs",
     "test:cloud": "node tests/cloud-integrity.mjs",

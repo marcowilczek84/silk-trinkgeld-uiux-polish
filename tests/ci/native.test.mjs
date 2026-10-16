@@ -16,6 +16,19 @@ test('C2 native Supabase isolated acceptance',{timeout:300000},async t=>{
   const cashArgs=async(root,receipt,chain,kind,lines,ref=randomUUID())=>({p_expected_revision:Number((await h.row()).revision),p_id:randomUUID(),p_root_id:root,p_chain_revision:chain,p_receipt_id:receipt,p_kind:kind,p_lines:lines,p_evidence_ref:ref});
   const cash=async args=>{const r=await h.rpc('tip_c2_confirm_cash',args,token());assert.equal(r.status,200,JSON.stringify(r.body));return r.body;};
 
+  await check('release gate: explicit approval required, default closed, gated production path on synthetic fixtures only',async()=>{
+   await h.admin.query('delete from private.tip_c2_gate where workspace_id=$1',[target]);
+   await assert.rejects(h.admin.query('insert into private.tip_c2_gate(workspace_id,synthetic_only) values($1,false)',[target]),/check constraint/);
+   assert.equal((await h.rpc('tip_c2_finalize',await finalArgs(input()),token())).status,403);
+   await h.admin.query("insert into private.tip_c2_gate values($1,false,'SYNTHETIC-RELEASE-APPROVAL',now())",[target]);
+   const i=input('1000.50',['A']);await h.store(i,token());assert.equal((await preview(i)).body.realFinalizationAllowed,true);
+   const closed=await finish(i,{p_cash_evidence:{adjustmentCents:50,kind:'funding',reference:'SYNTHETIC-RELEASE-FUNDING'}});assert.equal(closed.receipt.syntheticOnly,false);assert.equal(closed.receipt.resultData.cashReconciliationStatus,'confirmed');assert.equal(closed.receipt.paymentStatus,'not-confirmed');
+   const paid=await cash(await cashArgs(closed.args.p_id,closed.args.p_id,0,'baseline',closed.receipt.resultData.lines.map(x=>({id:x.id,amountCents:x.payoutCents}))));assert.equal(paid.syntheticOnly,false);
+   await h.admin.query('delete from private.tip_c2_gate where workspace_id=$1',[target]);
+   assert.equal((await h.rpc('tip_c2_finalize',closed.args,token())).status,403);assert.deepEqual((await h.row()).payload.settlements[closed.args.p_id],closed.receipt);
+   return {fixtureDataOnly:true,liveProductionChanged:false,gateRemovedBlocksWrites:true,receiptUnchanged:true};
+  });
+
   await check('real Auth login, refresh, invalid JWT, RLS and separate operation rights',async()=>{
    assert.equal((await h.http('/auth/v1/user',{token:token()})).status,200);
    const refreshed=await h.http('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:h.users.b.session.refresh_token}});assert.equal(refreshed.status,200);h.users.b.session=refreshed.body;

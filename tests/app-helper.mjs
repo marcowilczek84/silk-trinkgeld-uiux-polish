@@ -7,8 +7,8 @@ export async function app(storage={},options={}) {
    const source=await readFile(new URL(file,root),'utf8');html=html.replace(match[0],()=>'<script>'+source+'</script>');
  }
  const errors=[],virtualConsole=new VirtualConsole();virtualConsole.on('jsdomError',e=>errors.push(e.message));
- const dom=new JSDOM(html,{url:'https://silk-test.invalid',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole,beforeParse(w){
-   if(options.c2)w.SILK_SUPABASE_CONFIG={c2Candidate:true};
+ const dom=new JSDOM(html,{url:options.url||'https://silk-test.invalid',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole,beforeParse(w){
+   if(options.c2)w.SILK_SUPABASE_CONFIG={c2Candidate:true,c2LocalTest:!!options.c2LocalTest};
    Object.defineProperty(w.navigator,'locks',{value:{request:async (_name,_options,callback)=>callback({name:'test-lock'})}});
    for(const [k,v] of Object.entries(storage))w.localStorage.setItem(k,v);
    w.HTMLElement.prototype.scrollIntoView=()=>{};w.alert=()=>{};w.confirm=()=>true;

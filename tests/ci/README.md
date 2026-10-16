@@ -23,19 +23,12 @@ Der native Test hat belegt, dass bereits wartende Schreib-, Finalisierungs- und 
 
 PostgREST bildet den bestehenden SQL-Konfliktcode `40001` auf HTTP 500 ab. Die Tests prüfen diesen Code, den fachlichen Konflikt und den erhaltenen Datenstand. Die bestehende App verarbeitet `40001` bereits als Versionskonflikt; die native API wird nicht auf die künstliche HTTP-409-Antwort des früheren Testadapters umgeschrieben.
 
-## Abnahmegrenzen und Bedienablauf
+## Bedienkandidat nach Schritt 5b
 
-Ein erfolgreicher CI-Lauf ist **Runner-lokale native Integration**, keine gehostete Cloud- oder physische Geräteabnahme. Die echte Finalisierung bleibt gesperrt. Kassenregel und die Benutzeroberfläche für Bestätigungen sind weiterhin offen.
+Der bestehende Ablauf ist um sichtbare Abschluss-, Auszahlungs- und Rückzahlungsbestätigungen ergänzt. Der Browserlauf verwendet diese Formulare statt direkter Test-API-Mutationen. Er prüft beide Rundungszeichen, verlorene Antworten auf Abschluss und Auszahlung mit Neuladen, Rechteentzug, konkurrierende Bestätigung, eine Korrektur eines Korrekturbelegs, getrennte Rückzahlung sowie den erhaltenen Originalbeleg. Screenshots enthalten nur synthetische Daten.
 
-Für die spätere Bedienoberfläche ist folgende Reihenfolge vorzusehen, noch nicht freigegeben:
+Die App-Freigabe und das serverseitige Gate sind standardmässig geschlossen. Das synthetische Fixture darf den späteren Produktionspfad gezielt prüfen, ohne eine echte Umgebung zu aktivieren. Ein Server-Gate für den Produktivmodus verlangt eine Freigabereferenz und einen Zeitpunkt. Clientkonfiguration ersetzt weder Gate noch Rechteprüfung.
 
-1. Aktuelle Periode/Revision und offenen Kassenbetrag anzeigen; Berechnung und tatsächlichen Nachweis klar unterscheiden.
-2. Berechtigte Person erfasst tatsächliche Quelle bzw. Empfänger/Konto, signierten Betrag und eindeutige Belegreferenz. Ein Dialog muss vor Bestätigung Zeitraum und Betrag zusammen zeigen. Keine Vorbelegung als bereits ausgeglichen.
-3. Abschlussbeleg und tatsächliche Auszahlung bleiben getrennt. Zahlungen pro Empfänger ausdrücklich bestätigen; fehlende Ausgangsbestätigung sperrt Netto-Korrektur.
-4. Verbindungsverlust zeigt „Bestätigung ungeklärt“. Derselbe Auftrag erhält dieselbe Anfrage-ID, auch nach Neuladen. Keine neue Zahlung aus einer Wiederholung ableiten.
-5. Neuere Revision/entzogene Berechtigung verlangt erneutes Laden bzw. beendet den Vorgang. Belegreferenz-Duplikate führen zum vorhandenen Nachweis, nicht zu einer zweiten Buchung.
-6. Überzahlungen separat anzeigen. Rückzahlung erst nach Eingang bestätigen, keine automatische Verrechnung.
+Siehe [Bedienung, Freigabe und Rückfall](../../docs/V1_4_C2_RELEASE_CANDIDATE.md). Der aktuelle CI-Lauf liefert die tatsächlichen Testzahlen; die oben genannten 92 Regressionen beschreiben den übernommenen Stand vor den ergänzten Fällen.
 
-Diese Schritte werden derzeit nur über die Test-API und vorhandene Beleganzeige geprüft. Ein endgültiger Bedienablauf benötigt die fachliche Entscheidung zum Kassenverfahren und anschliessend eigene Touch-/Geräteabnahme.
-
-Backup, Wiederherstellung, produktiver Rollback und getrennte App-/SQL-Freigaben gehören weiterhin zur späteren Releaseprüfung. Der Runner entfernt ausschliesslich seinen eigenen synthetischen Stack.
+Ein erfolgreicher Lauf bleibt **Runner-lokale native Integration**, keine gehostete Cloud- oder physische Geräteabnahme. Production, produktive Datenbanken und historische Daten werden nicht verändert. Kassenverfahren und getrennte App-/SQL-Freigaben sind weiterhin von Marco zu bestätigen. Backup-, Wiederherstellungs- und produktive Rollback-Nachweise gehören zur kontrollierten Releaseprüfung.
