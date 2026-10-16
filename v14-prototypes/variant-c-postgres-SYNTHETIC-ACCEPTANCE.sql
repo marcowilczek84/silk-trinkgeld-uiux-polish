@@ -6,7 +6,7 @@
 
 DO $silk_test$
 DECLARE
-  v_input jsonb; v_out jsonb; v_lines jsonb; v_total numeric;
+  v_input jsonb; v_out jsonb; v_lines jsonb; v_total numeric; v_example record;
 BEGIN
   v_input:=$synthetic$
   {
@@ -17,7 +17,7 @@ BEGIN
   $synthetic$::jsonb;
   v_out:=private.tip_finance_variant_c_candidate(v_input);
   v_lines:=v_out->'lines';
-  IF (v_out->>'version') IS DISTINCT FROM 'silk-whole-chf-c-1'
+  IF (v_out->>'version') IS DISTINCT FROM 'silk-whole-chf-c-2'
      OR (v_out->>'canFinalize') IS DISTINCT FROM 'false'
      OR (v_out->>'previewOnly') IS DISTINCT FROM 'true'
      OR (v_out->>'payoutCents') IS DISTINCT FROM '100000' THEN
@@ -96,19 +96,39 @@ BEGIN
     RAISE EXCEPTION 'SILK_C_TEST_ZERO_FAILED';
   END IF;
 
-  v_input:=$synthetic$
-  {
-    "staff":["A"],
-    "shifts":[{"name":"F1","f":1,"s":0}],
-    "byDate":{"2035-01-01":{"f":"100.01","s":"0","assignments":[{"name":"A","shift":"F1"}]}}
-  }
-  $synthetic$::jsonb;
-  BEGIN
-    PERFORM private.tip_finance_variant_c_candidate(v_input);
-    RAISE EXCEPTION 'SILK_C_TEST_FRACTION_NOT_BLOCKED';
-  EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM<>'SILK_C_FRACTIONAL_TOTAL_UNRESOLVED' THEN RAISE; END IF;
-  END;
+  -- Whole-period half-up rounding, including originally fractional-CHF receipts.
+  -- This validates calculation only; no payout, SQL grant or cash posting is implied.
+  FOR v_example IN SELECT * FROM (VALUES
+    ('0.00',0::numeric,0::numeric),
+    ('0.10',0::numeric,-10::numeric),
+    ('0.49',0::numeric,-49::numeric),
+    ('0.50',100::numeric,50::numeric),
+    ('0.90',100::numeric,10::numeric),
+    ('100.01',10000::numeric,-1::numeric),
+    ('100.49',10000::numeric,-49::numeric),
+    ('100.50',10100::numeric,50::numeric),
+    ('1801.10',180100::numeric,-10::numeric),
+    ('1801.50',180200::numeric,50::numeric),
+    ('1801.90',180200::numeric,10::numeric)
+  ) AS rows(chf, payout, adjustment) LOOP
+    v_input:=jsonb_build_object('staff',jsonb_build_array('A'),
+      'shifts',jsonb_build_array(jsonb_build_object('name','F1','f',1,'s',0)),
+      'byDate',jsonb_build_object('2035-01-01',jsonb_build_object(
+        'f',v_example.chf,'s','0','assignments',
+        jsonb_build_array(jsonb_build_object('name','A','shift','F1')))));
+    v_out:=private.tip_finance_variant_c_candidate(v_input);
+    v_total:=(SELECT sum((x->>'payoutCents')::numeric) FROM jsonb_array_elements(v_out->'lines') x);
+    IF v_total IS DISTINCT FROM v_example.payout
+       OR (v_out->>'payoutCents')::numeric IS DISTINCT FROM v_example.payout
+       OR (v_out->>'roundingAdjustmentCents')::numeric IS DISTINCT FROM v_example.adjustment
+       OR (v_out->>'cashDifferenceCents')::numeric IS DISTINCT FROM -v_example.adjustment
+       OR (v_out->>'canFinalize') IS DISTINCT FROM 'false'
+       OR (v_out->>'previewOnly') IS DISTINCT FROM 'true'
+       OR (v_out->>'cashReconciliationStatus') IS DISTINCT FROM
+          (CASE WHEN v_example.adjustment=0 THEN 'not-required' ELSE 'pending' END) THEN
+      RAISE EXCEPTION 'SILK_C_PERIOD_CENTS_TEST_FAILED: %',v_example.chf;
+    END IF;
+  END LOOP;
   RAISE NOTICE 'SILK_C_POSTGRES_SYNTHETIC_TESTS_PASSED';
 END $silk_test$;
 
