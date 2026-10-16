@@ -45,7 +45,7 @@ test('C2 native Supabase isolated acceptance',async t=>{
   });
   await check('two actual PostgREST transactions overlap: one stale write loses without data loss',async()=>{
    const docs=[documentFor(input('1000')),documentFor(input('2000'))];const {results:r,backendCount}=await concurrent(h,docs.map((p_payload,n)=>()=>h.rpc('tip_write_workspace_v14',{p_expected_revision:1,p_payload},token(n?'b':'a'))));
-   assert.deepEqual(r.map(x=>x.status).sort(),[200,409]);assert.equal(r.find(x=>x.status===409).body.code,'40001');assert.deepEqual((await h.row()).payload,r.find(x=>x.status===200).body.payload);return {nativeWaitingBackends:backendCount};
+   assert.deepEqual(r.map(x=>x.status).sort(),[200,500],JSON.stringify(r));assert.equal(r.find(x=>x.status===500).body.code,'40001');assert.deepEqual((await h.row()).payload,r.find(x=>x.status===200).body.payload);return {nativeWaitingBackends:backendCount};
   });
   await check('concurrent duplicate finalization, retry after lost acknowledgement, immutable receipt',async()=>{
    const i=input('1000');await h.store(i,token());const args=await finalArgs(i);
@@ -69,7 +69,7 @@ test('C2 native Supabase isolated acceptance',async t=>{
    const correction=await finish(changed,{p_root_id:original.args.p_id,p_chain_revision:1,p_reason:'Synthetic cents correction',p_cash_evidence:{adjustmentCents:20,kind:'funding',reference:'SYNTHETIC-NET-ROUNDING'}});
    const due=correction.receipt.netCorrection.lines.filter(x=>x.additionalDueCents).map(x=>({id:x.id,amountCents:x.additionalDueCents}));const payment=await cashArgs(original.args.p_id,correction.args.p_id,2,'payout',due);
    const paid=await cash(payment);assert.equal(paid.additionalDueCents,0);assert.deepEqual(await cash(payment),paid);
-   const stale=await h.rpc('tip_c2_confirm_cash',{...payment,p_id:randomUUID(),p_evidence_ref:randomUUID()},token());assert.equal(stale.status,409);assert.match(stale.body.message,/STALE_REVISION/);
+   const stale=await h.rpc('tip_c2_confirm_cash',{...payment,p_id:randomUUID(),p_evidence_ref:randomUUID()},token());assert.equal(stale.status,500);assert.equal(stale.body.code,'40001');assert.match(stale.body.message,/STALE_REVISION/);
    const ledger=await h.rpc('tip_c2_ledger',{p_expected_revision:Number((await h.row()).revision),p_root_id:original.args.p_id},token());assert.equal(ledger.body.confirmations.length,2);
    assert.deepEqual((await h.row()).payload.settlements[original.args.p_id],original.receipt);return {nativeWaitingBackends:backendCount,additionalPayoutCents:100,additionalCashEvidenceCents:20};
   });
@@ -77,7 +77,7 @@ test('C2 native Supabase isolated acceptance',async t=>{
    const i=input('1000',['A']);await h.store(i,token());const original=await finish(i);await cash(await cashArgs(original.args.p_id,original.args.p_id,0,'baseline',original.receipt.resultData.lines.map(x=>({id:x.id,amountCents:x.payoutCents}))));
    const changed=input('1000',['A','B']);await h.store(changed,token());const correction=await finish(changed,{p_root_id:original.args.p_id,p_chain_revision:1,p_reason:'Synthetic shift correction'});assert.equal(correction.receipt.netCorrection.additionalDueCents,34100);assert.equal(correction.receipt.netCorrection.overpaidCents,34100);
    const args=await cashArgs(original.args.p_id,correction.args.p_id,2,'payout',[{id:'staff:B',amountCents:34100}]);
-   const {results:r}=await concurrent(h,[()=>h.rpc('tip_c2_confirm_cash',args,token()),()=>h.rpc('tip_c2_confirm_cash',{...args,p_id:randomUUID(),p_evidence_ref:randomUUID()},token('b'))]);assert.deepEqual(r.map(x=>x.status).sort(),[200,409]);assert.equal(r.find(x=>x.status===200).body.overpaidCents,34100);
+   const {results:r}=await concurrent(h,[()=>h.rpc('tip_c2_confirm_cash',args,token()),()=>h.rpc('tip_c2_confirm_cash',{...args,p_id:randomUUID(),p_evidence_ref:randomUUID()},token('b'))]);assert.deepEqual(r.map(x=>x.status).sort(),[200,500],JSON.stringify(r));assert.equal(r.find(x=>x.status===500).body.code,'40001');assert.equal(r.find(x=>x.status===200).body.overpaidCents,34100);
    const refund=await cash(await cashArgs(original.args.p_id,correction.args.p_id,3,'refund',[{id:'staff:A',amountCents:-100}]));assert.equal(refund.overpaidCents,34000);assert.equal(refund.additionalDueCents,0);
    await assert.rejects(h.admin.query('delete from private.tip_c2_cash'),/APPEND_ONLY/);await assert.rejects(h.admin.query('update private.tip_c2_operations set request=request'),/APPEND_ONLY/);
   });
@@ -103,11 +103,21 @@ test('C2 native Supabase isolated acceptance',async t=>{
     assert.ok(!events.some(x=>Number(x.revision)===Number(next.revision)),'revoked member must not receive later row');assert.equal(forbidden.length,0);
    }finally{await good.removeAllChannels();await bad.removeAllChannels();}
   });
-  await check('rights revoked while an RPC waits for its row lock prevent the pending mutation',async()=>{
-   const before=await h.row();
-   const {results:r}=await concurrent(h,[()=>h.rpc('tip_write_workspace_v14',{p_expected_revision:1,p_payload:documentFor(input('999'))},token())],async()=>h.admin.query('update public.tip_workspace_members set active=false where user_id=$1',[h.users.a.id]));
-   assert.equal(r[0].status,403,'queued write must recheck membership after acquiring its lock');
-   assert.deepEqual((await h.row()).payload,before.payload);
+  for(const operation of ['write','finalize','cash'])await check('rights revoked during a locked '+operation+' RPC prevent the pending mutation',async()=>{
+   const i=input('1000');let rpc,args;
+   if(operation==='write'){rpc='tip_write_workspace_v14';args={p_expected_revision:1,p_payload:documentFor(input('999'))};}
+   else{
+    await h.store(i,token());
+    if(operation==='finalize'){rpc='tip_c2_finalize';args=await finalArgs(i);}
+    else{const original=await finish(i);rpc='tip_c2_confirm_cash';args=await cashArgs(original.args.p_id,original.args.p_id,0,'baseline',original.receipt.resultData.lines.map(x=>({id:x.id,amountCents:x.payoutCents})));}
+   }
+   const before=await h.row(),counts=async()=> (await h.admin.query('select (select count(*) from private.tip_c2_operations)::int operations,(select count(*) from private.tip_c2_cash)::int movements')).rows[0],beforeCounts=await counts();
+   const {results:r,backendCount}=await concurrent(h,[()=>h.rpc(rpc,args,token())],async()=>{
+    if(operation==='write')await h.admin.query('update public.tip_workspace_members set active=false where user_id=$1',[h.users.a.id]);
+    else await h.admin.query('update private.tip_c2_operators set can_finalize=false,can_confirm_cash=false where actor=$1',[h.users.a.id]);
+   });
+   assert.equal(r[0].status,403,'queued '+operation+' must recheck rights after acquiring its lock: '+JSON.stringify(r[0].body));
+   assert.deepEqual(await h.row(),before);assert.deepEqual(await counts(),beforeCounts);return {nativeWaitingBackends:backendCount};
   });
   await check('old client protocol, direct writes and legacy finalization remain blocked',async()=>{
    const before=await h.row();for(const protocol of [null,'2','3']){

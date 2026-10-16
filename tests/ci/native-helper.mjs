@@ -65,7 +65,7 @@ export async function bootstrap(h){
 export async function reset(h){
  assert.equal((await h.admin.query('select current_database() db')).rows[0].db,'silk_c2_test_ci');
  // Only fresh synthetic fixture tables in this named disposable database; never cloud.
- await h.admin.query('truncate private.tip_c2_cash,private.tip_c2_operations,private.tip_c2_chains,private.tip_c2_operators,private.tip_c2_gate,public.tip_workspace_members,public.tip_workspace_state');
+ await h.admin.query('truncate private.tip_workspace_events_v14,private.tip_c2_cash,private.tip_c2_operations,private.tip_c2_chains,private.tip_c2_operators,private.tip_c2_gate,public.tip_workspace_members,public.tip_workspace_state');
  await h.admin.query('insert into public.tip_workspace_state(workspace_id,payload) values($1,$2)',[target,documentFor(input())]);
  for(const k of ['a','b','editor'])await h.admin.query('insert into public.tip_workspace_members values($1,$2,true)',[target,h.users[k].id]);
  await h.admin.query('insert into private.tip_c2_gate values($1,true)',[target]);
