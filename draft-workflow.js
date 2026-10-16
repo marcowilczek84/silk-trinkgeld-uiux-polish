@@ -21,7 +21,7 @@
     const button=document.querySelector('.draft-actions button');
     button.textContent=active?.dataFormat?.startsWith('draft')?'Entwurf speichern':'Als Entwurf speichern';
     const finalButton=document.getElementById('saveCalculationButton');
-    if(finalButton){const finalized=active?.dataFormat?.startsWith('final-v')&&!dirty,blocked=work.calculation?.numbers.canFinalize===false;finalButton.textContent=finalized?'Finalisiert':blocked?'Rundungsentscheidung offen':'Abrechnung finalisieren';finalButton.disabled=!!(finalized||blocked);finalButton.classList.toggle('saved',!!finalized);}
+    if(finalButton){const finalized=active?.dataFormat?.startsWith('final-v')&&!dirty,blocked=work.calculation?.numbers.canFinalize===false;finalButton.textContent=finalized?'Finalisiert':blocked?(window.SilkC2?.enabled()?'Finalisierung gesperrt · Abnahme offen':'Rundungsentscheidung offen'):'Abrechnung finalisieren';finalButton.disabled=!!(finalized||blocked);finalButton.classList.toggle('saved',!!finalized);}
   }
   function refresh() {updateWorkStatus();if(!calculating)resultSection.classList.add('hidden');}
   function validateDay(d) {
@@ -117,15 +117,29 @@
     finally{finalizing=false;}
   };
   calculate=function(){saveState();if(!validateAll()){resultSection.classList.add('hidden');return false;}calculating=true;
-    try {window.SilkCalculatedNumbers=SilkFinance.calculate(snapshot());
+    try {window.SilkCalculatedNumbers=window.SilkC2?.enabled()?SilkVariantCPreview.preview(snapshot()):SilkFinance.calculate(snapshot());
       const numbers=window.SilkCalculatedNumbers;finalizationError('');
-      result.innerHTML='<div class="resulthead"><small>Berechnungsentwurf · '+esc(numbers.version)+'</small><strong>'+esc(chf(numbers.total))+'</strong></div>'+numbers.lines.map(l=>'<div class="resrow"><span>'+esc(SilkIdentity.staffLabel(l.name))+'<small>'+esc(l.days===undefined?'':l.days+' Tag(e) · '+l.details.join(' · '))+'</small></span><b>'+esc(l.payout===null?'Gesperrt':chf(l.payout))+'</b></div>').join('')+'<p>'+esc(numbers.canFinalize?'Rundung summengleich. Abschluss erst nach Serverbestätigung.':'Keine Auszahlung freigegeben · Rundungsentscheidung erforderlich.')+'</p>';
+      result.innerHTML='<div class="resulthead"><small>Berechnungsentwurf · '+esc(numbers.version)+'</small><strong>'+esc(chf(numbers.total))+'</strong></div>'+numbers.lines.map(l=>'<div class="resrow"><span>'+esc(SilkIdentity.staffLabel(l.name))+'<small>'+esc(l.days===undefined?'':l.days+' Tag(e) · '+l.details.join(' · '))+'</small></span><b>'+esc(l.payout===null?'Gesperrt':chf(l.payout))+'</b></div>').join('')+'<p>'+esc(numbers.canFinalize?'Rundung summengleich. Abschluss erst nach Serverbestätigung.':window.SilkC2?.enabled()?'C2-Kandidat · echte Finalisierung bis zur Abnahme gesperrt.':'Keine Auszahlung freigegeben · Rundungsentscheidung erforderlich.')+'</p>';
       resultSection.classList.remove('hidden');
       if(!document.getElementById('saveCalculationButton')){const b=document.createElement('button');b.id='saveCalculationButton';b.className='secondary';resultSection.querySelector('.result-actions').prepend(b);}
-      repo.saveWork({...repo.getWork(),calculation:{fingerprint:fingerprint(),numbers:window.SilkCalculatedNumbers}});const button=document.getElementById('saveCalculationButton');if(button)button.onclick=saveCurrentCalculation;updateWorkStatus();if(!window.SilkCalculatedNumbers.canFinalize)finalizationError('Rundungsentscheidung offen: keine Auszahlung freigegeben. Differenz CHF '+(window.SilkCalculatedNumbers.residualCents/100).toFixed(2)+'.');}
+      repo.saveWork({...repo.getWork(),calculation:{fingerprint:fingerprint(),numbers:window.SilkCalculatedNumbers}});const button=document.getElementById('saveCalculationButton');if(button)button.onclick=saveCurrentCalculation;updateWorkStatus();if(!window.SilkCalculatedNumbers.canFinalize)finalizationError(window.SilkC2?.enabled()?'Berechneter Kassenrundungsbetrag CHF '+(numbers.roundingAdjustmentCents/100).toFixed(2)+'. Kein bestätigter Kassenausgleich. Echte Finalisierung gesperrt.':'Rundungsentscheidung offen: keine Auszahlung freigegeben. Differenz CHF '+(numbers.residualCents/100).toFixed(2)+'.');
+      if(window.SilkC2?.enabled())showServerCheck();}
     finally{calculating=false;}
     return true;
   };
+  function showServerCheck(){
+    document.getElementById('c2ServerCheck')?.remove();
+    const box=document.createElement('div');box.id='c2ServerCheck';
+    const button=document.createElement('button');button.className='secondary';button.textContent='C2 auf dem Server prüfen';
+    const status=document.createElement('p');status.setAttribute('role','status');
+    button.onclick=async()=>{button.disabled=true;try{const checked=await SilkC2.preview();status.textContent='Serverprüfung summengleich · Revision '+checked.revision+(checked.netCorrection?' · Nachzahlung offen CHF '+(checked.netCorrection.additionalDueCents/100).toFixed(2)+' · Überzahlung separat CHF '+(checked.netCorrection.overpaidCents/100).toFixed(2):'')+' · Kassenrundungsnachweis offen CHF '+(checked.cashReconciliationDueCents/100).toFixed(2)+'. Echte Finalisierung bleibt gesperrt.';}catch(e){status.textContent=SilkC2.errorMessage(e);}finally{button.disabled=false;}};
+    box.append(button,status);
+    if(SilkC2.testMode()){
+      const testButton=document.createElement('button');testButton.className='secondary';testButton.textContent='Testabschluss simulieren';
+      testButton.onclick=async()=>{testButton.disabled=true;try{const checked=await SilkC2.preview();let evidence=null;if(checked.cashReconciliationDueCents){const reference=prompt('SYNTHETISCHER Testnachweis für CHF '+(checked.cashReconciliationDueCents/100).toFixed(2)+': Belegreferenz');if(!reference)return;evidence={adjustmentCents:checked.cashReconciliationDueCents,kind:checked.cashReconciliationDueCents>0?'funding':'remainder',reference};}const receipt=await SilkC2.finalizeSynthetic(checked,evidence);status.textContent='Testbeleg '+receipt.id+' · keine echte Zahlung.';}catch(e){status.textContent=SilkC2.errorMessage(e);}finally{testButton.disabled=false;}};box.append(testButton);
+    }
+    resultSection.append(box);
+  }
   window.openSavedCalculations=function(){
     settingsHome.classList.add('hidden');staffEditor.classList.add('hidden');shiftEditor.classList.add('hidden');
     let panel=document.getElementById('savedCalculations');if(!panel){panel=document.createElement('div');panel.id='savedCalculations';drawer.appendChild(panel);}panel.classList.remove('hidden');
@@ -155,9 +169,17 @@
     let dialog=document.getElementById('archiveDialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='archiveDialog';dialog.className='release-dialog archive-dialog';document.body.appendChild(dialog);}
     // Archive content is kept separate from editable current inputs.
     dialog.innerHTML=`<h2>${item.dataFormat?.startsWith('final-v')?'Finalisierte Abrechnung':'Ergebnis-Archiv'}</h2><p>${esc(item.label)} · ${esc(stamp(item.savedAt))}</p><div class="archive-result"></div><button type="button">Schließen</button>`;
-    const template=document.createElement('template');template.innerHTML=item.html||'';if(item.dataFormat==='final-v3'){template.innerHTML='<p>Serverbeleg '+esc(item.id)+' · Revision '+esc(item.serverRevision)+' · '+esc(item.resultData.version)+'</p><p>Eingang: '+esc(chf(item.resultData.inputCents/100))+' · Auszahlung: '+esc(chf(item.resultData.payoutCents/100))+'</p><table><thead><tr><th>Empfänger</th><th>Auszahlung</th></tr></thead><tbody>'+item.resultData.lines.map(l=>'<tr><td>'+esc(item.inputSnapshot.staffLabels?.[l.name]||l.name)+'</td><td>'+esc(chf(l.payoutCents/100))+'</td></tr>').join('')+'</tbody></table><p>Regel: '+esc(item.resultData.policy)+' · Rundungsrest: '+esc(chf(item.resultData.residualCents/100))+'</p>';}
+    const template=document.createElement('template');template.innerHTML=item.html||'';if(['final-v3','final-v4-c2'].includes(item.dataFormat)){template.innerHTML='<p>Serverbeleg '+esc(item.id)+' · Revision '+esc(item.serverRevision)+' · '+esc(item.resultData.version)+'</p><p>Eingang: '+esc(chf(item.resultData.inputCents/100))+' · Auszahlung: '+esc(chf(item.resultData.payoutCents/100))+'</p><table><thead><tr><th>Empfänger</th><th>Auszahlung</th></tr></thead><tbody>'+item.resultData.lines.map(l=>'<tr><td>'+esc(item.inputSnapshot.staffLabels?.[l.name]||l.name)+'</td><td>'+esc(chf(l.payoutCents/100))+'</td></tr>').join('')+'</tbody></table><p>Regel: '+esc(item.resultData.policy)+' · Rundungsrest: '+esc(chf(item.resultData.residualCents/100))+'</p>';}
+    if(item.netCorrection){const n=item.netCorrection;template.innerHTML='<p>Serverbeleg '+esc(item.id)+' · Korrektur zu '+esc(item.correctionOf)+'</p><p>Grund: '+esc(item.correctionReason)+'</p><table class="workspace-table"><thead><tr><th>Empfänger</th><th>Bestätigt</th><th>Neues Ziel</th><th>Nachzahlung</th><th>Überzahlung</th></tr></thead><tbody>'+n.lines.map(l=>'<tr><th scope="row">'+esc(l.id==='kitchen'?'Küche':l.id==='housekeeping'?'Housekeeping':item.inputSnapshot.staffLabels?.[l.id.slice(6)]||l.id.slice(6))+'</th><td class="numeric" data-label="Bestätigt">'+esc(chf(l.previouslyPaidCents/100))+'</td><td class="numeric" data-label="Neues Ziel">'+esc(chf(l.desiredCents/100))+'</td><td class="numeric" data-label="Nachzahlung">'+esc(chf(l.additionalDueCents/100))+'</td><td class="numeric" data-label="Überzahlung">'+esc(chf(l.overpaidCents/100))+'</td></tr>').join('')+'</tbody></table><p>Überzahlungen separat klären. Kein automatischer Einbehalt; kein erneuter Gesamtbetrag zur Auszahlung. Belegstand bei Erstellung, spätere Bestätigungen separat nachgewiesen.</p>'; }
+    if(item.dataFormat==='final-v4-c2'){const p=document.createElement('p');p.textContent='TESTBELEG · Keine echte Auszahlung bestätigt. Kassenrundungsnachweis: '+item.resultData.cashReconciliationStatus+(item.netCorrection?' · Nachzahlung offen CHF '+(item.netCorrection.additionalDueCents/100).toFixed(2)+' · Überzahlung separat CHF '+(item.netCorrection.overpaidCents/100).toFixed(2):'');template.content.prepend(p);}
     template.content.querySelectorAll('script,iframe,object,embed,style,link').forEach(x=>x.remove());template.content.querySelectorAll('*').forEach(x=>[...x.attributes].forEach(a=>{if(a.name.startsWith('on')||/^(href|src)$/i.test(a.name))x.removeAttribute(a.name);}));
     dialog.querySelector('.archive-result').append(template.content);dialog.querySelector('button').onclick=()=>dialog.close();
+    if(window.SilkC2?.enabled()&&['final-v3','final-v4-c2'].includes(item.dataFormat)){
+      const proof=document.createElement('button');proof.textContent='Auszahlungsnachweise laden';
+      proof.onclick=async()=>{proof.disabled=true;try{const ledger=await SilkC2.ledger(item.correctionOf||item.id);dialog.querySelector('.c2-ledger')?.remove();const section=document.createElement('section');section.className='c2-ledger';const title=document.createElement('h3');title.textContent='Nachweise · Stand '+ledger.chainRevision;section.append(title);const info=document.createElement('p');info.textContent=ledger.baselineConfirmed?'Ausgangsauszahlung ausdrücklich bestätigt.':'Ausgangsauszahlung noch nicht bestätigt. Nettokorrektur gesperrt.';section.append(info);
+        for(const m of ledger.movements){const row=document.createElement('p');row.textContent=m.recipientId+' · '+chf(m.amountCents/100)+' · '+m.kind+' · Beleg '+m.evidenceRef+' · '+m.confirmedAt+' · Person '+m.confirmedBy;section.append(row);}dialog.append(section);
+      }catch(e){alert(SilkC2.errorMessage(e));}finally{proof.disabled=false;}};dialog.append(proof);
+    }
     const correction=document.createElement('button');correction.textContent='Korrekturentwurf vorbereiten';correction.onclick=()=>createCorrectionDraft(item.id);dialog.append(correction);dialog.showModal();
   };
   window.clearCurrentPeriod=()=>showDecision(()=>document.getElementById('clearPeriodDialog').classList.remove('hidden'));

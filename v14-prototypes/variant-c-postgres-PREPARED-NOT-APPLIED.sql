@@ -7,6 +7,18 @@
 
 BEGIN;
 
+-- Match JavaScript's existing stable-ID UTF-16 comparison independently of DB collation.
+CREATE OR REPLACE FUNCTION private.tip_c_utf16_key(value text) RETURNS integer[]
+LANGUAGE plpgsql IMMUTABLE STRICT SET search_path='' AS $$
+DECLARE result integer[]:='{}';cp integer;i integer;
+BEGIN
+ FOR i IN 1..length(value) LOOP
+  cp:=ascii(substr(value,i,1));
+  IF cp>65535 THEN result:=result||ARRAY[55296+(cp-65536)/1024,56320+(cp-65536)%1024];
+  ELSE result:=array_append(result,cp);END IF;
+ END LOOP;RETURN result;
+END $$;
+
 CREATE OR REPLACE FUNCTION private.tip_c_allocate_whole(p_items jsonb, p_budget numeric)
 RETURNS jsonb
 LANGUAGE plpgsql IMMUTABLE SET search_path='' AS $$
@@ -52,7 +64,7 @@ BEGIN
       IF v_best_id IS NULL
          OR v_rn*v_best_d>v_best_n*v_rd
          OR (v_rn*v_best_d=v_best_n*v_rd AND
-              (v_rank<v_best_rank OR (v_rank=v_best_rank AND v_pair.key<v_best_id))) THEN
+              (v_rank<v_best_rank OR (v_rank=v_best_rank AND private.tip_c_utf16_key(v_pair.key)<private.tip_c_utf16_key(v_best_id)))) THEN
         v_best_id:=v_pair.key; v_best_n:=v_rn; v_best_d:=v_rd; v_best_rank:=v_rank;
       END IF;
     END LOOP;
@@ -190,7 +202,7 @@ END $$;
 
 -- PostgreSQL functions default to PUBLIC EXECUTE unless revoked.
 -- Keep even the isolated preview private, consistent with the V1.4 security contract.
-REVOKE ALL ON FUNCTION private.tip_c_allocate_whole(jsonb,numeric),
+REVOKE ALL ON FUNCTION private.tip_c_utf16_key(text),private.tip_c_allocate_whole(jsonb,numeric),
   private.tip_finance_variant_c_candidate(jsonb) FROM PUBLIC;
 COMMIT;
 

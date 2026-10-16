@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {app} from './app-helper.mjs';import {documentFor,input} from './c2-db-helper.mjs';
+test('C2 UI uses agreed period allocation, keeps real finalization closed and survives JSONB key-order acknowledgements',async()=>{const a=await app({}, {c2:true}),w=a.window;try{
+ w.SilkLocalRepository.applyDocument(documentFor(input('1000.50',['A'])));w.calculate();assert.equal(w.SilkCalculatedNumbers.payoutCents,100100);assert.equal(w.SilkCalculatedNumbers.roundingAdjustmentCents,50);assert.equal(w.document.querySelector('#saveCalculationButton').disabled,true);
+ const sorted=value=>Array.isArray(value)?value.map(sorted):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,sorted(value[k])])):value;
+ w.SilkLocalRepository.applyDocument(sorted(w.SilkLocalRepository.document()));assert.equal(w.document.getElementById('resultSection').classList.contains('hidden'),false);
+ assert.match(w.document.getElementById('finalizationStatus').textContent,/Kein bestätigter Kassenausgleich/);await assert.rejects(w.SilkSyncService.finalize(w.SilkWorkflow.snapshot(),{canFinalize:true}),/bis zur Abnahme gesperrt/);assert.deepEqual(a.errors,[]);
+ }finally{w.close();}});

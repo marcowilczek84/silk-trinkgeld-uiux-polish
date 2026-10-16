@@ -8,6 +8,7 @@ export async function app(storage={},options={}) {
  }
  const errors=[],virtualConsole=new VirtualConsole();virtualConsole.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(html,{url:'https://silk-test.invalid',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole,beforeParse(w){
+   if(options.c2)w.SILK_SUPABASE_CONFIG={c2Candidate:true};
    Object.defineProperty(w.navigator,'locks',{value:{request:async (_name,_options,callback)=>callback({name:'test-lock'})}});
    for(const [k,v] of Object.entries(storage))w.localStorage.setItem(k,v);
    w.HTMLElement.prototype.scrollIntoView=()=>{};w.alert=()=>{};w.confirm=()=>true;

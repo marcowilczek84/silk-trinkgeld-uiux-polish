@@ -61,7 +61,7 @@
     saveConflicts(value) { change('_conflicts', value, {silent:true}); global.dispatchEvent(new CustomEvent('silk:conflicts', {detail: clone(value)})); },
     applyCloudSnapshot(snapshot, sync) {
       if(global.SilkWriteCoordinator?.hasFailure())throw new Error('SILK_UNSAVED_INPUTS');
-      const visibleBefore=JSON.stringify(repo.document());
+      const visibleBefore=repo.document();
       applyingCloud = true;
       try {
         repo.transaction(() => {
@@ -73,7 +73,7 @@
           if (snapshot.work) repo.saveWork(snapshot.work, {silent:true});
           if(sync){repo.saveSyncMeta({base:sync.base,revision:sync.revision});repo.saveConflicts(sync.conflicts||[]);}
         });
-        if(JSON.stringify(repo.document())!==visibleBefore)global.dispatchEvent(new CustomEvent('silk:cloud-applied'));
+        if(!(global.SilkSyncMerge?.equal(repo.document(),visibleBefore) ?? (JSON.stringify(repo.document())===JSON.stringify(visibleBefore))))global.dispatchEvent(new CustomEvent('silk:cloud-applied'));
       } finally { applyingCloud = false; }
     },
     isApplyingCloud: () => applyingCloud,

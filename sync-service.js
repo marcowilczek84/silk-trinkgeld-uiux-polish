@@ -149,6 +149,7 @@
   async function stop(){stopped=true;clearTimeout(timer);clearInterval(refreshTimer);await channel?.unsubscribe();while(running)await new Promise(resolve=>{setTimeout(resolve,25);});}
   const finalErrors={SILK_PERIOD_ALREADY_FINALIZED:'Dieser Zeitraum überschneidet sich mit einer abgeschlossenen Abrechnung. Bitte den Originalbeleg und das Korrekturverfahren prüfen.',SILK_ARCHIVE_COVERAGE_UNKNOWN:'Ein älterer Archivbeleg hat keinen eindeutigen Zeitraum. Vor einem neuen Abschluss muss seine Abdeckung geprüft werden.',SILK_REVISION_CONFLICT:'Der gemeinsame Stand wurde geändert. Bitte synchronisieren, prüfen und neu berechnen.',SILK_STALE_CALCULATION:'Die Berechnung gehört nicht mehr zum gemeinsamen Stand. Bitte neu berechnen.',SILK_ROUNDING_DECISION_REQUIRED:'Die Rundungsdifferenz benötigt eine freigegebene Verteilungsregel.',SILK_UPDATE_REQUIRED:'Der V1.4-Serverschutz ist noch nicht freigegeben oder diese App ist veraltet.',SILK_ADOPTION_REQUIRED:'Die Übernahme des gemeinsamen Datenstands benötigt eine gesonderte Freigabe.'};
   async function finalize(input,numbers){
+    if(global.SilkC2?.enabled())throw Error('Echte Finalisierung bleibt bis zur Abnahme gesperrt.');
     global.SilkWriteCoordinator.assertWritable();
     if(!cloud?.workspaceId||!navigator.onLine)throw new Error('Finalisierung benötigt eine aktive Serververbindung. Der lokale Entwurf bleibt erhalten.');
     if(repo.getConflicts().length||global.SilkWriteCoordinator.hasFailure())throw new Error('Bitte zuerst die offenen Speicher- oder Datenkonflikte lösen.');
@@ -179,5 +180,40 @@
       throw new Error('Abschluss noch nicht bestätigt. Nicht erneut auszahlen. Ein erneuter Versuch prüft dieselbe Belegnummer.');
     }
   }
-  global.SilkSyncService={init,stop,syncNow,finalize,refreshFromCloud:syncNow,showConflicts:renderConflicts,pair:()=>cloud?pairingView():init()};
+  async function c2Request(name,args){
+    if(!navigator.onLine||!cloud?.workspaceId)throw Error('Serverprüfung benötigt eine Verbindung. Der Entwurf bleibt lokal erhalten.');
+    if(!await syncNow())throw Error('Gemeinsamer Stand noch nicht bestätigt. Bitte Synchronisationsstatus prüfen.');
+    const {data,error}=await client.rpc(name,{...args,p_workspace_id:cloud.workspaceId,p_expected_revision:repo.getSyncMeta().revision});
+    if(error)throw error;return data;
+  }
+  async function c2Mutation(name,args,revision,workspaceResult){
+    global.SilkWriteCoordinator.assertWritable();
+    if(!global.SilkC2?.testMode())throw Error('SILK_C2_ACCEPTANCE_REQUIRED');
+    if(!navigator.onLine||!cloud?.workspaceId||repo.getConflicts().length||global.SilkWriteCoordinator.hasFailure())throw Error('Verbindung oder konfliktfreier Speicherstand fehlt.');
+    const key='silk_c2_pending_'+cloud.workspaceId,request={name,args},before=repo.document();
+    let pending=global.SilkStorageModels.parse(localStorage.getItem(key),null);
+    if(pending&&!M.equal(pending.request,request))throw Error('Vorherige Testbuchung ungeklärt. Zuerst dieselbe Anfrage erneut prüfen.');
+    if(!pending){pending={id:global.SilkStorageModels.uuid(),request,revision};localStorage.setItem(key,JSON.stringify(pending));}
+    try{
+      const call=client.rpc(name,{...args,p_workspace_id:cloud.workspaceId,p_expected_revision:pending.revision,p_id:pending.id});
+      const {data,error}=await (workspaceResult?call.single():call);if(error)throw error;
+      if(workspaceResult){
+        if(data?.payload?.settlements?.[pending.id]?.dataFormat!=='final-v4-c2')throw Error('INVALID_C2_RECEIPT');
+        const merged=M.merge(before,repo.document(),data.payload);
+        if(merged.conflicts.length)rememberConflict(data.payload,data.revision,merged);
+        else repo.applyDocument(merged.value,{base:data.payload,revision:data.revision});
+      }
+      localStorage.removeItem(key);return workspaceResult?data.payload.settlements[pending.id]:data;
+    }catch(error){
+      if(/^(22|23|40001|42501|P0001)/.test(error.code||''))localStorage.removeItem(key);
+      else throw Error('Testbuchung noch nicht bestätigt. Nicht erneut auszahlen. Dieselbe Anfrage erneut prüfen oder nach Neuladen fortsetzen.');
+      throw error;
+    }
+  }
+  async function resumeC2(){
+    if(!cloud?.workspaceId)throw Error('Keine Serververbindung.');
+    const p=global.SilkStorageModels.parse(localStorage.getItem('silk_c2_pending_'+cloud.workspaceId),null);
+    if(!p)return null;return c2Mutation(p.request.name,p.request.args,p.revision,p.request.name==='tip_c2_finalize');
+  }
+  global.SilkSyncService={init,stop,syncNow,finalize,c2Request,c2Mutation,resumeC2,refreshFromCloud:syncNow,showConflicts:renderConflicts,pair:()=>cloud?pairingView():init()};
 })(window);

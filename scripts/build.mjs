@@ -12,9 +12,13 @@ for (const entry of await readdir(root, { withFileTypes:true })) {
   await cp(new URL('../'+entry.name, import.meta.url), new URL('../dist/'+entry.name, import.meta.url));
 }
 // Integrity previews must not create sessions or write into the production workspace.
-const localOnly = process.env.VERCEL_ENV === 'preview' || process.env.SILK_LOCAL_ONLY === '1';
-const url = localOnly ? '' : process.env.SILK_SUPABASE_URL || '';
+const localApi = process.env.SILK_C2_LOCAL_API || '';
+if(localApi && (process.env.VERCEL_ENV || !/^http:\/\/(127\.0\.0\.1|localhost):[0-9]+$/.test(localApi)))throw Error('C2 test API must be loopback and cannot be used on Vercel');
+await mkdir(new URL('../dist/v14-prototypes/',import.meta.url),{recursive:true});
+for(const file of ['variant-c-allocation.js','variant-c-calculation-adapter.js'])await cp(new URL('../v14-prototypes/'+file,import.meta.url),new URL('../dist/v14-prototypes/'+file,import.meta.url));
+const localOnly = !localApi && ( process.env.VERCEL_ENV === 'preview' || process.env.SILK_LOCAL_ONLY === '1');
+const url = localApi || (localOnly ? '' : process.env.SILK_SUPABASE_URL || '');
 const publishableKey = localOnly ? '' : process.env.SILK_SUPABASE_PUBLISHABLE_KEY || '';
-await writeFile(new URL('../dist/supabase-config.js', import.meta.url), `window.SILK_SUPABASE_CONFIG=${JSON.stringify({url,publishableKey,localOnly})};\n`);
+await writeFile(new URL('../dist/supabase-config.js', import.meta.url), `window.SILK_SUPABASE_CONFIG=${JSON.stringify({url,publishableKey,localOnly,c2Candidate:true,c2LocalTest:!!localApi})};\n`);
 if (localOnly) console.info('Isolated preview: Supabase disabled.');
 else if (!url || !publishableKey) console.warn('Supabase configuration missing; local-only fallback will be used.');

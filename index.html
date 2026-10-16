@@ -145,12 +145,15 @@ body{animation:ambassador-quiet-appear 240ms ease-out both}
 <script src="write-coordinator.js?v=4"></script>
 <script src="local-repository.js?v=4"></script>
 <script src="financial-core.js?v=4"></script>
+<script src="v14-prototypes/variant-c-allocation.js"></script>
+<script src="v14-prototypes/variant-c-calculation-adapter.js"></script>
 <script src="assignment-identity.js?v=1"></script>
 <script src="sync-status.js?v=integrity-v1"></script>
 <script src="cloud-repository.js?v=1"></script>
 <script src="legacy-migration.js?v=1"></script>
 <script src="sync-merge.js?v=integrity-v1"></script>
 <script src="sync-service.js?v=2"></script>
+<script src="c2-integration.js"></script>
 <script>SilkLegacyMigration.backup()</script>
 <script>const DEFAULT_STAFF=["Sandra Porepp","Marco Wilczek","Sladjana Trninic","Manuela Ellmaier","Emily","Martin Georgiew","Sascha Mirabito","Ben","Phuong Anh Pham","David","Roman","Pengcheng Zhao","Julia Lemaitre","Jeannine Grohmann"],DEFAULT_SHIFTS=[{name:"F1",f:1,s:0,color:"#d9dde2"},{name:"FR8",f:.75,s:.25,color:"#d9dde2"},{name:"FFR",f:.65,s:.35,color:"#d9dde2"},{name:"MD10",f:.5,s:.5,color:"#e4e7eb"},{name:"MD",f:.35,s:.65,color:"#e4e7eb"},{name:"MD2",f:.35,s:.65,color:"#e4e7eb"},{name:"SP1",f:0,s:1,color:"#1015e8"},{name:"SP2",f:0,s:1,color:"#ff13c8"},{name:"SP3",f:0,s:1,color:"#0d7778"}];window.SILK_DEFAULT_STAFF=DEFAULT_STAFF.slice();window.SILK_DEFAULT_SHIFTS=DEFAULT_SHIFTS.map(x=>({...x}));let STAFF=SilkLocalRepository.getStaff(DEFAULT_STAFF.slice()),SHIFTS=SilkLocalRepository.getShifts(DEFAULT_SHIFTS.map(x=>({...x}))),FACTOR={},MODE='day';const STORE='silk_v12_data',MODEKEY='silk_tip_mode';
 // Staff IDs are immutable; display-name changes belong in staffLabels.
