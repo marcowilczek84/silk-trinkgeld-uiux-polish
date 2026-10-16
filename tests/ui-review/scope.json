@@ -1,0 +1,10 @@
+{
+  "base": "06e139b83c562186c1b1a9933681801d4332789f",
+  "files": {
+    "draft-workflow.js": "34f59b385e6ea6d438f15fbbe577d4683d2c8d529cf058f26a5df8666e39f6ab",
+    "c2-integration.js": "b55037fb9663cca95d89919d57f78fecef9b0638ab512aed0cee96297f4a65ae",
+    "c2-workflow-ui.js": "3b9504e4eb4477515d4159e9d83cdc650c1f56be4d50c67ce8e02c65224b87e6",
+    "sync-status.js": "61879cb17f4ff6e681dd5cdac2f61decaab377f0cf899ef1288c1d00edaba854",
+    "professional-workspace.css": "3b4d4d4952390c543389f3911d651bd3e98c52fb8ceae603995faba7142e74db"
+  }
+}

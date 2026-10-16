@@ -7,7 +7,7 @@
  const button=(parent,text,fn)=>{const b=node('button',text,parent);b.type='button';b.onclick=fn;return b;};
  function field(parent,label,options={}){const wrap=node('label',label,parent),input=node('input',undefined,wrap);Object.assign(input,{type:'text',required:true,...options});return input;}
  function acknowledgement(parent,text){const label=node('label',undefined,parent);label.className='c2-ack';const input=node('input',undefined,label);input.type='checkbox';input.required=true;label.append(document.createTextNode(text));return input;}
- function roundingText(cents){return cents>0?'Aufrundung: '+money(cents)+' zusätzlich bereitstellen.':cents<0?'Abrundung: '+money(-cents)+' bleiben übrig.':'Keine Rundungsdifferenz.';}
+ function roundingText(cents){return cents>0?'Aufrundung: '+money(cents)+' zusätzlich bereitstellen.':cents<0?'Abrundung: '+money(-cents)+' bleiben übrig.':'Rundungsdifferenz CHF 0.00 · kein Kassenausgleich erforderlich.';}
  function recipient(id,receipt){return id==='kitchen'?'Küche':id==='housekeeping'?'Housekeeping':receipt.inputSnapshot?.staffLabels?.[id.slice(6)]||id.slice(6);}
  function period(receipt){return receipt.periodStart+' – '+receipt.periodEnd;}
  function message(parent,text){const p=node('p',text,parent);p.setAttribute('role','status');return p;}
@@ -29,12 +29,13 @@
  }
  async function openFinalization(){
   document.getElementById('c2CloseDialog')?.remove();const dialog=node('dialog',undefined,document.body);dialog.id='c2CloseDialog';dialog.className='release-dialog c2-dialog';dialog.setAttribute('aria-labelledby','c2CloseTitle');node('h2','Abrechnung abschliessen',dialog).id='c2CloseTitle';
-  testNotice(dialog);const loading=message(dialog,'Berechnung wird mit dem Server abgeglichen …');button(dialog,'Zurück',()=>dialog.close());dialog.showModal();
+  testNotice(dialog);const loading=message(dialog,g.SilkC2.previewOnly()?g.SilkC2.previewNotice:'Berechnung wird mit dem Server abgeglichen …');button(dialog,'Zurück',()=>dialog.close());dialog.showModal();
+  if(g.SilkC2.previewOnly())return dialog;
   try{
    const checked=await g.SilkC2.preview(),c=checked.candidate,delta=checked.cashReconciliationDueCents;
    loading.textContent=checked.input.periodStart+' – '+checked.input.periodEnd;
    node('p','Erfasst: '+money(c.inputCents)+' · Berechnete Auszahlung: '+money(c.payoutCents),dialog);
-   node('p',roundingText(c.roundingAdjustmentCents)+' Die Berechnung bestätigt weder Kassenausgleich noch Auszahlung.',dialog);
+   node('p',roundingText(c.roundingAdjustmentCents)+(c.roundingAdjustmentCents?' Die Berechnung bestätigt weder Kassenausgleich noch Auszahlung.':' Die tatsächliche Auszahlung muss separat bestätigt werden.'),dialog);
    if(checked.netCorrection)node('p','Nur Nachzahlung: '+money(checked.netCorrection.additionalDueCents)+' · Überzahlung separat: '+money(checked.netCorrection.overpaidCents)+'. Keine erneute Gesamtauszahlung.',dialog);
    let reference,ack;
    const ui=mutationForm(dialog,'Abrechnung verbindlich abschliessen',async status=>{

@@ -12,7 +12,7 @@
   function set(status, detail) {
     current = status; const node = ensure(); if (!node) return;
     const preview = global.SILK_SUPABASE_CONFIG?.localOnly;
-    node.dataset.status = status; node.textContent = preview && !['error','conflict','blocked'].includes(status) ? 'Test-Preview · Daten bleiben auf diesem Gerät' : detail || labels[status] || status;
+    node.dataset.status = status; node.textContent = preview && !['error','conflict','blocked'].includes(status) ? 'Test-Preview · Daten bleiben auf diesem Gerät. Endgültiger Abschluss in dieser Testversion deaktiviert.' : detail || labels[status] || status;
     const action = preview ? null : status === 'conflict' ? () => global.SilkSyncService?.showConflicts() : status === 'local' ? () => global.SilkSyncService?.pair() : null;
     node.setAttribute('role', action ? 'button' : 'status');
     node.tabIndex = action ? 0 : -1;

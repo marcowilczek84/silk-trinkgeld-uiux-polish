@@ -123,7 +123,7 @@
       result.innerHTML='<div class="resulthead"><small>Berechnungsentwurf · '+esc(numbers.version)+'</small><strong>'+esc(chf(numbers.total))+'</strong></div>'+numbers.lines.map(l=>'<div class="resrow"><span>'+esc(SilkIdentity.staffLabel(l.name))+'<small>'+esc(l.days===undefined?'':l.days+' Tag(e) · '+l.details.join(' · '))+'</small></span><b>'+esc(l.payout===null?'Gesperrt':chf(l.payout))+'</b></div>').join('')+'<p>'+esc(numbers.canFinalize?'Rundung summengleich. Abschluss erst nach Serverbestätigung.':window.SilkC2?.enabled()?'Berechnete Verteilung · tatsächliche Auszahlung separat bestätigen.':'Keine Auszahlung freigegeben · Rundungsentscheidung erforderlich.')+'</p>';
       resultSection.classList.remove('hidden');
       if(!document.getElementById('saveCalculationButton')){const b=document.createElement('button');b.id='saveCalculationButton';b.className='secondary';resultSection.querySelector('.result-actions').prepend(b);}
-      repo.saveWork({...repo.getWork(),calculation:{fingerprint:fingerprint(),numbers:window.SilkCalculatedNumbers}});const button=document.getElementById('saveCalculationButton');if(button)button.onclick=saveCurrentCalculation;updateWorkStatus();if(!window.SilkCalculatedNumbers.canFinalize)finalizationError(window.SilkC2?.enabled()?'Berechneter Kassenrundungsbetrag CHF '+(numbers.roundingAdjustmentCents/100).toFixed(2)+'. Kein bestätigter Kassenausgleich.'+(SilkC2.writesEnabled()?'':' Finalisierung bis zur Freigabe gesperrt.'):'Rundungsentscheidung offen: keine Auszahlung freigegeben. Differenz CHF '+(numbers.residualCents/100).toFixed(2)+'.');
+      repo.saveWork({...repo.getWork(),calculation:{fingerprint:fingerprint(),numbers:window.SilkCalculatedNumbers}});const button=document.getElementById('saveCalculationButton');if(button)button.onclick=saveCurrentCalculation;updateWorkStatus();if(!window.SilkCalculatedNumbers.canFinalize)finalizationError(window.SilkC2?.enabled()?SilkC2UI.roundingText(numbers.roundingAdjustmentCents)+(numbers.roundingAdjustmentCents?' Kein bestätigter Kassenausgleich.':'')+' Tatsächliche Auszahlung noch nicht bestätigt.'+(SilkC2.previewOnly()?' '+SilkC2.previewNotice:SilkC2.writesEnabled()?'':' Finalisierung bis zur Freigabe gesperrt.'):'Rundungsentscheidung offen: keine Auszahlung freigegeben. Differenz CHF '+(numbers.residualCents/100).toFixed(2)+'.');
       }
     finally{calculating=false;}
     return true;
@@ -179,9 +179,15 @@
   // Save/Discard/Back before changing the selected period. Restore controls while asking.
   const rawSetMode=setMode,rawParts=updatePeriodFromParts,rawLoad=loadState;
   loadState=function(){restoring=true;try{return rawLoad();}finally{restoring=false;}};
-  setMode=function(mode){if(restoring||repo.isApplyingCloud()||mode===MODE)return rawSetMode(mode);showDecision(()=>{repo.saveWork({...repo.getWork(),activeId:null,checkpoint:null,calculation:null});rawSetMode(mode);updateWorkStatus();});};
-  updatePeriodFromParts=function(){const selected={};for(const prefix of ['periodStart','periodEnd'])for(const part of ['Day','Month','Year'])selected[prefix+part]=document.getElementById(prefix+part).value;setPeriodRange(periodStart.value,periodEnd.value);showDecision(()=>{for(const [id,value] of Object.entries(selected))document.getElementById(id).value=value;repo.saveWork({activeId:null,checkpoint:null,calculation:null});rawParts();});};
-  singleDate.onchange=()=>{const next=singleDate.value;singleDate.value=getState().singleDate||next;showDecision(()=>{singleDate.value=next;repo.saveWork({activeId:null,checkpoint:null,calculation:null});buildVisibleDays();});};
+  // Guard edits before navigation, then baseline the loaded view. Merely loading
+  // existing days must not turn their saved inputs into a new unsaved draft.
+  function navigate(action){
+    repo.transaction(()=>{action();saveState();repo.saveWork({activeId:null,checkpoint:snapshot(),calculation:null});});
+    updateWorkStatus();
+  }
+  setMode=function(mode){if(restoring||repo.isApplyingCloud()||mode===MODE)return rawSetMode(mode);showDecision(()=>navigate(()=>rawSetMode(mode)));};
+  updatePeriodFromParts=function(){const selected={};for(const prefix of ['periodStart','periodEnd'])for(const part of ['Day','Month','Year'])selected[prefix+part]=document.getElementById(prefix+part).value;setPeriodRange(periodStart.value,periodEnd.value);showDecision(()=>navigate(()=>{for(const [id,value] of Object.entries(selected))document.getElementById(id).value=value;rawParts();}));};
+  singleDate.onchange=()=>{const next=singleDate.value;singleDate.value=getState().singleDate||next;showDecision(()=>navigate(()=>{singleDate.value=next;buildVisibleDays();}));};
   document.querySelector('.ad-hub-link')?.addEventListener('click',e=>{e.preventDefault();const href=e.currentTarget.href;showDecision(()=>{location.href=href;});});
   window.addEventListener('beforeunload',e=>{if(isDirty()){e.preventDefault();e.returnValue='';}});
   window.addEventListener('silk:local-change',refresh);

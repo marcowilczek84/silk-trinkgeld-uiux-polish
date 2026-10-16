@@ -31,7 +31,7 @@ body.silk-workspace{--ws-primary:#1C777B;--ws-hover:#155F63;--ws-selected:#EDF6F
 .silk-workspace .workspace-overview .workspace-amount{font-size:28px;line-height:1.2}
 .silk-workspace #workStatus{font-size:14px!important;margin:0;color:var(--ws-ink);font-weight:400}
 .silk-workspace #workStatus[data-dirty=true]{font-weight:600}
-.silk-workspace .silk-sync-status{font-size:13px;text-align:left;padding:4px 0 0;margin:0;color:var(--ws-muted)}
+.silk-workspace .silk-sync-status{position:static;inset:auto;z-index:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere;font-size:13px;text-align:left;padding:4px 0 0;margin:0;color:var(--ws-muted)}
 .silk-workspace .mode{max-width:400px;gap:16px;margin:0 0 24px}
 .silk-workspace .mode button{font-size:14px;min-height:48px;color:var(--ws-muted)}
 .silk-workspace .panel{padding:0 0 24px;border:0;margin:0}

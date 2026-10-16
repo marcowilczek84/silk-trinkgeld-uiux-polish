@@ -12,6 +12,7 @@ on:
       - '*.css'
       - 'index.html'
       - 'tests/*.mjs'
+      - 'tests/ui-review/**'
       - 'scripts/**'
   workflow_dispatch:
 permissions:
@@ -20,10 +21,67 @@ concurrency:
   group: silk-c2-isolated-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    outputs:
+      ui_only: ${{ steps.scope.outputs.ui_only }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: scope
+        name: Bound review-only changes to the accepted handover
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: node tests/ui-review/scope.mjs
+  ui-review:
+    needs: scope
+    if: needs.scope.outputs.ui_only == 'true' && github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 06e139b83c562186c1b1a9933681801d4332789f
+          path: .ci-ui-baseline
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.18.0'
+      - name: Locked dependencies and affected workflow regressions only
+        run: |
+          npm ci
+          node --test tests/c2-ux-review.test.mjs tests/draft-workflow.test.mjs tests/c2-ui.test.mjs tests/c2-operator-ui.test.mjs
+          npx eslint draft-workflow.js c2-integration.js c2-workflow-ui.js sync-status.js tests/c2-ux-review.test.mjs
+          npm run typecheck
+      - name: Build cloud-free candidate and accepted baseline
+        env:
+          SILK_LOCAL_ONLY: '1'
+        run: |
+          npm run build
+          ln -s "$GITHUB_WORKSPACE/node_modules" .ci-ui-baseline/node_modules
+          node .ci-ui-baseline/scripts/build.mjs
+      - name: Install Chromium and WebKit
+        run: npx playwright install --with-deps chromium webkit
+      - name: Targeted Chromium UI checks (emulation only)
+        run: node tests/ui-review/browser.mjs
+      - name: Targeted WebKit UI checks (emulation only)
+        if: ${{ !cancelled() }}
+        env:
+          QA_BROWSER: webkit
+        run: node tests/ui-review/browser.mjs
   isolated-supabase:
+    needs: scope
     # Public-repository standard Linux runner only. No larger/paid runner, secrets,
     # environment credentials, platform login/link, cache or artifact storage.
-    if: github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
+    if: needs.scope.outputs.ui_only != 'true' && github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
