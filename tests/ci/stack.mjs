@@ -4,6 +4,7 @@ import {readFile,writeFile,mkdir,rm} from 'node:fs/promises';
 import {execFileSync,spawn} from 'node:child_process';
 import {randomBytes,createHmac} from 'node:crypto';
 import {resolve} from 'node:path';
+import net from 'node:net';
 
 assert.equal(process.env.GITHUB_ACTIONS,'true');
 assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');
@@ -42,8 +43,8 @@ if(command==='prepare'){
  c.services.storage.image='supabase/storage-api:v1.82.1';
  // Stay within the standard runner's descriptor limit; no privilege escalation.
  c.services.supavisor.environment.RLIMIT_NOFILE='1024';
- c.services.db.ports=[{target:5432,published:'54322',host_ip:'127.0.0.1',protocol:'tcp'}];
- c.services['api-gw'].ports=[{target:8000,published:'54321',host_ip:'127.0.0.1',protocol:'tcp'}];
+ // Internal Docker networks do not publish usable host ports. A runner-local TCP
+ // forwarder below reaches only the inspected bridge IPs and binds only 127.0.0.1.
  c.services.mailpit={image:'axllent/mailpit:v1.30.2',networks:{default:null},environment:{MP_SMTP_DISABLE_RDNS:'true'},healthcheck:{test:['CMD','/mailpit','readyz'],interval:'5s',timeout:'3s',retries:10}};
  // The complete stack includes Functions; its synthetic handler has no remote imports.
  await writeFile(source+'/volumes/functions/main/index.ts',"Deno.serve(() => new Response(JSON.stringify({syntheticOnly:true}),{headers:{'content-type':'application/json'}}));\n");
@@ -56,6 +57,11 @@ if(command==='prepare'){
  await run('docker',compose(['pull','--quiet']));
  try{await run('docker',compose(['up','-d','--wait','--wait-timeout','240']));}catch(e){await diagnosticLogs();throw e;}
  const net=JSON.parse(docker(['network','inspect','silk-c2-ci-internal']))[0];assert.equal(net.Internal,true);
+ const ip=name=>JSON.parse(docker(['inspect',name]))[0].NetworkSettings.Networks['silk-c2-ci-internal'].IPAddress;
+ const api=ip('supabase-envoy'),db=ip('supabase-db');
+ await new Promise((resolve,reject)=>{const s=netConnect(db);s.once('connect',()=>{s.destroy();resolve();});s.once('error',reject);s.setTimeout(3000,()=>s.destroy(Error('Internal bridge connection timeout')));});
+ const proxy=spawn(process.execPath,['tests/ci/loopback-proxy.mjs',api,db],{detached:true,stdio:'ignore'});proxy.unref();await writeFile(dir+'/proxy.pid',String(proxy.pid));
+ await new Promise(r=>setTimeout(r,250));
  console.log('PASS: all configured Supabase services ready; Docker network is internal.');
 }else if(command==='build'){
  const x=JSON.parse(await readFile(secretFile));
@@ -69,5 +75,6 @@ if(command==='prepare'){
  await writeFile(dir+'/evidence.json',JSON.stringify(report,null,2));
  if(process.env.GITHUB_STEP_SUMMARY)await writeFile(process.env.GITHUB_STEP_SUMMARY,'C2 synthetic Supabase CI: '+report.commit+'\n\nFull evidence is in this step log. This is a runner-local integration test, not hosted-cloud or physical-device acceptance. Real finalization stays locked.\n',{flag:'a'});
 }else if(command==='stop'){
- try{await run('docker',compose(['down','--volumes','--remove-orphans','--timeout','10']));}finally{await rm(secretFile,{force:true});await rm(dir+'/stack.env',{force:true});await rm(config,{force:true});}
+ try{await run('docker',compose(['down','--volumes','--remove-orphans','--timeout','10']));}finally{try{process.kill(Number(await readFile(dir+'/proxy.pid','utf8')),'SIGTERM');}catch{}await rm(secretFile,{force:true});await rm(dir+'/stack.env',{force:true});await rm(config,{force:true});}
 }else throw Error('Unknown isolated CI command');
+function netConnect(host){return net.connect({host,port:5432});}
