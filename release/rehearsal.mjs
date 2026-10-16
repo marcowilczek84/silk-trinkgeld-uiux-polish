@@ -45,13 +45,17 @@ try{
  assert.equal((await h.rpc('tip_c2_confirm_cash',cashArgs,token)).status,200);
  const withPayments=await fingerprints(h.admin),originalRow=await h.row();
  // App-schema dump, not a full Supabase backup. Auth identities/roles are prerequisites.
- const dump=docker(['pg_dump','-U','postgres','-d','silk_c2_test_ci','--schema=public','--schema=private','--format=custom','--no-owner']);
+ const dump=docker(['pg_dump','-U','postgres','-d','silk_c2_test_ci','--schema=public','--schema=private','--format=custom']);
  report.syntheticDumpSHA256=createHash('sha256').update(dump).digest('hex');report.syntheticDumpBytes=dump.length;
  docker(['psql','-U','supabase_admin','-d','silk_c2_test_ci','-v','ON_ERROR_STOP=1','-c','CREATE DATABASE silk_c2_test_restore OWNER postgres;']);
  const cfg=new URL(h.cfg.db);cfg.pathname='/silk_c2_test_restore';restore=new pg.Client({connectionString:cfg.toString()});await restore.connect();
  await restore.query("DROP SCHEMA public;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;").catch(async e=>{throw Error('restore prerequisites: '+e.message);});
  await restore.query('INSERT INTO auth.users VALUES($1)',[actor]);
- docker(['pg_restore','-U','postgres','-d','silk_c2_test_restore','--single-transaction','--exit-on-error','--no-owner'],{input:dump});
+ // Restore includes Supabase-owned default ACLs: only the isolated cluster admin may restore
+ // them. Preserve original object owners, never grant new privileges to the app/API role.
+ docker(['pg_restore','-U','supabase_admin','-d','silk_c2_test_restore','--single-transaction','--exit-on-error'],{input:dump});
+ const functionRights=async client=>(await client.query("select n.nspname schema,p.proname name,pg_get_function_identity_arguments(p.oid) args,pg_get_userbyid(p.proowner) owner,p.prosecdef,p.proconfig,p.prosrc,has_function_privilege('anon',p.oid,'execute') anon,has_function_privilege('authenticated',p.oid,'execute') authenticated from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.proname like 'tip_%' order by 1,2,3")).rows;
+ assert.deepEqual(await functionRights(restore),await functionRights(h.admin));
  assert.deepEqual(await fingerprints(restore),withPayments);check('pg_dump / pg_restore into separate empty PostgreSQL 17 database',{allTablesIdentical:true,authSessionsRestored:false});
  await restore.query("SELECT set_config('request.jwt.claims',$1,false),set_config('request.headers','{\"x-silk-client-protocol\":\"4\"}',false)",[JSON.stringify({sub:actor,role:'authenticated'})]);
  await restore.query('SET ROLE authenticated');
