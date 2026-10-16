@@ -2,7 +2,10 @@
 -- DEPENDENCY: docs/production/v14-integrity-PREPARED-NOT-APPLIED.sql
 -- Provides exact whole-CHF candidate arithmetic, NOT an authorized finalization RPC.
 -- Never execute in production until a separate reviewed/approved release.
--- SQL preview only: no tables, grants, triggers, write calls or history migrations.
+-- SQL preview only: no tables, exposed RPCs, triggers, write calls or history migrations.
+-- The following DDL must only be run after isolated staging approval.
+
+BEGIN;
 
 CREATE OR REPLACE FUNCTION private.tip_c_allocate_whole(p_items jsonb, p_budget numeric)
 RETURNS jsonb
@@ -179,5 +182,11 @@ BEGIN
     'categories',v_result_categories);
 END $$;
 
--- IMPORTANT: no replacement of private.tip_finance, no RPC, no grants,
+-- PostgreSQL functions default to PUBLIC EXECUTE unless revoked.
+-- Keep even the isolated preview private, consistent with the V1.4 security contract.
+REVOKE ALL ON FUNCTION private.tip_c_allocate_whole(jsonb,numeric),
+  private.tip_finance_variant_c_candidate(jsonb) FROM PUBLIC;
+COMMIT;
+
+-- IMPORTANT: no replacement of private.tip_finance, no RPC, no public grants,
 -- no activation of V1.4 finalization. SQL remains unexecuted in this branch.
