@@ -8,9 +8,11 @@ export async function app(storage={},options={}) {
  }
  const errors=[],virtualConsole=new VirtualConsole();virtualConsole.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(html,{url:'https://silk-test.invalid',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole,beforeParse(w){
+   Object.defineProperty(w.navigator,'locks',{value:{request:async (_name,_options,callback)=>callback({name:'test-lock'})}});
    for(const [k,v] of Object.entries(storage))w.localStorage.setItem(k,v);
    w.HTMLElement.prototype.scrollIntoView=()=>{};w.alert=()=>{};w.confirm=()=>true;
    w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};
  }});
+ await dom.window.SilkWriteCoordinator?.ready;
  return {dom,window:dom.window,errors};
 }

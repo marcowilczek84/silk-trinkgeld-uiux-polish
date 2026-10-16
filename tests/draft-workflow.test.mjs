@@ -16,15 +16,15 @@ test('partial draft restores exact inputs, staff, shifts and same identity after
  assert.deepEqual(errors,[]);assert.deepEqual(second.errors,[]);second.dom.window.close();
 });
 
-test('finalization rejects incomplete period; complete result preserves draft identity and dirty state',async()=>{
+test('finalization rejects incomplete period; rounding decision preserves draft identity and dirty state',async()=>{
  const {dom,window:w,errors}=await app();fixture(w);w.saveCurrentDraft();const id=w.SilkLocalRepository.getSettlements()[0].id;
  assert.equal(w.calculate(),false);assert.match(w.calculationError.textContent,/2 Tag/);
  for(const date of ['2026-09-02','2026-09-03']){w.document.getElementById('f_'+date).value='0';w.document.getElementById('s_'+date).value='0';w.changeDay(date);}
- assert.equal(w.calculate(),true);assert.equal(w.SilkWorkflow.isDirty(),true);assert.equal(w.saveCalculationButton.textContent,'Abrechnung finalisieren');
- w.saveCurrentDraft();assert.equal(w.SilkWorkflow.isDirty(),false);w.calculate();w.saveCurrentCalculation();
- const final=w.SilkLocalRepository.getSettlements();assert.equal(final.length,1);assert.equal(final[0].id,id);assert.equal(final[0].dataFormat,'final-v2');assert.equal(final[0].resultData.total,12.4);
- assert.equal(w.saveCalculationButton.textContent,'Finalisiert');
- w.document.getElementById('f_2026-09-01').value='14.10';w.changeDay('2026-09-01');assert.equal(w.SilkWorkflow.isDirty(),true);assert.equal(w.saveCalculationButton.textContent,'Abrechnung finalisieren');
+ assert.equal(w.calculate(),true);assert.equal(w.SilkWorkflow.isDirty(),true);assert.equal(w.saveCalculationButton.textContent,'Rundungsentscheidung offen');
+ w.saveCurrentDraft();assert.equal(w.SilkWorkflow.isDirty(),false);w.calculate();await w.saveCurrentCalculation();
+ const final=w.SilkLocalRepository.getSettlements();assert.equal(final.length,1);assert.equal(final[0].id,id);assert.equal(final[0].dataFormat,'draft-v2');assert.match(w.finalizationStatus.textContent,/Rundungsdifferenz/);
+ assert.equal(w.saveCalculationButton.textContent,'Rundungsentscheidung offen');
+ w.document.getElementById('f_2026-09-01').value='14.10';w.changeDay('2026-09-01');assert.equal(w.SilkWorkflow.isDirty(),true);assert.equal(w.saveCalculationButton.textContent,'Rundungsentscheidung offen');
  assert.deepEqual(errors,[]);dom.window.close();
 });
 

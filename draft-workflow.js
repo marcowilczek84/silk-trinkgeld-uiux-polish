@@ -16,18 +16,18 @@
     let node=document.getElementById('workStatus');
     if(!node){node=document.createElement('p');node.id='workStatus';node.setAttribute('aria-live','polite');document.querySelector('.draft-actions').before(node);}
     const work=repo.getWork(),active=repo.getSettlements().find(x=>String(x.id)===String(work.activeId));
-    const dirty=isDirty();node.textContent=dirty?'Ungespeicherte Änderungen':active?.dataFormat==='draft-v2'?'Entwurf gespeichert':active?.dataFormat==='final-v2'?'Abrechnung finalisiert':'Aktueller Arbeitsstand';
+    const dirty=isDirty();node.textContent=dirty?'Ungespeicherte Änderungen':active?.dataFormat==='draft-v2'?'Entwurf gespeichert':active?.dataFormat?.startsWith('final-v')?'Abrechnung finalisiert':'Aktueller Arbeitsstand';
     node.dataset.dirty=String(dirty);
     const button=document.querySelector('.draft-actions button');
     button.textContent=active?.dataFormat?.startsWith('draft')?'Entwurf speichern':'Als Entwurf speichern';
     const finalButton=document.getElementById('saveCalculationButton');
-    if(finalButton){finalButton.textContent=active?.dataFormat==='final-v2'&&!dirty?'Finalisiert':'Abrechnung finalisieren';finalButton.disabled=active?.dataFormat==='final-v2'&&!dirty;finalButton.classList.toggle('saved',finalButton.disabled);}
+    if(finalButton){const finalized=active?.dataFormat?.startsWith('final-v')&&!dirty,blocked=work.calculation?.numbers.canFinalize===false;finalButton.textContent=finalized?'Finalisiert':blocked?'Rundungsentscheidung offen':'Abrechnung finalisieren';finalButton.disabled=!!(finalized||blocked);finalButton.classList.toggle('saved',!!finalized);}
   }
   function refresh() {updateWorkStatus();if(!calculating)resultSection.classList.add('hidden');}
   function validateDay(d) {
     const assigned=(d.assignments||[]).filter(a=>a.shift),empty=v=>v===''||v==null;
     if(empty(d.f)&&empty(d.s)&&!assigned.length)return {key:'neutral',label:'Nicht bearbeitet'};
-    if([d.f,d.s].some(v=>!empty(v)&&(!Number.isFinite(Number(v))||Number(v)<0)))return {key:'review',label:'Betrag prüfen'};
+    try{for(const v of [d.f,d.s])if(!empty(v))SilkFinance.cents(v);}catch{return {key:'review',label:'Betrag prüfen · maximal 2 Nachkommastellen'};}
     if(assigned.some(a=>!STAFF.includes(a.name)||!FACTOR[a.shift]))return {key:'review',label:'Zuordnung prüfen'};
     if(empty(d.f)||empty(d.s))return {key:'incomplete',label:'Unvollständig'};
     let early=Number(d.f)*.7*.975,late=Number(d.s)*.7*.975;
@@ -76,7 +76,7 @@
     const input=snapshot(),work=repo.getWork(),items=repo.getSettlements();
     const existing=items.find(x=>String(x.id)===String(work.activeId)&&x.dataFormat?.startsWith('draft'));
     const id=existing?.id||SilkStorageModels.uuid(),now=new Date().toISOString();
-    const item={id,dataFormat:'draft-v2',label:input.periodStart+' – '+input.periodEnd,createdAt:existing?.createdAt||now,savedAt:now,periodStart:input.periodStart,periodEnd:input.periodEnd,inputSnapshot:input};
+    const item={id,dataFormat:'draft-v2',label:input.periodStart+' – '+input.periodEnd,createdAt:existing?.createdAt||now,savedAt:now,periodStart:input.periodStart,periodEnd:input.periodEnd,inputSnapshot:input,...(existing?.correctionOf?{correctionOf:existing.correctionOf,correctionReason:existing.correctionReason}:{})};
     repo.transaction(()=>{repo.saveSettlements([...items.filter(x=>String(x.id)!==String(id)),item]);repo.saveWork({...work,activeId:id,checkpoint:input});});
     updateWorkStatus();return true;
   };
@@ -98,21 +98,31 @@
     const remove=()=>{repo.transaction(()=>{repo.saveSettlements(repo.getSettlements().filter(x=>String(x.id)!==String(id)));if(String(repo.getWork().activeId)===String(id))repo.saveWork({activeId:null,checkpoint:null,calculation:null});});openSavedCalculations();updateWorkStatus();};
     if(String(repo.getWork().activeId)===String(id))showDecision(remove);else remove();
   };
-  window.saveCurrentCalculation=function(){
-    if(!validateAll())return;
-    const work=repo.getWork();if(work.calculation?.fingerprint!==fingerprint()){alert('Die Eingaben haben sich geändert. Bitte zuerst neu berechnen.');return;}
-    const existing=repo.getSettlements().find(x=>String(x.id)===String(work.activeId));
-    // A repeated click/replayed action must not create a second archived result.
-    if(existing?.dataFormat==='final-v2'&&SilkSyncMerge.equal(existing.inputSnapshot,snapshot())){updateWorkStatus();return;}
-    if(!confirm('Diese geprüfte Abrechnung jetzt finalisieren? Sie wird als abgeschlossene Abrechnung gespeichert.'))return;
-    const id=existing?.dataFormat?.startsWith('draft')?existing.id:SilkStorageModels.uuid(),now=new Date().toISOString(),input=snapshot();
-    const item={id,dataFormat:'final-v2',label:input.periodStart+' – '+input.periodEnd,periodStart:input.periodStart,periodEnd:input.periodEnd,savedAt:now,finalizedAt:now,inputSnapshot:input,resultData:work.calculation.numbers,html:result.innerHTML};
-    repo.transaction(()=>{repo.saveSettlements([...repo.getSettlements().filter(x=>String(x.id)!==String(id)),item]);repo.saveWork({activeId:id,checkpoint:input,calculation:work.calculation});});
-    resultSection.classList.remove('hidden');updateWorkStatus();
+  let finalizing=false;
+  function finalizationError(message){let node=document.getElementById('finalizationStatus');if(!node){node=document.createElement('p');node.id='finalizationStatus';node.className='period-error';node.setAttribute('role','alert');resultSection.prepend(node);}node.textContent=message;node.classList.remove('hidden');}
+  window.saveCurrentCalculation=async function(){
+    if(finalizing)return false;
+    try{
+      saveState();if(!validateAll())return false;
+      const work=repo.getWork(),input=snapshot();
+      if(repo.getSettlements().find(x=>x.id===work.activeId)?.correctionOf)throw new Error('Korrekturentwurf gespeichert. Vor einer weiteren Auszahlung muss die Nettodifferenz zum Originalbeleg fachlich freigegeben werden.');
+      if(work.calculation?.fingerprint!==fingerprint())throw new Error('Die Eingaben haben sich geändert. Bitte zuerst neu berechnen.');
+      if(!work.calculation.numbers.canFinalize)throw new Error('Finalisierung gesperrt: Die Rundungsdifferenz benötigt eine freigegebene Verteilungsregel. Der Entwurf bleibt erhalten.');
+      if(repo.getConflicts().length)throw new Error('Bitte zuerst den Synchronisationskonflikt lösen und neu berechnen.');
+      if(!confirm('Diese geprüfte Abrechnung verbindlich auf dem Server abschliessen?'))return false;
+      finalizing=true;finalizationError('Finalisierung wird geprüft …');
+      const receipt=await SilkSyncService.finalize(input,work.calculation.numbers);
+      resultSection.classList.remove('hidden');finalizationError('Serverbestätigt · Beleg '+receipt.id);updateWorkStatus();return true;
+    }catch(error){finalizationError(error.message||'Finalisierung nicht bestätigt. Entwurf erhalten; bitte erneut prüfen.');return false;}
+    finally{finalizing=false;}
   };
-  const coreCalculate=calculate;
   calculate=function(){saveState();if(!validateAll()){resultSection.classList.add('hidden');return false;}calculating=true;
-    try {coreCalculate();repo.saveWork({...repo.getWork(),calculation:{fingerprint:fingerprint(),numbers:window.SilkCalculatedNumbers}});const button=document.getElementById('saveCalculationButton');if(button)button.onclick=saveCurrentCalculation;updateWorkStatus();}
+    try {window.SilkCalculatedNumbers=SilkFinance.calculate(snapshot());
+      const numbers=window.SilkCalculatedNumbers;finalizationError('');
+      result.innerHTML='<div class="resulthead"><small>Berechnungsentwurf · '+esc(numbers.version)+'</small><strong>'+esc(chf(numbers.total))+'</strong></div>'+numbers.lines.map(l=>'<div class="resrow"><span>'+esc(SilkIdentity.staffLabel(l.name))+'<small>'+esc(l.days===undefined?'':l.days+' Tag(e) · '+l.details.join(' · '))+'</small></span><b>'+esc(l.payout===null?'Gesperrt':chf(l.payout))+'</b></div>').join('')+'<p>'+esc(numbers.canFinalize?'Rundung summengleich. Abschluss erst nach Serverbestätigung.':'Keine Auszahlung freigegeben · Rundungsentscheidung erforderlich.')+'</p>';
+      resultSection.classList.remove('hidden');
+      if(!document.getElementById('saveCalculationButton')){const b=document.createElement('button');b.id='saveCalculationButton';b.className='secondary';resultSection.querySelector('.result-actions').prepend(b);}
+      repo.saveWork({...repo.getWork(),calculation:{fingerprint:fingerprint(),numbers:window.SilkCalculatedNumbers}});const button=document.getElementById('saveCalculationButton');if(button)button.onclick=saveCurrentCalculation;updateWorkStatus();if(!window.SilkCalculatedNumbers.canFinalize)finalizationError('Rundungsentscheidung offen: keine Auszahlung freigegeben. Differenz CHF '+(window.SilkCalculatedNumbers.residualCents/100).toFixed(2)+'.');}
     finally{calculating=false;}
     return true;
   };
@@ -120,8 +130,8 @@
     settingsHome.classList.add('hidden');staffEditor.classList.add('hidden');shiftEditor.classList.add('hidden');
     let panel=document.getElementById('savedCalculations');if(!panel){panel=document.createElement('div');panel.id='savedCalculations';drawer.appendChild(panel);}panel.classList.remove('hidden');
     const items=repo.getSettlements().sort((a,b)=>String(b.savedAt).localeCompare(String(a.savedAt)));
-    const group=(title,list,draft)=>`<h3>${title}</h3><div class="saved-list">${list.map(x=>`<div class="saved-item"><button class="saved-open" data-open="${esc(x.id)}" data-draft="${draft}"><strong>${esc(x.label)}</strong><small>${draft?'Entwurf':x.dataFormat==='final-v2'?'Finalisiert':'Ergebnis-Archiv'} · ${esc(stamp(x.savedAt))}</small></button>${draft?`<button class="saved-delete" data-delete="${esc(x.id)}" aria-label="Entwurf löschen">Löschen</button>`:''}</div>`).join('')||'<p class="saved-empty">Noch keine Einträge.</p>'}</div>`;
-    panel.innerHTML='<button class="backlink" onclick="backFromSaved()">← Einstellungen</button>'+group('Entwürfe',items.filter(x=>x.dataFormat?.startsWith('draft')),true)+group('Finalisierte Abrechnungen',items.filter(x=>x.dataFormat==='final-v2'),false)+group('Bisheriges Ergebnis-Archiv',items.filter(x=>!x.dataFormat?.startsWith('draft')&&x.dataFormat!=='final-v2'),false);
+    const group=(title,list,draft)=>`<h3>${title}</h3><div class="saved-list">${list.map(x=>`<div class="saved-item"><button class="saved-open" data-open="${esc(x.id)}" data-draft="${draft}"><strong>${esc(x.label)}</strong><small>${draft?'Entwurf':x.dataFormat?.startsWith('final-v')?'Finalisiert':'Ergebnis-Archiv'} · ${esc(stamp(x.savedAt))}</small></button>${draft?`<button class="saved-delete" data-delete="${esc(x.id)}" aria-label="Entwurf löschen">Löschen</button>`:''}</div>`).join('')||'<p class="saved-empty">Noch keine Einträge.</p>'}</div>`;
+    panel.innerHTML='<button class="backlink" onclick="backFromSaved()">← Einstellungen</button>'+group('Entwürfe',items.filter(x=>x.dataFormat?.startsWith('draft')),true)+group('Finalisierte Abrechnungen',items.filter(x=>x.dataFormat?.startsWith('final-v')),false)+group('Bisheriges Ergebnis-Archiv',items.filter(x=>!x.dataFormat?.startsWith('draft')&&!x.dataFormat?.startsWith('final-v')),false);
     panel.onclick=e=>{const b=e.target.closest('button');if(b?.dataset.delete){const item=repo.getSettlements().find(x=>String(x.id)===b.dataset.delete);item?.dataFormat?.startsWith('draft')?deleteDraft(b.dataset.delete):deleteSavedCalculation(b.dataset.delete);}if(b?.dataset.open)b.dataset.draft==='true'?continueDraft(b.dataset.open):restoreSavedCalculation(b.dataset.open);};
   };
   window.deleteSavedCalculation=function(id){
@@ -129,14 +139,26 @@
     if(item?.dataFormat?.startsWith('draft'))return deleteDraft(id);
     alert('Abgeschlossene Abrechnungen sind geschützt und bleiben im Archiv erhalten.');return false;
   };
+  window.createCorrectionDraft=function(id){
+    const original=repo.getSettlements().find(x=>String(x.id)===String(id)&&!x.dataFormat?.startsWith('draft'));
+    if(!original?.inputSnapshot){alert('Dieser Altbeleg enthält keine vollständigen Eingaben. Bitte eine dokumentierte manuelle Korrektur mit Bezug auf die Belegnummer vorbereiten.');return false;}
+    const reason=prompt('Grund der Korrektur (Originalbeleg bleibt unverändert):');if(!reason?.trim())return false;
+    if(SilkIdentity.restoreProblem(original.inputSnapshot,STAFF,SHIFTS)){alert('Die damaligen Dienstzuordnungen müssen vor einer Korrektur geprüft werden.');return false;}
+    showDecision(()=>{
+      const input=original.inputSnapshot,now=new Date().toISOString(),draft={id:SilkStorageModels.uuid(),dataFormat:'draft-v2',label:'Korrektur · '+original.label,createdAt:now,savedAt:now,periodStart:input.periodStart,periodEnd:input.periodEnd,inputSnapshot:input,correctionOf:original.id,correctionReason:reason.trim()};
+      repo.transaction(()=>{restoreInputs(input);repo.saveSettlements([...repo.getSettlements(),draft]);repo.saveWork({activeId:draft.id,checkpoint:snapshot(),calculation:null});});
+      document.getElementById('archiveDialog')?.close();closeSettings();updateWorkStatus();
+    });return true;
+  };
   window.addEventListener('silk:finalization-stale',()=>{let node=document.getElementById('calculationError');if(!node){node=document.createElement('p');node.id='calculationError';node.className='period-error';node.setAttribute('role','alert');document.querySelector('.actionbar').prepend(node);}node.textContent='Finalisierung nicht übernommen: Der gemeinsame Stand wurde inzwischen geändert. Der Entwurf bleibt erhalten. Bitte prüfen und neu berechnen.';node.classList.remove('hidden');});
   window.restoreSavedCalculation=function(id){const item=repo.getSettlements().find(x=>String(x.id)===String(id));if(!item)return;
     let dialog=document.getElementById('archiveDialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='archiveDialog';dialog.className='release-dialog archive-dialog';document.body.appendChild(dialog);}
     // Archive content is kept separate from editable current inputs.
-    dialog.innerHTML=`<h2>${item.dataFormat==='final-v2'?'Finalisierte Abrechnung':'Ergebnis-Archiv'}</h2><p>${esc(item.label)} · ${esc(stamp(item.savedAt))}</p><div class="archive-result"></div><button type="button">Schließen</button>`;
-    const template=document.createElement('template');template.innerHTML=item.html||'';
+    dialog.innerHTML=`<h2>${item.dataFormat?.startsWith('final-v')?'Finalisierte Abrechnung':'Ergebnis-Archiv'}</h2><p>${esc(item.label)} · ${esc(stamp(item.savedAt))}</p><div class="archive-result"></div><button type="button">Schließen</button>`;
+    const template=document.createElement('template');template.innerHTML=item.html||'';if(item.dataFormat==='final-v3'){template.innerHTML='<p>Serverbeleg '+esc(item.id)+' · Revision '+esc(item.serverRevision)+' · '+esc(item.resultData.version)+'</p><p>Eingang: '+esc(chf(item.resultData.inputCents/100))+' · Auszahlung: '+esc(chf(item.resultData.payoutCents/100))+'</p><table><thead><tr><th>Empfänger</th><th>Auszahlung</th></tr></thead><tbody>'+item.resultData.lines.map(l=>'<tr><td>'+esc(item.inputSnapshot.staffLabels?.[l.name]||l.name)+'</td><td>'+esc(chf(l.payoutCents/100))+'</td></tr>').join('')+'</tbody></table><p>Regel: '+esc(item.resultData.policy)+' · Rundungsrest: '+esc(chf(item.resultData.residualCents/100))+'</p>';}
     template.content.querySelectorAll('script,iframe,object,embed,style,link').forEach(x=>x.remove());template.content.querySelectorAll('*').forEach(x=>[...x.attributes].forEach(a=>{if(a.name.startsWith('on')||/^(href|src)$/i.test(a.name))x.removeAttribute(a.name);}));
-    dialog.querySelector('.archive-result').append(template.content);dialog.querySelector('button').onclick=()=>dialog.close();dialog.showModal();
+    dialog.querySelector('.archive-result').append(template.content);dialog.querySelector('button').onclick=()=>dialog.close();
+    const correction=document.createElement('button');correction.textContent='Korrekturentwurf vorbereiten';correction.onclick=()=>createCorrectionDraft(item.id);dialog.append(correction);dialog.showModal();
   };
   window.clearCurrentPeriod=()=>showDecision(()=>document.getElementById('clearPeriodDialog').classList.remove('hidden'));
   window.closeClearPeriod=()=>document.getElementById('clearPeriodDialog').classList.add('hidden');

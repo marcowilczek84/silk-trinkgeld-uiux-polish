@@ -58,10 +58,10 @@
   }
   function rememberConflict(remote, revision, merged) {
     // Persist remote base and both alternatives before touching the visible working copy.
-    repo.saveSyncMeta({base:remote,revision});repo.saveConflicts(merged.conflicts);
-    repo.applyDocument(merged.value);renderConflicts();
+    repo.applyDocument(merged.value,{base:remote,revision,conflicts:merged.conflicts});renderConflicts();
   }
   async function syncNow() {
+    if(!global.SilkWriteCoordinator?.canWrite()||global.SilkWriteCoordinator?.hasFailure())return false;
     if(stopped)return false;
     if(blockedMessage){ui.set('blocked',blockedMessage);return false;}
     if(!cloud?.workspaceId){ui.set('local');return false;}
@@ -84,16 +84,18 @@
         const staleFinalization=M.protectFinalization(meta.base||remote,merged.value);
         let committed=row;
         if(!row||!M.equal(merged.value,remote)) {
-          const request=row?client.from('tip_workspace_state').update({payload:merged.value}).eq('workspace_id',cloud.workspaceId).eq('revision',row.revision).select().maybeSingle():client.rpc('tip_create_workspace_state',{p_workspace_id:cloud.workspaceId,p_payload:merged.value,p_legacy_revision:legacyRevision}).single();
+          if(!row)throw new Error('SILK_ADOPTION_REQUIRED');
+          const request=client.rpc('tip_write_workspace_v14',{p_workspace_id:cloud.workspaceId,p_expected_revision:row.revision,p_payload:merged.value}).single();
           const {data,error}=await request;
           if(['23505','40001'].includes(error?.code)||(!error&&!data))continue;
           if(error)throw error;if(stopped)return false;committed=data;
         }
         // Edits made during network requests must survive the acknowledgement.
         const latest=repo.document(), rebased=M.merge(local,latest,committed.payload);
-        repo.saveSyncMeta({base:committed.payload,revision:committed.revision});
         if(rebased.conflicts.length){rememberConflict(committed.payload,committed.revision,rebased);return false;}
-        if(!M.equal(latest,rebased.value))repo.applyDocument(rebased.value);
+        repo.applyDocument(rebased.value,{base:committed.payload,revision:committed.revision});
+        const pendingKey='silk_finalization_v14_'+cloud.workspaceId,pending=global.SilkStorageModels.parse(localStorage.getItem(pendingKey),null);
+        if(pending&&committed.payload.settlements?.[pending.id]?.dataFormat==='final-v3'&&M.equal(committed.payload.settlements[pending.id].inputSnapshot,pending.input))localStorage.removeItem(pendingKey);
         const clean=M.equal(repo.document(),committed.payload);
         if(clean){clearQueue();ui.set('synced');}else{ui.set('pending');again=true;}
         if(staleFinalization.length)global.dispatchEvent(new CustomEvent('silk:finalization-stale'));
@@ -103,7 +105,8 @@
       ui.set('pending','Weitere Änderungen eingegangen · erneuter Abgleich');again=true;return false;
     } catch(error) {
       if(stopped)return false;console.warn('SILK sync:',error.code||error.name);
-      if(/SILK_(UPDATE_REQUIRED|ROLLOUT_PAUSED|ARCHIVE_PROTECTED|INVALID_DOCUMENT)/.test(error.message||'')){
+      if(error.code==='PGRST202'){blockedMessage='Der V1.4-Serverschutz ist noch nicht installiert. Änderungen bleiben lokal erhalten; Production-Freigabe erforderlich.';again=false;ui.set('blocked',blockedMessage);return false;}
+      if(/SILK_(UPDATE_REQUIRED|ROLLOUT_PAUSED|ARCHIVE_PROTECTED|INVALID_DOCUMENT|ADOPTION_REQUIRED|FINALIZATION_REQUIRED)/.test(error.message||'')){
         blockedMessage=error.message.includes('UPDATE_REQUIRED')?'Diese App-Version ist veraltet. Bitte zuerst lokale Eingaben sichern und SILK neu laden.':error.message.includes('ROLLOUT_PAUSED')?'Versionswechsel läuft. Änderungen bleiben lokal erhalten. Bitte nach der Freigabe neu laden.':error.message.includes('ARCHIVE_PROTECTED')?'Synchronisierung angehalten: Eine abgeschlossene Abrechnung wurde verändert. Lokale Eingaben bleiben erhalten; bitte den Stand prüfen.':'Synchronisierung angehalten: Der Datenstand muss geprüft werden. Lokale Eingaben bleiben erhalten.';
         again=false;clearTimeout(timer);ui.set('blocked',blockedMessage);return false;
       }
@@ -129,6 +132,7 @@
     await syncNow();if(repo.getConflicts().length)renderConflicts();
   }
   async function init() {
+    if(!await global.SilkWriteCoordinator.ready)return;
     if(initialized)return;initialized=true;global.SilkLegacyMigration.backup();repo.getDeviceId();
     client=global.SilkSupabase?.create();if(!client){ui.set('local');return;}
     try {
@@ -139,8 +143,41 @@
     }catch(error){showError('Cloud-Verbindung nicht verfügbar · lokal erhalten');}
   }
   global.addEventListener('silk:local-change',()=>{repo.enqueue('document');schedule();});
+  global.addEventListener('silk:writer-ready',()=>{if(document.readyState!=='loading')init();});
   global.addEventListener('online',()=>schedule(0));global.addEventListener('offline',()=>ui.set(cloud?.workspaceId?'offline':'local'));
   global.addEventListener('focus',()=>schedule(0));
   async function stop(){stopped=true;clearTimeout(timer);clearInterval(refreshTimer);await channel?.unsubscribe();while(running)await new Promise(resolve=>{setTimeout(resolve,25);});}
-  global.SilkSyncService={init,stop,syncNow,refreshFromCloud:syncNow,showConflicts:renderConflicts,pair:()=>cloud?pairingView():init()};
+  const finalErrors={SILK_PERIOD_ALREADY_FINALIZED:'Dieser Zeitraum überschneidet sich mit einer abgeschlossenen Abrechnung. Bitte den Originalbeleg und das Korrekturverfahren prüfen.',SILK_ARCHIVE_COVERAGE_UNKNOWN:'Ein älterer Archivbeleg hat keinen eindeutigen Zeitraum. Vor einem neuen Abschluss muss seine Abdeckung geprüft werden.',SILK_REVISION_CONFLICT:'Der gemeinsame Stand wurde geändert. Bitte synchronisieren, prüfen und neu berechnen.',SILK_STALE_CALCULATION:'Die Berechnung gehört nicht mehr zum gemeinsamen Stand. Bitte neu berechnen.',SILK_ROUNDING_DECISION_REQUIRED:'Die Rundungsdifferenz benötigt eine freigegebene Verteilungsregel.',SILK_UPDATE_REQUIRED:'Der V1.4-Serverschutz ist noch nicht freigegeben oder diese App ist veraltet.',SILK_ADOPTION_REQUIRED:'Die Übernahme des gemeinsamen Datenstands benötigt eine gesonderte Freigabe.'};
+  async function finalize(input,numbers){
+    global.SilkWriteCoordinator.assertWritable();
+    if(!cloud?.workspaceId||!navigator.onLine)throw new Error('Finalisierung benötigt eine aktive Serververbindung. Der lokale Entwurf bleibt erhalten.');
+    if(repo.getConflicts().length||global.SilkWriteCoordinator.hasFailure())throw new Error('Bitte zuerst die offenen Speicher- oder Datenkonflikte lösen.');
+    if(!numbers.canFinalize)throw new Error(finalErrors.SILK_ROUNDING_DECISION_REQUIRED);
+    const existing=repo.getSettlements().find(x=>x.dataFormat==='final-v3'&&M.equal(x.inputSnapshot,input));if(existing)return existing;
+    if(!await syncNow())throw new Error('Der gemeinsame Stand ist noch nicht bestätigt. Bitte den Synchronisationsstatus prüfen und erneut versuchen.');
+    const confirmed=repo.getSettlements().find(x=>x.dataFormat==='final-v3'&&M.equal(x.inputSnapshot,input));if(confirmed)return confirmed;
+    if(!M.equal(global.SilkWorkflow.snapshot(),input))throw new Error(finalErrors.SILK_STALE_CALCULATION);
+    const key='silk_finalization_v14_'+cloud.workspaceId;
+    let pending=global.SilkStorageModels.parse(localStorage.getItem(key),null);
+    if(pending&&!M.equal(pending.input,input))throw new Error('Ein früherer Abschluss ist noch ungeklärt. Bitte dessen Eingaben wiederherstellen und denselben Abschluss erneut prüfen.');
+    if(!pending){pending={id:global.SilkStorageModels.uuid(),input};try{localStorage.setItem(key,JSON.stringify(pending));}catch{throw new Error('Abschlussanforderung konnte nicht sicher gespeichert werden. Bitte Speicherplatz freigeben.');}}
+    const before=repo.document(),meta=repo.getSyncMeta();
+    try{
+      const {data,error}=await client.rpc('tip_finalize_workspace_v14',{p_workspace_id:cloud.workspaceId,p_expected_revision:meta.revision,p_id:pending.id,p_input:pending.input}).single();
+      if(error)throw error;
+      const receipt=data?.payload?.settlements?.[pending.id];
+      if(receipt?.dataFormat!=='final-v3')throw new Error('INVALID_RECEIPT');
+      const merged=M.merge(before,repo.document(),data.payload);
+      if(merged.conflicts.length)rememberConflict(data.payload,data.revision,merged);
+      else repo.applyDocument(merged.value,{base:data.payload,revision:data.revision});
+      localStorage.removeItem(key);schedule(0);return receipt;
+    }catch(error){
+      const code=Object.keys(finalErrors).find(k=>(error.message||'').includes(k));
+      // Known transaction rejection is safe to clear. Unknown transport outcome retains the ID.
+      if(code){localStorage.removeItem(key);throw new Error(finalErrors[code]);}
+      if(/^(22|23|42501|P0001)/.test(error.code||'')){localStorage.removeItem(key);throw new Error('Der Server hat den Abschluss abgelehnt. Eingaben und Archiv bleiben erhalten. Bitte Zeitraum, Zuordnungen und Korrekturbezug prüfen.');}
+      throw new Error('Abschluss noch nicht bestätigt. Nicht erneut auszahlen. Ein erneuter Versuch prüft dieselbe Belegnummer.');
+    }
+  }
+  global.SilkSyncService={init,stop,syncNow,finalize,refreshFromCloud:syncNow,showConflicts:renderConflicts,pair:()=>cloud?pairingView():init()};
 })(window);

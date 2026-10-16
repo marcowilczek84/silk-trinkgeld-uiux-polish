@@ -16,7 +16,7 @@ test('workspace projection preserves exact calculation, source HTML and input sn
   assert.deepEqual(json(after.window.SilkWorkflow.snapshot()),json(before.window.SilkWorkflow.snapshot()));
   assert.equal(after.window.document.querySelectorAll('.workspace-table tbody tr').length,after.window.SilkCalculatedNumbers.lines.length);
   const payouts=[...after.window.document.querySelectorAll('.workspace-payout')].map(x=>x.textContent);
-  assert.deepEqual(payouts,json(after.window.SilkCalculatedNumbers.lines.map(x=>after.window.chf(x.payout))));
+  assert.deepEqual(payouts,json(after.window.SilkCalculatedNumbers.lines.map(x=>x.payout===null?'Gesperrt':after.window.chf(x.payout))));
  }}finally{before.window.close();after.window.close();}
 });
 
@@ -36,11 +36,11 @@ test('workspace navigation and search have no data writes; filtered rename keeps
 
 test('workspace refresh keeps finalized archive bytes unchanged and repeated finalization idempotent',async()=>{
  const a=await setup(),w=a.window;try{
-  w.calculate();await tick();w.saveCurrentCalculation();const archives=JSON.stringify(w.SilkLocalRepository.getSettlements());
-  w.document.querySelector('[data-workspace=entry]').click();w.document.querySelector('[data-workspace=settlement]').click();await tick();w.saveCurrentCalculation();
+  w.SilkLocalRepository.saveSettlements([{id:'legacy',dataFormat:'final-v2',html:'Historical receipt'}]);w.calculate();await tick();await w.saveCurrentCalculation();const archives=JSON.stringify(w.SilkLocalRepository.getSettlements());
+  w.document.querySelector('[data-workspace=entry]').click();w.document.querySelector('[data-workspace=settlement]').click();await tick();await w.saveCurrentCalculation();
   assert.equal(JSON.stringify(w.SilkLocalRepository.getSettlements()),archives);
   assert.equal(w.document.querySelectorAll('#workspaceSettlement script').length,0);
-  assert.equal(w.SilkLocalRepository.getSettlements()[0].html,w.document.getElementById('result').innerHTML);
+  assert.equal(w.SilkLocalRepository.getSettlements()[0].html,'Historical receipt');
  }finally{w.close();}
 });
 

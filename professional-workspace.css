@@ -207,3 +207,8 @@ body.silk-workspace{--ws-primary:#1C777B;--ws-hover:#155F63;--ws-selected:#EDF6F
 .silk-workspace #silk-import-modal textarea{width:100%;font:400 16px/1.5 var(--ad-font);border:1px solid var(--ws-control);border-radius:4px;padding:12px}
 .silk-workspace #silk-import-modal .sim-close{min-width:44px;width:44px;height:44px;font-size:24px}
 @media(max-width:699px){.silk-workspace main#app{scroll-margin-top:88px}.silk-workspace #silk-import-modal .sim-card{padding:16px}.silk-workspace #silk-import-modal h2{font-size:22px}}
+
+/* Integrity status is persistent, readable and touch accessible. */
+#silkWriteStatus{position:sticky;top:0;z-index:110;padding:14px 18px;background:#fff4d7;border-bottom:1px solid #b28629;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+#silkWriteStatus[hidden]{display:none}
+#silkWriteStatus button{display:block;margin-top:8px;min-height:44px;padding:8px 14px;border:1px solid #79601b;border-radius:8px;background:#fff}

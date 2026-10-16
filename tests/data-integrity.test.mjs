@@ -52,7 +52,7 @@ test('new staff and shifts receive unique IDs; removing a row cannot rename its 
  w.openEditor('shifts');w.addShift();w.document.querySelectorAll('#shiftEditorRows [data-field=name]')[3].value='NEU';assert.equal(w.saveShifts(),true);assert.ok(w.SilkLocalRepository.getShifts()[3].name.startsWith('shift-'));close(c);
 });
 test('saved and finalized records remain byte-identical after both renames',async()=>{
- const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();const draft=plain(w.SilkLocalRepository.getSettlements()[0]);w.calculate();w.saveCurrentCalculation();
+ const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();const draft=plain(w.SilkLocalRepository.getSettlements()[0]);w.calculate();w.SilkLocalRepository.saveSettlements([{...draft,dataFormat:'final-v2',html:'Historical receipt'}]);
  w.SilkLocalRepository.saveSettlements([...w.SilkLocalRepository.getSettlements(),{...draft,id:'older-draft'}]);const archives=JSON.stringify(w.SilkLocalRepository.getSettlements());
  rename(w,'staff',0,'Neuer Name');rename(w,'shifts',0,'NEUER DIENST');assert.equal(JSON.stringify(w.SilkLocalRepository.getSettlements()),archives);
  assert.equal(w.SilkLocalRepository.getWork().calculation,null);close(c);
@@ -120,14 +120,14 @@ test('ambiguous import reports a visible error in preview and leaves assignments
  const error=w.document.getElementById('silk-import-error');assert.match(error.textContent,/mehrfach/);assert.equal(error.closest('.hidden'),null);assert.equal(JSON.stringify(w.SilkLocalRepository.document()),before);close(c);
 });
 
-test('repeated finalization is idempotent and preserves the first archived bytes',async()=>{
- const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();w.calculate();w.saveCurrentCalculation();
- const before=JSON.stringify(w.SilkLocalRepository.getSettlements());w.saveCurrentCalculation();
+test('repeated offline finalization stays a draft and creates no archive',async()=>{
+ const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();w.calculate();await w.saveCurrentCalculation();
+ const before=JSON.stringify(w.SilkLocalRepository.getSettlements());assert.equal(w.SilkLocalRepository.getSettlements()[0].dataFormat,'draft-v2');await w.saveCurrentCalculation();
  assert.equal(JSON.stringify(w.SilkLocalRepository.getSettlements()),before);close(c);
 });
 
 test('archive delete controls and both delete entrypoints cannot remove final records',async()=>{
- const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();w.calculate();w.saveCurrentCalculation();
+ const c=await app(),w=c.window;fixture(w);w.saveCurrentDraft();w.SilkLocalRepository.saveSettlements(w.SilkLocalRepository.getSettlements().map(x=>({...x,dataFormat:'final-v2',html:'Historical receipt'})));
  const item=w.SilkLocalRepository.getSettlements()[0],before=JSON.stringify(w.SilkLocalRepository.document());
  assert.equal(w.deleteDraft(item.id),false);assert.equal(w.deleteSavedCalculation(item.id),false);
  assert.equal(JSON.stringify(w.SilkLocalRepository.document()),before);w.openSavedCalculations();

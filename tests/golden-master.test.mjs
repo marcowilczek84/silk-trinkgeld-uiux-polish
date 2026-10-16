@@ -22,8 +22,8 @@ async function calculateFixture({ state, staff, shifts, mode, from, to }) {
     amount: row.querySelector('b')?.textContent.trim()
   }));
   const total = window.document.querySelector('#result .resulthead strong')?.textContent.trim();
-  dom.window.close();
-  return { total, rows };
+  const candidates=Array.from(window.SilkCalculatedNumbers.lines,l=>l.candidatePayoutCents/100);dom.window.close();
+  return { total, rows, candidates };
 }
 
 const shifts = [
@@ -42,13 +42,13 @@ test('golden master: day distribution including Emily cap, kitchen and housekeep
     } }
   });
   assert.deepEqual(actual, {
-    total: 'CHF 145.50',
+    total: 'CHF 145.50', candidates:[10,68,21,43,4],
     rows: [
-      { label: 'Emily', detail: '1 Tag(e) · 03.09. · MD', amount: 'CHF 10' },
-      { label: 'Marco Wilczek', detail: '1 Tag(e) · 03.09. · F1', amount: 'CHF 68' },
-      { label: 'Sandra Porepp', detail: '1 Tag(e) · 03.09. · SP1', amount: 'CHF 21' },
-      { label: 'Küche gesamt', detail: '', amount: 'CHF 43' },
-      { label: 'Housekeeping gesamt', detail: '', amount: 'CHF 4' }
+      { label: 'Emily', detail: '1 Tag(e) · 2026-09-03 · MD', amount: 'Gesperrt' },
+      { label: 'Marco Wilczek', detail: '1 Tag(e) · 2026-09-03 · F1', amount: 'Gesperrt' },
+      { label: 'Sandra Porepp', detail: '1 Tag(e) · 2026-09-03 · SP1', amount: 'Gesperrt' },
+      { label: 'Küche gesamt', detail: '', amount: 'Gesperrt' },
+      { label: 'Housekeeping gesamt', detail: '', amount: 'Gesperrt' }
     ]
   });
 });
@@ -62,12 +62,12 @@ test('golden master: multi-day weighted shifts and rounding display', async () =
     } }
   });
   assert.deepEqual(actual, {
-    total: 'CHF 341.00',
+    total: 'CHF 341.00', candidates:[137,96,100,9],
     rows: [
-      { label: 'Marco Wilczek', detail: '2 Tag(e) · 03.09. · F1 · 04.09. · MD', amount: 'CHF 137' },
-      { label: 'Sandra Porepp', detail: '2 Tag(e) · 03.09. · SP1 · 04.09. · MD', amount: 'CHF 96' },
-      { label: 'Küche gesamt', detail: '', amount: 'CHF 100' },
-      { label: 'Housekeeping gesamt', detail: '', amount: 'CHF 9' }
+      { label: 'Marco Wilczek', detail: '2 Tag(e) · 2026-09-03 · F1 · 2026-09-04 · MD', amount: 'Gesperrt' },
+      { label: 'Sandra Porepp', detail: '2 Tag(e) · 2026-09-03 · SP1 · 2026-09-04 · MD', amount: 'Gesperrt' },
+      { label: 'Küche gesamt', detail: '', amount: 'Gesperrt' },
+      { label: 'Housekeeping gesamt', detail: '', amount: 'Gesperrt' }
     ]
   });
 });

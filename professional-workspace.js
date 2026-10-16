@@ -85,12 +85,12 @@
     for(const line of numbers.lines){const row=document.createElement('tr');if(line.days===undefined)row.className='workspace-total-row';
       const name=line.days===undefined?line.name:window.SilkIdentity.staffLabel(line.name);
       const th=cell(row,'th',name);th.scope='row';cell(row,'td',line.details?.join(' · ')||'Gesamtanteil','workspace-duty-detail');
-      cell(row,'td',money(line.amount),'numeric').dataset.label='Anteil';cell(row,'td',money(line.payout),'numeric workspace-payout').dataset.label='Auszahlung';tbody.append(row);
+      cell(row,'td',money(line.amount),'numeric').dataset.label='Anteil';cell(row,'td',line.payout===null?'Gesperrt':money(line.payout),'numeric workspace-payout').dataset.label='Auszahlung';tbody.append(row);
     }table.append(tbody);presentation.append(table);
     const rounded=numbers.lines.reduce((sum,line)=>sum+line.payout,0);
     const note=document.createElement('div');note.className='workspace-rounding';
-    cell(note,'span','Auszahlung gesamt');cell(note,'strong',money(rounded));
-    const help=document.createElement('p');help.textContent='Auszahlungen werden wie bisher auf ganze Franken gerundet. Differenz zum Trinkgeld gesamt: '+money(rounded-numbers.total)+'.';note.append(help);presentation.append(note);
+    cell(note,'span','Auszahlung gesamt');cell(note,'strong',numbers.canFinalize?money(rounded):'Nicht freigegeben');
+    const help=document.createElement('p');help.textContent=numbers.canFinalize?'Summengleiche Rundung auf ganze Franken · exakte Rappenrechnung.':'Die bisherige Einzelrundung würde '+money(numbers.candidatePayoutCents/100)+' ergeben. Differenz zum Eingang: '+money(numbers.residualCents/100)+'. Finalisierung bis zur Entscheidung über die Restbetragsverteilung gesperrt.';note.append(help);presentation.append(note);
     const rules=document.createElement('p');rules.className='workspace-rule-note';rules.textContent='Ausgangsverteilung: Service 70 % · Küche 30 %. Housekeeping: je 2,5 % vom jeweiligen Anteil. Sonderregeln und Schichtgewichtungen bleiben berücksichtigt.';presentation.append(rules);
     resultSection.classList.add('workspace-projected');
   }
