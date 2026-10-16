@@ -1,9 +1,22 @@
 // Shared UI acceptance: all finalization and payment mutations go through visible forms.
 import assert from 'node:assert/strict';
-export async function waitSync(page){await page.waitForFunction(()=>SilkLocalRepository.getSyncMeta().revision>0);for(let n=0;n<30;n++){if(await page.evaluate(()=>SilkSyncService.syncNow()))return;await page.waitForTimeout(100);}throw Error('Server synchronization not confirmed');}
+export async function waitSync(page){
+ await page.waitForFunction(()=>SilkLocalRepository.getSyncMeta().revision>0);
+ for(let n=0;n<30;n++){
+  // Retain the actual request in the page. Chromium's debugger can otherwise
+  // collect an unretained evaluate promise (Playwright issue #41826). Never
+  // retry an indeterminate request: first await this exact probe with a bound.
+  await page.evaluate(()=>{const probe={done:false};window.silkC2SyncProbe=probe;probe.promise=SilkSyncService.syncNow().then(value=>{probe.value=value;probe.done=true;},error=>{probe.error=error.message;probe.done=true;});});
+  await page.waitForFunction(()=>window.silkC2SyncProbe.done,null,{timeout:15000});
+  const result=await page.evaluate(()=>{const p=window.silkC2SyncProbe;delete window.silkC2SyncProbe;return {value:p.value,error:p.error};});
+  if(result.error)throw Error(result.error);if(result.value)return;await page.waitForTimeout(100);
+ }throw Error('Server synchronization not confirmed');
+}
 export async function operatorFlow({a,b,row,setCashPermission,screenshot=async()=>{}}){
  const page=a.page,close=page.locator('#c2CloseDialog'),archive=page.locator('#archiveDialog');
  const ledger=page.locator('.c2-ledger');
+ const pageErrors=[],expectedOfflineNetworkErrors=[];let offlinePhase=false;
+ const onError=e=>{if(offlinePhase&&e.message.includes('/rest/v1/tip_workspace_state?')&&e.message.endsWith('due to access control checks.'))expectedOfflineNetworkErrors.push(e.message);else pageErrors.push(e.message);};page.on('pageerror',onError);b.page.on('pageerror',onError);
  async function openClose(ref){await page.evaluate(()=>{saveCurrentDraft();calculate();});await waitSync(page);await page.locator('#saveCalculationButton').click();await close.locator('form').waitFor();assert.equal(await close.getByRole('checkbox').isChecked(),false);await close.locator('input[type=text]').fill(ref);await close.getByRole('checkbox').check();}
  async function showLedger(p=page){await p.getByRole('button',{name:'Auszahlungsnachweise laden'}).click();await p.locator('.c2-ledger table').waitFor();}
  async function recover(revoked=false){const p=await page.evaluate(()=>SilkSyncService.pendingC2());assert.ok(p.id);await page.reload();await waitSync(page);await page.getByRole('button',{name:'Bestätigung erneut prüfen'}).click();if(revoked){await page.locator('#c2PendingNotice').getByText('Keine Berechtigung',{exact:false}).waitFor();assert.equal((await page.evaluate(()=>SilkSyncService.pendingC2())).id,p.id);await setCashPermission(true);await page.getByRole('button',{name:'Bestätigung erneut prüfen'}).click();}await page.locator('#archiveDialog[open]').waitFor();await page.waitForFunction(()=>!SilkSyncService.pendingC2());return p;}
@@ -42,9 +55,10 @@ export async function operatorFlow({a,b,row,setCashPermission,screenshot=async()
  proof=await page.evaluate(id=>SilkC2.ledger(id),original.id);assert.equal(proof.confirmations.length,3);assert.equal(proof.movements.filter(x=>x.kind==='refund').reduce((n,x)=>n+x.amountCents,0),-100);
  assert.equal(JSON.stringify((await row()).payload.settlements[original.id]),originalBytes);assert.equal(await archive.evaluate(n=>n.scrollWidth>n.clientWidth+1),false);
  await archive.getByRole('button',{name:'Schließen',exact:true}).click();await b.page.locator('#archiveDialog').getByRole('button',{name:'Schließen',exact:true}).click();await waitSync(b.page);
- await a.context.setOffline(true);await page.evaluate(()=>{document.getElementById('f_2035-01-01').value='777';changeDay('2035-01-01');});
+ offlinePhase=true;await a.context.setOffline(true);await page.evaluate(()=>{document.getElementById('f_2035-01-01').value='777';changeDay('2035-01-01');});
  await b.page.evaluate(()=>{document.getElementById('f_2035-01-01').value='888';changeDay('2035-01-01');});await waitSync(b.page);
  await a.context.setOffline(false);await page.evaluate(()=>SilkSyncService.syncNow());await page.waitForFunction(()=>SilkLocalRepository.getConflicts().length>0);
  await page.reload();await page.waitForFunction(()=>SilkLocalRepository.getConflicts().length>0);assert.equal(await page.evaluate(()=>SilkLocalRepository.getState().byDate['2035-01-01'].f),'777');
- return {operatorUI:true,roundingBothSigns:true,explicitPayoutAndRefund:true,finalizationAndPaymentResponseLossReload:true,staleSecondDevice:true,revokedOperatorBlocked:true,correctionOfCorrection:true,originalUnchanged:true,offlineConflictReload:true,realFinalizationLocked:true,physicalDevices:false};
+ offlinePhase=false;assert.deepEqual(pageErrors,[]);page.off('pageerror',onError);b.page.off('pageerror',onError);
+ return {operatorUI:true,roundingBothSigns:true,explicitPayoutAndRefund:true,finalizationAndPaymentResponseLossReload:true,staleSecondDevice:true,revokedOperatorBlocked:true,correctionOfCorrection:true,originalUnchanged:true,offlineConflictReload:true,realFinalizationLocked:true,physicalDevices:false,pageErrors,expectedOfflineNetworkErrors};
 }

@@ -21,6 +21,7 @@ try{
    const a=await device('a'),b=await device('b');
    const result=await operatorFlow({a,b,row:h.row,setCashPermission:async allowed=>h.admin.query('update private.tip_c2_operators set can_confirm_cash=$1 where workspace_id=$2 and actor=$3',[allowed,target,h.users.a.id]),screenshot:async(page,name)=>{const data=await page.screenshot({type:'jpeg',quality:55});console.log('SILK_UI_IMAGE '+engineName+'-'+width+'-'+name+' '+data.toString('base64'));}});
    reports.push({width,height,status:'passed',actualAuthSessions:2,actualPostgREST:true,...result});
+  }catch(error){const diagnostic={};for(const [i,c] of contexts.entries())try{diagnostic[i]=await c.pages()[0].evaluate(()=>({ready:document.readyState,sync:document.querySelector('.silk-sync-status')?.textContent,probe:window.silkC2SyncProbe?{done:window.silkC2SyncProbe.done,value:window.silkC2SyncProbe.value,error:window.silkC2SyncProbe.error}:null,conflicts:window.SilkLocalRepository?.getConflicts().length}));}catch{}reports.push({width,height,status:'failed',error:error.message.slice(0,1500),diagnostic});throw error;
   }finally{for(const c of contexts)await c.close();await writeFile(output()+'/browser-results-'+engineName+'.json',JSON.stringify({engine:engineName,engineVersion:browser.version(),physicalDevices:false,hostedCloud:false,reports},null,2));}
  }
  console.log('PASS: '+engineName+' operator forms through actual local Supabase APIs; not physical-device acceptance.');

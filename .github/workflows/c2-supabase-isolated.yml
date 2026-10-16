@@ -58,12 +58,15 @@ jobs:
           npx eslint tests/ci/*.mjs
           npm run typecheck
       - name: Build integrated local candidate
+        id: build_candidate
         run: node tests/ci/stack.mjs build
       - name: Install browser for integrated candidate
+        id: install_browsers
         run: npx playwright install --with-deps chromium webkit
       - name: Chromium real API operator flow (emulation only)
         run: node tests/ci/browser.mjs
       - name: WebKit real API operator flow (emulation only)
+        if: ${{ !cancelled() && steps.build_candidate.outcome == 'success' && steps.install_browsers.outcome == 'success' }}
         run: QA_BROWSER=webkit node tests/ci/browser.mjs
       - name: Sanitized version and test evidence
         if: always()
