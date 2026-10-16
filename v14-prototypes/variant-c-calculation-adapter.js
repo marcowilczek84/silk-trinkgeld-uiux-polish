@@ -8,7 +8,7 @@
    const exact=global.SilkFinance.calculate(input);
    const c=global.SilkVariantC.allocate(exact);
    if(c.inputCents!==exact.inputCents||c.lines.length!==exact.lines.length)throw new Error('SILK_C_INTEGRITY_MISMATCH');
-   return {...exact,...c,candidatePayoutCents:c.payoutCents,exactCalculationVersion:exact.version,version:'silk-whole-chf-c-1',policy:'whole-chf-largest-remainder',previewOnly:true,canFinalize:false,serverFinalizationRequired:true,finalizationStatus:'STAGING_SQL_PARITY_REQUIRED'};
+   return {...exact,...c,candidatePayoutCents:c.payoutCents,exactCalculationVersion:exact.version,version:'silk-whole-chf-c-2',policy:'whole-chf-largest-remainder-half-up',previewOnly:true,canFinalize:false,serverFinalizationRequired:true,finalizationStatus:c.cashReconciliationRequired?'CASH_RECONCILIATION_AND_SQL_PARITY_REQUIRED':'STAGING_SQL_PARITY_REQUIRED'};
  }
  global.SilkVariantCPreview={preview};
 })(typeof window==='undefined'?globalThis:window);
