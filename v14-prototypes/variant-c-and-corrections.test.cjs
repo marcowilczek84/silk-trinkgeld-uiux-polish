@@ -14,8 +14,10 @@ test('changing UI order does not change recipient amounts',()=>{
  const f=allocate({inputCents:20000,lines}),r=allocate({inputCents:20000,lines:lines.slice().reverse()});
  assert.deepEqual(Object.fromEntries(f.lines.map(x=>[x.id,x.payout])),Object.fromEntries(r.lines.map(x=>[x.id,x.payout])));
 });
-test('fractional total remains blocked (no undisclosed cash remainder)',()=>{
- assert.throws(()=>allocate({inputCents:180110,lines:[line('staff:A',180110)]}),/FRACTIONAL_TOTAL_UNRESOLVED/);
+test('fractional input rounds only the period and makes cash difference visible',()=>{
+ const r=allocate({inputCents:180110,lines:[line('staff:A',180110)]});
+ assert.equal(r.payoutCents,180100);assert.equal(r.roundingAdjustmentCents,-10);
+ assert.equal(r.cashReconciliationStatus,'pending');assert.equal(r.canFinalize,false);
 });
 test('never allocate when claims do not sum to incoming amount',()=>{
  assert.throws(()=>allocate({inputCents:100000,lines:[line('staff:A',100001)]}),/CLAIMS_NOT_BALANCED/);
