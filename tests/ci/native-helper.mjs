@@ -56,7 +56,11 @@ export async function bootstrap(h){
  alter table public.tip_workspace_state replica identity full;`);
  for(const file of ['docs/production/v14-integrity-PREPARED-NOT-APPLIED.sql','v14-prototypes/variant-c-postgres-PREPARED-NOT-APPLIED.sql','docs/production/c2-server-PREPARED-NOT-APPLIED.sql'])await h.admin.query(await readFile(file,'utf8'));
  await h.admin.query("notify pgrst,'reload schema'");
- for(let n=0;n<60;n++){const x=await h.http('/rest/v1/',{token:h.users.a.session.access_token});if(x.status===200&&x.body.paths?.['/rpc/tip_c2_finalize'])return;await new Promise(r=>setTimeout(r,200));}throw Error('PostgREST schema reload timeout');
+ // Envoy protects the OpenAPI root separately. Probe the actual application RPC;
+ // no membership fixture exists yet, so a loaded function must deny access.
+ let probe;
+ for(let n=0;n<60;n++){probe=await h.rpc('tip_c2_preview',{p_expected_revision:1,p_input:input()},h.users.a.session.access_token);if(probe.status===403&&probe.body.message==='SILK_FORBIDDEN')return;await new Promise(r=>setTimeout(r,200));}
+ throw Error('PostgREST RPC readiness failed: '+JSON.stringify(probe));
 }
 export async function reset(h){
  assert.equal((await h.admin.query('select current_database() db')).rows[0].db,'silk_c2_test_ci');
