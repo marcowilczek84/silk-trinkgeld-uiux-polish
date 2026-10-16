@@ -1,0 +1,17 @@
+{
+  "applicationCommit": "901b92a42350496c336fa7418fb9045a0ad785c2",
+  "sources": [
+    {
+      "path": "docs/production/v14-integrity-PREPARED-NOT-APPLIED.sql",
+      "sha256": "530f709490f9f9fcf451d05c610410045fcf496136a4fcd274cbacd3a9bfcab5"
+    },
+    {
+      "path": "v14-prototypes/variant-c-postgres-PREPARED-NOT-APPLIED.sql",
+      "sha256": "3944ffefe401de9eebfcfeae8738014e75b6379c912596e001430561281e5c39"
+    },
+    {
+      "path": "docs/production/c2-server-PREPARED-NOT-APPLIED.sql",
+      "sha256": "4446595226797abab161ce567ee5ce47c98e46344dd9bd189966a2be1fdea368"
+    }
+  ]
+}

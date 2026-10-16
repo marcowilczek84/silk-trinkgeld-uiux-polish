@@ -1,0 +1,40 @@
+name: C2 release recovery rehearsal
+on:
+  push:
+    branches: [tips-v14-c-whole-chf-complete-period-20261016]
+    paths: ['release/**', '.github/workflows/c2-release-rehearsal.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release-recovery:
+    if: github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SILK_C2_CI: synthetic-only
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: supabase/supabase
+          ref: bc27d2661edd09a5d0b8d76ce33da6d4071a756e
+          sparse-checkout: docker
+          path: .ci-supabase-source
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.18.0'
+      - run: npm ci
+      - run: node tests/ci/stack.mjs prepare
+      - run: node tests/ci/stack.mjs start
+      - name: Target-schema installation and isolated backup restore rollback
+        run: node release/rehearsal.mjs
+      - name: Runtime versions (existing full acceptance is not repeated)
+        if: always()
+        run: node tests/ci/stack.mjs report
+      - name: Remove synthetic services and ephemeral credentials
+        if: always()
+        run: node tests/ci/stack.mjs stop
