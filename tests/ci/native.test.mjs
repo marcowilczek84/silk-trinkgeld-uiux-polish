@@ -91,7 +91,14 @@ test('C2 native Supabase isolated acceptance',{timeout:300000},async t=>{
   });
   await check('Realtime delivers actual committed revisions and filters revoked/outsider subscribers',async()=>{
    const good=h.client(token()),bad=h.client(token('outsider')),events=[],forbidden=[];
-   const watch=(c,name,arr)=>new Promise((resolve,reject)=>{const ch=c.channel(name).on('postgres_changes',{event:'UPDATE',schema:'public',table:'tip_workspace_state',filter:'workspace_id=eq.'+target},p=>arr.push(p.new)).subscribe(s=>{if(s==='SUBSCRIBED')resolve(ch);if(['CHANNEL_ERROR','TIMED_OUT'].includes(s))reject(Error('Realtime '+name+' '+s));});});
+   // A joined WebSocket channel is not yet a ready PostgreSQL subscription.
+   const watch=(c,name,arr)=>new Promise((resolve,reject)=>{
+    let joined=false,postgresReady=false;const timer=setTimeout(()=>reject(Error('Realtime '+name+' PostgreSQL readiness timeout')),20000);
+    const ready=()=>{if(joined&&postgresReady){clearTimeout(timer);resolve();}};
+    c.channel(name).on('system',{},p=>{if(p.extension==='postgres_changes'){if(p.status==='ok'){postgresReady=true;ready();}else{clearTimeout(timer);reject(Error('Realtime '+name+' '+p.status+': '+p.message));}}})
+     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'tip_workspace_state',filter:'workspace_id=eq.'+target},p=>arr.push(p.new))
+     .subscribe((s,e)=>{if(s==='SUBSCRIBED'){joined=true;ready();}if(['CHANNEL_ERROR','TIMED_OUT'].includes(s)){clearTimeout(timer);reject(Error('Realtime '+name+' '+s+': '+(e?.message||'')));}});
+   });
    try{
     await good.realtime.setAuth(token());await bad.realtime.setAuth(token('outsider'));
     await Promise.all([watch(good,'synthetic-member',events),watch(bad,'synthetic-outsider',forbidden)]);
