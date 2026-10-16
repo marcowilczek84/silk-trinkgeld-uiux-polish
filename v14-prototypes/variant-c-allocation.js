@@ -60,6 +60,7 @@
      inputCents:asSafeNumber(total),roundedPayoutTargetCents:asSafeNumber(payoutTarget),
      candidatePayoutCents:asSafeNumber(payout),payoutCents:asSafeNumber(payout),
      roundingAdjustmentCents:asSafeNumber(adjustment),cashDifferenceCents:asSafeNumber(total-payout),
+     residualCents:asSafeNumber(total-payout),
      cashReconciliationRequired:adjustment!==0n,
      cashReconciliationStatus:adjustment===0n?'not-required':'pending',
      cashReconciliationEvidence:null,allocationReady:true,canFinalize:false,previewOnly:true,
