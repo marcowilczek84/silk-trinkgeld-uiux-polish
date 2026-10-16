@@ -64,3 +64,14 @@ test('2,000 weighted periods: exact claims, full CHF, server gate closed',()=>{
   check(sample(f,total-f,staff,assignments));
  }
 });
+
+test('linked correction with changed cents posts ONLY the net whole-CHF delta',()=>{
+ const orig=check(sample(180110,0,['A'],[{name:'A',shift:'F1'}]));
+ const revised=check(sample(180190,0,['A'],[{name:'A',shift:'F1'}]));
+ assert.equal(orig.roundingAdjustmentCents,-10);assert.equal(revised.roundingAdjustmentCents,10);
+ const actual=orig.lines.map((x,j)=>({id:'paid'+j,rootFinalId:'root',recipientId:x.id,amountCents:x.payoutCents,type:'payout',confirmed:true}));
+ const p=correction.preview({rootFinalId:'root',confirmedBaseline:true,expectedRevision:5,currentRevision:5,targetLines:revised.lines,confirmedCashMovements:actual});
+ assert.equal(p.netDeltaCents,100);assert.equal(p.automaticPayoutAllowed,false);
+ assert.equal(revised.payoutCents-orig.payoutCents,100);
+ assert.equal((180190-180110)+(revised.roundingAdjustmentCents-orig.roundingAdjustmentCents),100);
+});
