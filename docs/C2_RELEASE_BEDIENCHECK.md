@@ -1,17 +1,17 @@
 # Kurzer echter Bediencheck vor Aktivierung
 
-App-Kandidat unverändert: `901b92a42350496c336fa7418fb9045a0ad785c2`.
+App-Kandidat mit den letzten Bedienkorrekturen: `d22900d696bc40afb3978aaff635d142615c8e14`.
 
 ## Sofort am iPhone/iPad: Eingabe und Berechnung
 
 Geprüfte, isolierte Preview (gegebenenfalls mit Marcos bestehender Vercel-Anmeldung):
-https://silk-trinkgeld-uiux-polish-dzfb90gah-restaurant-silk.vercel.app/
+https://silk-trinkgeld-uiux-polish-ikmzgt8m3-restaurant-silk.vercel.app/
 
 Diese konkrete Preview hat **keine Supabase-URL, keinen Schlüssel und keine Abschlussfreigabe**. Nicht mit Production verbinden. Vorhandene lokale Preview-Eingaben erhalten; einen leeren zukünftigen Testtag verwenden.
 
-1. Einen Testmitarbeiter an einem zukünftigen Testtag dem Frühdienst zuordnen. Nur synthetische Beträge eingeben.
-2. Eingang CHF 1’801.10 berechnen: berechnete Auszahlung CHF 1’801, Rest CHF 0.10. Danach CHF 1’801.90: berechnete Auszahlung CHF 1’802, zusätzlich nötig CHF 0.10.
-3. Entwurf speichern, neu laden und wieder öffnen. Prüfen, ob Beträge, Dienst und Buttons gut lesbar und bedienbar sind.
+1. **Zeitraum/Tag wechseln:** Ohne Eingaben wechseln, dann einen Testbetrag ändern und vollständig zurücksetzen bzw. als Entwurf speichern. Nur bei einer noch offenen echten Änderung darf die Speicherfrage erscheinen.
+2. **CHF 1’000.00 berechnen:** An einem leeren Testtag Frühbetrag 1000, Spätbetrag 0 und einen Frühdienst erfassen. Bei CHF 0.00 Rundungsdifferenz ist kein Kassenausgleich erforderlich; „Abschluss prüfen“ erklärt die deaktivierte Testfunktion.
+3. **Am iPhone scrollen:** Der Preview-Hinweis darf SILK-Logo und App-Namen nicht überdecken.
 
 **Grenze:** Die sichere Preview kann keinen serverseitigen Abschluss-/Zahlungsdialog durchlaufen. Diese drei Punkte sind nur ein echter Eingabe-/Darstellungscheck, keine Abnahme der Bestätigungsformulare.
 

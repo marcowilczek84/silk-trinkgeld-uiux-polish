@@ -1,18 +1,20 @@
 # C2 – vorbereitete Veröffentlichung, keine Aktivierung
 
-App-Kandidat: `901b92a42350496c336fa7418fb9045a0ad785c2`. App-Dateien, Berechnung und Bedienablauf sind unverändert. Release-Dateien liegen im bestehenden Branch `tips-v14-c-whole-chf-complete-period-20261016`.
+Aktueller App-Kandidat: `d22900d696bc40afb3978aaff635d142615c8e14`. Die drei beauftragten Bedienkorrekturen wurden nach Übergabestand `06e139b8` ergänzt; C2, Finanz-/Serverlogik, SQL und Release-Nachweise bleiben unverändert. Details und gezielte Nachweise: `docs/C2_UI_REVIEW_20261017.md`. Release-Dateien liegen im bestehenden Branch `tips-v14-c-whole-chf-complete-period-20261016`.
 
 ## Zielabgleich vom 17.10.2026, Schweizer Zeit
 
 - Vercel: Projekt `prj_dKUCwFBKHfZVC0hmxhvdKpzrJQYO`, Team `team_38D8NmJHWLJIxN1R5XHD63yJ`.
 - Production: `dpl_AckEsRbZoAmihU4wmn7qEtbRrvMj`, Commit `16fab0e23fa58a0fb59d4c8b4c7aa66dbbb79440`, Branch `tips-quiet-launch-20261013`. Nicht verändert.
-- Geprüfte Candidate-Preview: `dpl_Dzm9VF52VbRY3pSVzek8tFS7rc7f`, Commit `901b92a4`, READY; Supabase-URL und Schlüssel leer, `localOnly=true`, `c2AppApproved=false`.
+- Vorherige geprüfte Candidate-Preview (historischer Ausgangspunkt): `dpl_Dzm9VF52VbRY3pSVzek8tFS7rc7f`, Commit `901b92a4`, READY; Supabase-URL und Schlüssel leer, `localOnly=true`, `c2AppApproved=false`.
 - Tatsächliche Production-Konfiguration verweist auf Supabase `xgbbwnmqgpwxxftnjrkc`, Name „Ambassador Breakfast“, PostgreSQL 17.6. Gemeinsames Projekt: ausschliesslich Trinkgeld-Objekte lesend untersucht; keine Tests in diesem Projekt.
 - Workspace `edb875da-fea6-49a0-8e50-e314254752a6` / Restaurant Silk. Format 2, Revision 31, MD5 des JSON-Payloads `3832a0ec13892927c3b62fe2cb4d17d1` beim Abgleich. Dient der Driftprüfung, nicht als Ersatz für SHA256 der Sicherung.
 - Der Server enthält einen `draft-v2`-Entwurf, keine finalisierten Abrechnungen in den untersuchten Abrechnungstabellen. Das belegt nicht das Fehlen von Browser-lokalen Archiven auf anderen Geräten.
 - Vorhanden sind die ursprünglichen sechs `tip_*`-Funktionen und die Shared-State-Migration. V1.4-Ereignistabelle, C2-Tabellen/Funktionen, Gate und Operatoren sind noch nicht vorhanden.
 - RLS ist für alle vorhandenen Trinkgeld-Tabellen aktiv. `tip_workspace_state` erlaubt Mitgliedern SELECT und gezielte Spaltenschreibrechte; Mitgliedschaft wird serverseitig anhand `auth.uid()` und `active=true` geprüft. Realtime-Publikation enthält den Workspace-State.
 - Sieben aktive gekoppelte anonyme Auth-Gerätezugänge, alle Rolle `member`, darunter alte Testgeräte, `MacIntel` und `iPhone`. Kein benannter Abschlussverantwortlicher und keine automatische Übernahme als C2-Operator. Identität des tatsächlich gewählten Arbeitsgeräts vor Aktivierung prüfen, keine pauschalen Rechte an alle sieben.
+
+Aktuelle cloudfreie Preview: https://silk-trinkgeld-uiux-polish-ikmzgt8m3-restaurant-silk.vercel.app/ (`dpl_3d4KpjeD2TbdpxCKRZDuyfWuan57`, READY, App `d22900d6`). URL/Schlüssel leer, `localOnly=true`, `c2AppApproved=false`. Production am 17.10.2026 erneut lesend identisch bestätigt.
 
 ## Exakter SQL-Umfang
 
@@ -63,7 +65,7 @@ Kein DROP von C2-Daten, keine Entfernung des Versionsschutzes, keine Rücksicher
 
 ## Freigabeantrag
 
-- **App separat:** Veröffentlichung des unveränderten App-Kandidaten `901b92a4` mit der vorgesehenen Production-Konfiguration und dem App-Freigabeflag.
+- **App separat:** Veröffentlichung des korrigierten App-Kandidaten `d22900d696bc40afb3978aaff635d142615c8e14` mit der vorgesehenen Production-Konfiguration und dem App-Freigabeflag.
 - **SQL separat:** Das oben benannte atomare Installationspaket inklusive gezielter RPC-Rechte, anschliessender Gate-/Operator-Konfiguration nur für das eindeutig bestätigte Gerät und dem vorbereiteten sicheren Pausenverfahren.
 - **Betriebliches Verfahren:** Fehlbeträge aus Aufrundungen aus der bestehenden Betriebskasse ergänzen; Abrundungsreste dort belassen. Je Periode Herkunft/Verbleib belegen und ausdrücklich bestätigen. Tatsächliche Auszahlung anschliessend gesondert bestätigen. Keine neue Kassenverwaltung oder persönlichen Überträge.
 

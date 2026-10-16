@@ -1,0 +1,227 @@
+{
+  "appCommit": "d22900d696bc40afb3978aaff635d142615c8e14",
+  "base": "06e139b83c562186c1b1a9933681801d4332789f",
+  "run": "https://github.com/marcowilczek84/silk-trinkgeld-uiux-polish/actions/runs/38979358392",
+  "unitTests": {
+    "passed": 13,
+    "failed": 0
+  },
+  "lint": true,
+  "typecheck": true,
+  "cloudFreeBuild": true,
+  "browsers": [
+    {
+      "engine": "chromium",
+      "version": "151.0.7922.34",
+      "physicalDevices": false,
+      "hostedCloud": false,
+      "reports": [
+        {
+          "width": 375,
+          "height": 812,
+          "baselineOverlap": null,
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        },
+        {
+          "width": 393,
+          "height": 852,
+          "baselineOverlap": {
+            "noticeOnTop": true,
+            "logoVisible": false,
+            "titleVisible": false,
+            "position": "static",
+            "zIndex": "55",
+            "overflow": false
+          },
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        },
+        {
+          "width": 1024,
+          "height": 768,
+          "baselineOverlap": null,
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "baselineOverlap": null,
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "version": "26.5",
+      "physicalDevices": false,
+      "hostedCloud": false,
+      "reports": [
+        {
+          "width": 375,
+          "height": 812,
+          "baselineOverlap": null,
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        },
+        {
+          "width": 393,
+          "height": 852,
+          "baselineOverlap": {
+            "noticeOnTop": true,
+            "logoVisible": false,
+            "titleVisible": false,
+            "position": "static",
+            "zIndex": "55",
+            "overflow": false
+          },
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        },
+        {
+          "width": 1024,
+          "height": 768,
+          "baselineOverlap": null,
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "baselineOverlap": null,
+          "header": {
+            "noticeOnTop": false,
+            "logoVisible": true,
+            "titleVisible": true,
+            "position": "static",
+            "zIndex": "auto",
+            "overflow": false
+          },
+          "emptyNavigation": true,
+          "savedNavigation": true,
+          "realEditGuard": true,
+          "revertedEditClean": true,
+          "zeroRoundingClear": true,
+          "previewClosureDisabled": true,
+          "reloadClean": true,
+          "cloudRequests": 0,
+          "pageErrors": []
+        }
+      ]
+    }
+  ],
+  "preserved": {
+    "sqlInstallerSha256": "cb5a28d4fe759904e4096a9dbf9b6ccc90b3f06e794bb3459657827ae560bd33",
+    "pauseSqlSha256": "49e72f435bedac6e6cab7e5067f865ecf27037dc3042e36712c092d40e9d2fc4",
+    "financialCoreAndC2SqlUnchanged": true,
+    "productionDeployment": "dpl_AckEsRbZoAmihU4wmn7qEtbRrvMj",
+    "productionCommit": "16fab0e23fa58a0fb59d4c8b4c7aa66dbbb79440"
+  }
+}
