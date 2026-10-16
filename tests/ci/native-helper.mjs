@@ -13,7 +13,7 @@ export async function connect(){
  assert.equal(cfg.api,'http://127.0.0.1:54321');const url=new URL(cfg.db);assert.equal(url.hostname,'127.0.0.1');assert.equal(url.port,'54322');assert.equal(url.pathname,'/silk_c2_test_ci');
  const admin=new pg.Client({connectionString:cfg.db,application_name:'silk-ci-admin'});await admin.connect();
  const v=(await admin.query("select current_database() db,current_setting('server_version') version,current_setting('server_version_num')::int number")).rows[0];assert.equal(v.db,'silk_c2_test_ci');assert.equal(Math.floor(v.number/10000),17);
- const client=(token,key=cfg.anon)=>createClient(cfg.api,key,{auth:{autoRefreshToken:false,persistSession:false},global:{headers:token?{Authorization:'Bearer '+token,'x-silk-client-protocol':'4'}:{'x-silk-client-protocol':'4'}}});
+ const client=(token,key=cfg.anon)=>createClient(cfg.api,key,{...(token?{accessToken:async()=>token}:{}),auth:{autoRefreshToken:false,persistSession:false},global:{headers:token?{Authorization:'Bearer '+token,'x-silk-client-protocol':'4'}:{'x-silk-client-protocol':'4'}}});
  async function http(path,{token,key=cfg.anon,method='GET',body,protocol='4',signal,headers={}}={}){
   const r=await fetch(cfg.api+path,{method,signal:signal||AbortSignal.timeout(20000),headers:{apikey:key,...(token?{authorization:'Bearer '+token}:{}),'content-type':'application/json',...(protocol===null?{}:{'x-silk-client-protocol':protocol}),...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});
   const text=await r.text();let data;try{data=JSON.parse(text);}catch{data=text;}return {status:r.status,body:data};

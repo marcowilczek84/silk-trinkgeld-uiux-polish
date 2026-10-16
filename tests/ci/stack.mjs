@@ -70,10 +70,11 @@ if(command==='prepare'){
  const x=JSON.parse(await readFile(secretFile));
  await run(process.execPath,['scripts/build.mjs'],{env:{...process.env,SILK_C2_LOCAL_API:x.api,SILK_SUPABASE_PUBLISHABLE_KEY:x.anon}});
 }else if(command==='report'){
- const report={commit:process.env.GITHUB_SHA,run:'https://github.com/'+process.env.GITHUB_REPOSITORY+'/actions/runs/'+process.env.GITHUB_RUN_ID,runner:'ubuntu-24.04 standard github-hosted',supabaseDockerSource:'bc27d2661edd09a5d0b8d76ce33da6d4071a756e',cloudAcceptance:false,physicalDeviceTests:false,realFinalizationEnabled:false};
+ const report={node:process.version,runnerImage:process.env.ImageVersion||null,commit:process.env.GITHUB_SHA,run:'https://github.com/'+process.env.GITHUB_REPOSITORY+'/actions/runs/'+process.env.GITHUB_RUN_ID,runner:'ubuntu-24.04 standard github-hosted',supabaseDockerSource:'bc27d2661edd09a5d0b8d76ce33da6d4071a756e',cloudAcceptance:false,physicalDeviceTests:false,realFinalizationEnabled:false};
  try{report.images=JSON.parse(await readFile(dir+'/images.json'));report.imageDigests=Object.fromEntries(Object.entries(report.images).map(([k,v])=>{try{return [k,JSON.parse(docker(['image','inspect','--format','{{json .RepoDigests}}',v]))];}catch{return [k,[]];}}));}catch{}
  try{report.containers=JSON.parse('['+docker(compose(['ps','--all','--format','json'])).trim().split('\n').join(',')+']').map(x=>({service:x.Service,state:x.State,health:x.Health}));}catch{}
  for(const name of ['native-results','browser-results'])try{report[name]=JSON.parse(await readFile(dir+'/'+name+'.json'));}catch{report[name]={status:'not-completed'};}
+ if(report['native-results']?.results?.some(x=>x.status==='failed'))await diagnosticLogs();
  console.log('SILK_C2_CI_EVIDENCE_BEGIN\n'+JSON.stringify(report,null,2)+'\nSILK_C2_CI_EVIDENCE_END');
  await writeFile(dir+'/evidence.json',JSON.stringify(report,null,2));
  if(process.env.GITHUB_STEP_SUMMARY)await writeFile(process.env.GITHUB_STEP_SUMMARY,'C2 synthetic Supabase CI: '+report.commit+'\n\nFull evidence is in this step log. This is a runner-local integration test, not hosted-cloud or physical-device acceptance. Real finalization stays locked.\n',{flag:'a'});

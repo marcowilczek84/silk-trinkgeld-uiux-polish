@@ -132,6 +132,8 @@ BEGIN
  SELECT * INTO r FROM public.tip_workspace_state WHERE workspace_id=p_workspace_id FOR UPDATE;
  -- Adoption of a legacy workspace requires its separately reviewed migration, never an implicit rewrite.
  IF NOT FOUND THEN RAISE EXCEPTION 'SILK_ADOPTION_REQUIRED';END IF;
+ -- Rights may have been revoked while this transaction waited for the row lock.
+ PERFORM private.tip_v14_access(p_workspace_id);
  IF r.revision IS DISTINCT FROM p_expected_revision THEN RAISE EXCEPTION 'SILK_REVISION_CONFLICT' USING ERRCODE='40001';END IF;
  IF p_payload->>'format' IS DISTINCT FROM '2' THEN RAISE EXCEPTION 'SILK_INVALID_DOCUMENT';END IF;
  FOR e IN SELECT * FROM (VALUES('days','object'),('period','object'),('staff','array'),('staffLabels','object'),('shifts','array'),('settlements','object'),('work','object')) AS t(k,v) LOOP

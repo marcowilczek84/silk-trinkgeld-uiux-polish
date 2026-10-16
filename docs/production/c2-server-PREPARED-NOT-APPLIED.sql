@@ -86,6 +86,8 @@ BEGIN
  IF p_id IS NULL THEN RAISE EXCEPTION 'SILK_C2_REQUEST_ID_REQUIRED';END IF;
  SELECT * INTO r FROM public.tip_workspace_state WHERE workspace_id=p_workspace_id FOR UPDATE;
  IF NOT FOUND THEN RAISE EXCEPTION 'SILK_ADOPTION_REQUIRED';END IF;
+ -- Recheck current rights after a potentially blocking lock, including retries.
+ PERFORM private.tip_c2_authorize(p_workspace_id,'finalize');
  req:=jsonb_build_object('type','finalize','input',p_input,'rootId',p_root_id,'reason',p_reason,'cashEvidence',p_cash_evidence,'chainRevision',p_chain_revision);
  SELECT * INTO op FROM private.tip_c2_operations WHERE workspace_id=p_workspace_id AND request_id=p_id;
  IF FOUND THEN IF op.request IS DISTINCT FROM req THEN RAISE EXCEPTION 'SILK_IDEMPOTENCY_CONFLICT';END IF;RETURN r;END IF;
@@ -130,6 +132,7 @@ BEGIN
  PERFORM private.tip_c2_authorize(p_workspace_id,'cash');
  IF p_id IS NULL OR length(trim(coalesce(p_evidence_ref,'')))<5 OR p_kind IS NULL OR p_kind NOT IN ('baseline','payout','refund') THEN RAISE EXCEPTION 'SILK_C2_INVALID_CASH';END IF;
  SELECT * INTO r FROM public.tip_workspace_state WHERE workspace_id=p_workspace_id FOR UPDATE;
+ PERFORM private.tip_c2_authorize(p_workspace_id,'cash');
  req:=jsonb_build_object('type','cash','rootId',p_root_id,'receiptId',p_receipt_id,'kind',p_kind,'lines',p_lines,'evidenceRef',trim(p_evidence_ref),'chainRevision',p_chain_revision);
  SELECT * INTO op FROM private.tip_c2_operations WHERE workspace_id=p_workspace_id AND request_id=p_id;
  IF FOUND THEN IF op.request IS DISTINCT FROM req THEN RAISE EXCEPTION 'SILK_IDEMPOTENCY_CONFLICT';END IF;RETURN op.result;END IF;

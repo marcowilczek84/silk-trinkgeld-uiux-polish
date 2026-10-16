@@ -5,7 +5,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {connect,bootstrap,reset,concurrent,output,input,documentFor,target} from './native-helper.mjs';
 
-test('C2 native Supabase isolated acceptance',async t=>{
+test('C2 native Supabase isolated acceptance',{timeout:300000},async t=>{
  const h=await connect(),results=[];
  try{
   await bootstrap(h);const token=k=>h.users[k||'a'].session.access_token;

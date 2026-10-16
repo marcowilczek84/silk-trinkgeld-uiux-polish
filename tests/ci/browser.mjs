@@ -39,7 +39,7 @@ try{
    await a.context.setOffline(false);await a.page.evaluate(()=>SilkSyncService.syncNow());await a.page.waitForFunction(()=>SilkLocalRepository.getConflicts().length>0);
    await a.page.reload();await a.page.waitForFunction(()=>SilkLocalRepository.getConflicts().length>0);assert.equal(await a.page.evaluate(()=>SilkLocalRepository.getState().byDate['2035-01-01'].f),'777');
    reports.push({width,height,status:'passed',actualAuthSessions:2,actualPostgREST:true,committedResponseLossAndReload:true,netCorrection:true,originalUnchanged:true,offlineConflict:true,realFinalizationLocked:true,cashConfirmationViaTestAPIOnly:true});
-  }finally{for(const c of contexts)await c.close();await writeFile(output()+'/browser-results.json',JSON.stringify({engine:'chromium',physicalDevices:false,hostedCloud:false,reports},null,2));}
+  }finally{for(const c of contexts)await c.close();await writeFile(output()+'/browser-results.json',JSON.stringify({engine:'chromium',engineVersion:browser.version(),physicalDevices:false,hostedCloud:false,reports},null,2));}
  }
  console.log('PASS: integrated Chromium candidate through real local Supabase at three viewport sizes. Confirmation operator UI still not accepted.');
 }finally{await browser.close();await h.admin.end();await new Promise(r=>server.close(r));}
