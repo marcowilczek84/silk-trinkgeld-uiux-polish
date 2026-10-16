@@ -134,9 +134,10 @@ BEGIN
                          ELSE v_housekeeping END;
     IF jsonb_array_length(v_items)=0 THEN
       IF v_target<>0 THEN RAISE EXCEPTION 'SILK_C_EMPTY_POOL';END IF;
-      CONTINUE;
+      v_group_allocations:='{}'::jsonb;
+    ELSE
+      v_group_allocations:=private.tip_c_allocate_whole(v_items,v_target);
     END IF;
-    v_group_allocations:=private.tip_c_allocate_whole(v_items,v_target);
     v_allocations:=v_allocations||v_group_allocations;
     v_cat_n:=CASE v_name WHEN 'service' THEN 273
                          WHEN 'kitchen' THEN 117 ELSE 1 END;
