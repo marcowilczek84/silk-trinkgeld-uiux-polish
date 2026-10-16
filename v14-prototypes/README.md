@@ -25,3 +25,12 @@
 Prototype test execution locally: 18 passed, including 4,000 algorithmic distribution scenarios. Repository test file `variant-c-and-corrections.test.cjs` is provided for CI; **full inherited V1.4 regression and live browser/server acceptance not rerun** for this isolated branch. 
 
 Files: `variant-c-allocation.js`, `net-correction-reference.js`, `variant-c-and-corrections.test.cjs`.
+
+## Development step 2 — source-engine verification (16.10.2026)
+
+- The new `variant-c-calculation-adapter.js` calls the **unaltered** `SilkFinance.calculate(input)`, then applies `SilkVariantC.allocate(exact)` to the exact claim fractions. This is a READ-ONLY candidate, never an authorized server payout. The adapter explicitly sets `previewOnly: true`, `canFinalize: false` and `finalizationStatus: STAGING_SQL_PARITY_REQUIRED`.
+- `variant-c-real-finance.test.cjs` loads the existing application financial core, validates exact service (273/400), kitchen (117/400), HK (1/40), Emily cap, extreme 30-person shift weights, multi-day CHF 341 and a linked net correction. It also runs 2,000 seeded scenarios with whole-CHF gross totals. Each checks final payout conservation and preserves the exact original claims.
+- Run all reference tests using `npm run test:variant-c`. This is separate from `npm test`; the production app's calculation/UI/server RPC has **not** been switched to C.
+- Local pre-commit rehearsal (the original V1.4 exact engine reproduced in the isolated workspace) passed 26/26 node tests overall, including this new integration suite; **the repository's new test command and CI have not been executed by the connector**. The code is committed for independent reproduction.
+- PostgreSQL source parity is **NOT completed**; current prepared SQL still implements legacy `whole-chf-balanced-only`. Any enabled C finalization before a coordinated and thoroughly tested server change is forbidden.
+- Open business policy: incoming totals with fractional CHF (e.g. 1,801.10) remain blocked. Do not silently round/discard these cents; do not introduce recipient rest accounts. Also confirm whether group tie order Service → Küche → HK should be the permanently approved deterministic rule.
