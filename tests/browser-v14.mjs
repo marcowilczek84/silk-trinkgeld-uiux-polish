@@ -1,6 +1,6 @@
 import {chromium,webkit} from 'playwright';import assert from 'node:assert/strict';import {createServer} from 'node:http';import {readFile,mkdir,writeFile} from 'node:fs/promises';import {resolve,extname} from 'node:path';import {fixture} from './workspace-fixture.mjs';
 const root=resolve('dist'),out=resolve(process.env.QA_OUTPUT||'../evidence-v14/browser');await mkdir(out,{recursive:true});
-const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(!path.startsWith(root+'/')&&path!==root)throw Error();const file=path===root?root+'/index.html':path;res.setHeader('Content-Type',({'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml'})[extname(file)]||'application/octet-stream');res.end(await readFile(file));}catch{res.statusCode=404;res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(!path.startsWith(root+'/')&&path!==root)throw Error();const file=path===root?root+'/index.html':path;res.setHeader('Content-Type',({'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml'})[extname(file)]||'application/octet-stream');res.end(await readFile(file));}catch{res.statusCode=404;res.end();}});await new Promise(r=>{server.listen(0,'127.0.0.1',r);});
 const origin='http://127.0.0.1:'+server.address().port;
 const engine=process.env.QA_BROWSER==='webkit'?webkit:chromium;
 const browser=await engine.launch({headless:true,executablePath:process.env.QA_EXECUTABLE,args:engine===chromium?['--no-sandbox','--disable-dev-shm-usage']:[]});const reports=[];
@@ -31,4 +31,4 @@ try{
   assert.deepEqual(errors,[]);reports.push({width,height,twoTabs:'pass',takeover:'pass',quotaRecovery:'pass',roundingBlock:'pass',horizontalOverflow:false,pageErrors:errors});await c.close();
  }
  await writeFile(out+'/results.json',JSON.stringify({browser:engine===webkit?'WebKit':'Chromium',reports},null,2));console.log(JSON.stringify(reports));
-}finally{await browser.close();await new Promise(r=>server.close(r));}
+}finally{await browser.close();await new Promise(r=>{server.close(r);});}
