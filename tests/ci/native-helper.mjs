@@ -27,11 +27,10 @@ export async function connect(){
 }
 export async function bootstrap(h){
  for(const role of ['a','b','editor','outsider']){
-  const password=randomBytes(24).toString('hex');console.log('::add-mask::'+password);
+  const password=randomBytes(24).toString('hex');
   const email='silk-ci-'+role+'@example.invalid';
   const created=await h.http('/auth/v1/admin/users',{method:'POST',key:h.cfg.service,token:h.cfg.service,body:{email,password,email_confirm:true}});assert.equal(created.status,200,'create synthetic Auth user '+role);
   const login=await h.http('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});assert.equal(login.status,200,'password login '+role);
-  for(const k of ['access_token','refresh_token'])console.log('::add-mask::'+login.body[k]);
   h.users[role]={id:login.body.user.id,session:login.body};
  }
  await writeFile(output()+'/users.json',JSON.stringify(h.users),{mode:0o600});

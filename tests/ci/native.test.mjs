@@ -18,7 +18,7 @@ test('C2 native Supabase isolated acceptance',async t=>{
 
   await check('real Auth login, refresh, invalid JWT, RLS and separate operation rights',async()=>{
    assert.equal((await h.http('/auth/v1/user',{token:token()})).status,200);
-   const refreshed=await h.http('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:h.users.b.session.refresh_token}});assert.equal(refreshed.status,200);console.log('::add-mask::'+refreshed.body.access_token);console.log('::add-mask::'+refreshed.body.refresh_token);h.users.b.session=refreshed.body;
+   const refreshed=await h.http('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:h.users.b.session.refresh_token}});assert.equal(refreshed.status,200);h.users.b.session=refreshed.body;
    assert.equal((await h.rpc('tip_c2_preview',{p_expected_revision:1,p_input:input()},'invalid.jwt')).status,401);
    assert.equal((await h.rpc('tip_c2_preview',{p_expected_revision:1,p_input:input()},undefined)).status,401);
    assert.deepEqual((await h.http('/rest/v1/tip_workspace_state',{token:token('outsider')})).body,[]);
