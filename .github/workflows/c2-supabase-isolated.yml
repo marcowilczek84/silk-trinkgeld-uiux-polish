@@ -1,0 +1,69 @@
+name: C2 isolated Supabase acceptance
+on:
+  push:
+    branches: [tips-v14-c-whole-chf-complete-period-20261016]
+    paths:
+      - '.github/workflows/c2-supabase-isolated.yml'
+      - 'tests/ci/**'
+      - 'docs/production/**'
+      - 'v14-prototypes/**'
+      - 'package*.json'
+      - '*.js'
+      - 'tests/*.mjs'
+      - 'scripts/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: silk-c2-isolated-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  isolated-supabase:
+    # Public-repository standard Linux runner only. No larger/paid runner, secrets,
+    # environment credentials, platform login/link, cache or artifact storage.
+    if: github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SILK_C2_CI: synthetic-only
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: supabase/supabase
+          ref: bc27d2661edd09a5d0b8d76ce33da6d4071a756e
+          sparse-checkout: docker
+          path: .ci-supabase-source
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.18.0'
+      - name: Install locked test dependencies
+        run: npm ci
+      - name: Prepare isolated stack with ephemeral credentials
+        run: node tests/ci/stack.mjs prepare
+      - name: Start complete local Supabase stack
+        run: node tests/ci/stack.mjs start
+      - name: Native PostgreSQL, PostgREST, Auth and Realtime acceptance
+        run: node --test --test-concurrency=1 tests/ci/native.test.mjs
+      - name: Existing regressions and C2 reference rules
+        run: |
+          npm test
+          npm run test:variant-c
+          npm run lint
+          npx eslint tests/ci/*.mjs
+          npm run typecheck
+      - name: Build integrated local candidate
+        run: node tests/ci/stack.mjs build
+      - name: Install browser for integrated candidate
+        run: npx playwright install --with-deps chromium
+      - name: Real API browser flow (emulation only)
+        run: node tests/ci/browser.mjs
+      - name: Sanitized version and test evidence
+        if: always()
+        run: node tests/ci/stack.mjs report
+      - name: Remove disposable stack and credentials
+        if: always()
+        run: node tests/ci/stack.mjs stop
