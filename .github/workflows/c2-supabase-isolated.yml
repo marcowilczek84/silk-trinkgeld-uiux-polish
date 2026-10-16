@@ -28,6 +28,7 @@ jobs:
       contents: read
     outputs:
       ui_only: ${{ steps.scope.outputs.ui_only }}
+      late_only: ${{ steps.scope.outputs.late_only }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -77,11 +78,41 @@ jobs:
         env:
           QA_BROWSER: webkit
         run: node tests/ui-review/browser.mjs
+  late-input:
+    needs: scope
+    if: needs.scope.outputs.late_only == 'true' && github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.18.0'
+      - name: Targeted blank late-input regressions
+        run: |
+          npm ci
+          node --test tests/ui-review/late-empty.test.mjs
+          node --check tests/ui-review/late-browser.mjs
+      - name: Build cloud-free candidate
+        env:
+          SILK_LOCAL_ONLY: '1'
+        run: npm run build
+      - name: Install Chromium and WebKit
+        run: npx playwright install --with-deps chromium webkit
+      - name: Chromium blank late-input flow (emulation only)
+        run: node tests/ui-review/late-browser.mjs
+      - name: WebKit blank late-input flow (emulation only)
+        if: ${{ !cancelled() }}
+        env:
+          QA_BROWSER: webkit
+        run: node tests/ui-review/late-browser.mjs
   isolated-supabase:
     needs: scope
     # Public-repository standard Linux runner only. No larger/paid runner, secrets,
     # environment credentials, platform login/link, cache or artifact storage.
-    if: needs.scope.outputs.ui_only != 'true' && github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
+    if: needs.scope.outputs.ui_only != 'true' && needs.scope.outputs.late_only != 'true' && github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:

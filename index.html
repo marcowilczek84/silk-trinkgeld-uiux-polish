@@ -254,14 +254,17 @@ function buildVisibleDays(){const st=getState();days.innerHTML='';visibleDates()
 function toggleDay(k){const t=document.getElementById('day_'+k),w=t.classList.contains('open');document.querySelectorAll('.day.open').forEach(x=>x.classList.remove('open'));if(!w)t.classList.add('open')}
 function changeDay(k){sum=document.getElementById('sum_'+k);sum.textContent=chf((+document.getElementById('f_'+k).value||0)+(+document.getElementById('s_'+k).value||0));meta=document.getElementById('meta_'+k);meta.textContent=[...document.getElementById('day_'+k).querySelectorAll('select')].filter(x=>x.value).length+' aktiv';updatePeriodTotal();saveState();resultSection.classList.add('hidden')}
 let inputBaseline={};
-function readVisibleInputs(){return Object.fromEntries([...document.querySelectorAll('.day')].map(d=>{const k=d.id.slice(4);return [k,{f:document.getElementById('f_'+k)?.value||'',s:document.getElementById('s_'+k)?.value||'',assignments:Object.fromEntries([...d.querySelectorAll('select')].map(s=>[s.dataset.name,s.value]))}]}))}
+// An entered early amount makes an empty late amount zero. Use the same
+// representation for the edit baseline and remote merge; untouched days stay empty.
+function lateInputValue(f,s,invalid=false){return !invalid&&f!==''&&s===''?'0':s}
+function readVisibleInputs(){return Object.fromEntries([...document.querySelectorAll('.day')].map(d=>{const k=d.id.slice(4),f=document.getElementById('f_'+k)?.value||'',late=document.getElementById('s_'+k);return [k,{f,s:lateInputValue(f,late?.value||'',late?.validity.badInput),assignments:Object.fromEntries([...d.querySelectorAll('select')].map(s=>[s.dataset.name,s.value]))}]}))}
 function captureInputBaseline(){inputBaseline=readVisibleInputs()}
 function saveState(){
   SilkWriteCoordinator.assertWritable();
   const p=getState(),byDate={...(p.byDate||{})},visible=readVisibleInputs();
   for(const [k,v] of Object.entries(visible)){
     const current=byDate[k]||{},base=inputBaseline[k]||v;
-    const remote={f:current.f??'',s:current.s??'',assignments:{...Object.fromEntries(Object.keys(v.assignments).map(n=>[n,''])),...Object.fromEntries((current.assignments||[]).map(a=>[a.name,a.shift]))}};
+    const remote={f:current.f??'',s:lateInputValue(current.f??'',current.s??'',document.getElementById('s_'+k)?.validity.badInput),assignments:{...Object.fromEntries(Object.keys(v.assignments).map(n=>[n,''])),...Object.fromEntries((current.assignments||[]).map(a=>[a.name,a.shift]))}};
     const merged=SilkSyncMerge.merge(base,v,remote);
     if(merged.conflicts.length){SilkWriteCoordinator.fail('Lokaler Konflikt: Dieser Tag wurde inzwischen geändert. Deine Eingaben bleiben sichtbar. Bitte vor dem Neuladen sichern.');throw new Error('SILK_LOCAL_INPUT_CONFLICT');}
     const next=merged.value;byDate[k]={f:next.f,s:next.s,assignments:Object.entries(next.assignments).map(([name,shift])=>({name,shift}))};
