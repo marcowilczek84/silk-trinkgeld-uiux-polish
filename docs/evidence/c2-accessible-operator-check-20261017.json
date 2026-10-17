@@ -1,0 +1,112 @@
+{
+  "appCommit": "a5df93a425360a0a35056890bee03432b29fffa8",
+  "testCommit": "db5d61c2da06094077a418f331616dd7eaa11c76",
+  "run": "https://github.com/marcowilczek84/silk-trinkgeld-uiux-polish/actions/runs/38986858879",
+  "job": 117260228014,
+  "scope": "New accessible synthetic operator check only; previously accepted suites not repeated",
+  "reports": [
+    {
+      "engine": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": [
+        393,
+        852
+      ],
+      "closeAndPaymentForms": true,
+      "explicitSeparateConfirmations": true,
+      "originalReceiptUnchanged": true,
+      "reloadSameSinglePayment": true,
+      "externalRequests": 0,
+      "physicalDevices": false,
+      "hostedSupabase": false,
+      "adapter": "local browser PGlite",
+      "pageErrors": []
+    },
+    {
+      "engine": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": [
+        1024,
+        768
+      ],
+      "closeAndPaymentForms": true,
+      "explicitSeparateConfirmations": true,
+      "originalReceiptUnchanged": true,
+      "reloadSameSinglePayment": true,
+      "externalRequests": 0,
+      "physicalDevices": false,
+      "hostedSupabase": false,
+      "adapter": "local browser PGlite",
+      "pageErrors": []
+    },
+    {
+      "engine": "chromium",
+      "version": "151.0.7922.34",
+      "viewport": [
+        1440,
+        900
+      ],
+      "closeAndPaymentForms": true,
+      "explicitSeparateConfirmations": true,
+      "originalReceiptUnchanged": true,
+      "reloadSameSinglePayment": true,
+      "externalRequests": 0,
+      "physicalDevices": false,
+      "hostedSupabase": false,
+      "adapter": "local browser PGlite",
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "version": "26.5",
+      "viewport": [
+        393,
+        852
+      ],
+      "closeAndPaymentForms": true,
+      "explicitSeparateConfirmations": true,
+      "originalReceiptUnchanged": true,
+      "reloadSameSinglePayment": true,
+      "externalRequests": 0,
+      "physicalDevices": false,
+      "hostedSupabase": false,
+      "adapter": "local browser PGlite",
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "version": "26.5",
+      "viewport": [
+        1024,
+        768
+      ],
+      "closeAndPaymentForms": true,
+      "explicitSeparateConfirmations": true,
+      "originalReceiptUnchanged": true,
+      "reloadSameSinglePayment": true,
+      "externalRequests": 0,
+      "physicalDevices": false,
+      "hostedSupabase": false,
+      "adapter": "local browser PGlite",
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "version": "26.5",
+      "viewport": [
+        1440,
+        900
+      ],
+      "closeAndPaymentForms": true,
+      "explicitSeparateConfirmations": true,
+      "originalReceiptUnchanged": true,
+      "reloadSameSinglePayment": true,
+      "externalRequests": 0,
+      "physicalDevices": false,
+      "hostedSupabase": false,
+      "adapter": "local browser PGlite",
+      "pageErrors": []
+    }
+  ],
+  "productionChanged": false
+}

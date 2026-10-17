@@ -1,0 +1,116 @@
+{
+  "checkedAt": "2026-10-17T00:33:17.331024+00:00",
+  "production": {
+    "deployment": "dpl_AckEsRbZoAmihU4wmn7qEtbRrvMj",
+    "commit": "16fab0e23fa58a0fb59d4c8b4c7aa66dbbb79440",
+    "project": "prj_dKUCwFBKHfZVC0hmxhvdKpzrJQYO"
+  },
+  "database": {
+    "project": "xgbbwnmqgpwxxftnjrkc",
+    "postgres": "17.6",
+    "workspace": "edb875da-fea6-49a0-8e50-e314254752a6",
+    "revision": 31,
+    "payloadMD5": "3832a0ec13892927c3b62fe2cb4d17d1",
+    "gateAbsent": true,
+    "operatorsAbsent": true,
+    "metadataIdentical": {
+      "tables": 15,
+      "functions": 6,
+      "policies": 15,
+      "triggers": 17,
+      "constraints": 52
+    },
+    "rights": {
+      "executor": "postgres",
+      "checked_at": "2026-10-17T00:33:17.331024+00:00",
+      "default_acl": [
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "type": "f",
+          "owner": "postgres"
+        },
+        {
+          "acl": [
+            "postgres=X/supabase_admin",
+            "anon=X/supabase_admin",
+            "authenticated=X/supabase_admin",
+            "service_role=X/supabase_admin"
+          ],
+          "type": "f",
+          "owner": "supabase_admin"
+        }
+      ],
+      "column_grants": [
+        {
+          "acl": [
+            "authenticated=aw/postgres"
+          ],
+          "table": "tip_workspace_state",
+          "column": "payload"
+        },
+        {
+          "acl": [
+            "authenticated=a/postgres"
+          ],
+          "table": "tip_workspace_state",
+          "column": "workspace_id"
+        }
+      ],
+      "realtime_state": true,
+      "function_owners": [
+        {
+          "name": "tip_is_workspace_member",
+          "owner": "postgres",
+          "schema": "private",
+          "security_definer": true
+        },
+        {
+          "name": "tip_require_current_client",
+          "owner": "postgres",
+          "schema": "private",
+          "security_definer": false
+        },
+        {
+          "name": "tip_create_workspace_state",
+          "owner": "postgres",
+          "schema": "public",
+          "security_definer": false
+        },
+        {
+          "name": "tip_legacy_revision",
+          "owner": "postgres",
+          "schema": "public",
+          "security_definer": false
+        },
+        {
+          "name": "tip_redeem_pairing_code",
+          "owner": "postgres",
+          "schema": "public",
+          "security_definer": true
+        },
+        {
+          "name": "tip_touch_revision",
+          "owner": "postgres",
+          "schema": "public",
+          "security_definer": false
+        }
+      ]
+    }
+  },
+  "backup": {
+    "capturedAt": "2026-10-17T00:28:34.692753+00:00",
+    "sha256": "7d7679655e925bd2bbfdd433a16d4fda6b4a28683bdf0e742b2507ca30e014b2",
+    "tables": 14,
+    "rows": 153,
+    "allRowsIdenticalToPriorSnapshot": true,
+    "privateSaved": true,
+    "localRestorePassed": true,
+    "restoreRuntime": "PGlite 0.5.10, PostgreSQL 18.6 WASM; native PG17 evidence carried forward separately"
+  },
+  "productionMutations": 0
+}

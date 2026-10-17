@@ -17,7 +17,11 @@ Diese konkrete Preview hat **keine Supabase-URL, keinen Schlüssel und keine Abs
 
 **Grenze:** Die sichere Preview kann keinen serverseitigen Abschluss-/Zahlungsdialog durchlaufen. Diese drei Punkte sind nur ein echter Eingabe-/Darstellungscheck, keine Abnahme der Bestätigungsformulare.
 
-## Vollständiger kurzer Bediencheck am Computer
+## Vollständiger kurzer Bediencheck auf iPhone, iPad oder Computer
+
+Neu ohne lokale Installation zugänglich: siehe `docs/C2_FINAL_RELEASE_20261017.md`. Der dort verlinkte Browser-Check öffnet die bereits vorbereitete synthetische Abrechnung direkt. Abschluss, Auszahlungsbestätigung und Neuladen bleiben getrennt prüfbar. Kein echter Geldfluss, keine Cloud-Datenbank und keine gemeinsame Testsitzung zwischen Geräten.
+
+### Weiterhin verfügbare lokale Alternative
 
 Im bestehenden Repository mit Node und den gesicherten Abhängigkeiten:
 
@@ -40,4 +44,4 @@ Bitte zurückmelden: Gerät/Browser, Datum, Punkte 1–4 bestanden oder der konk
 
 Auf jedem tatsächlich verwendeten Production-Gerät offene Eingaben speichern/synchronisieren. „Synchronisiert“ bedeutet nur servergesicherte Daten; reine Browserdaten und alte lokale Archive sind in der Serversicherung nicht enthalten. Bei lokalen Resten vor dem Wechsel sichern und klären. Alte Tabs danach schliessen.
 
-Abschluss- und Zahlungsrechte erst dem eindeutig verifizierten Arbeitsgerät zuordnen. Die sieben bestehenden Gerätezugänge enthalten historische Testgeräte; eine pauschale Freischaltung ist nicht vorgesehen.
+Abschluss- und Zahlungsrechte den eindeutig verifizierten aktiven Gerätezugängen zuordnen. iPhone, iPad und Computer sind möglich; keine Bindung an ein einzelnes iPad. Die sieben bestehenden Gerätezugänge enthalten historische Testgeräte; eine pauschale Freischaltung ist nicht vorgesehen.

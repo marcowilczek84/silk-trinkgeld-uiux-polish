@@ -12,7 +12,7 @@ Aktueller App-Kandidat: `a5df93a425360a0a35056890bee03432b29fffa8`. Die drei bea
 - Der Server enthält einen `draft-v2`-Entwurf, keine finalisierten Abrechnungen in den untersuchten Abrechnungstabellen. Das belegt nicht das Fehlen von Browser-lokalen Archiven auf anderen Geräten.
 - Vorhanden sind die ursprünglichen sechs `tip_*`-Funktionen und die Shared-State-Migration. V1.4-Ereignistabelle, C2-Tabellen/Funktionen, Gate und Operatoren sind noch nicht vorhanden.
 - RLS ist für alle vorhandenen Trinkgeld-Tabellen aktiv. `tip_workspace_state` erlaubt Mitgliedern SELECT und gezielte Spaltenschreibrechte; Mitgliedschaft wird serverseitig anhand `auth.uid()` und `active=true` geprüft. Realtime-Publikation enthält den Workspace-State.
-- Sieben aktive gekoppelte anonyme Auth-Gerätezugänge, alle Rolle `member`, darunter alte Testgeräte, `MacIntel` und `iPhone`. Kein benannter Abschlussverantwortlicher und keine automatische Übernahme als C2-Operator. Identität des tatsächlich gewählten Arbeitsgeräts vor Aktivierung prüfen, keine pauschalen Rechte an alle sieben.
+- Sieben aktive gekoppelte anonyme Auth-Gerätezugänge, alle Rolle `member`, darunter alte Testgeräte, `MacIntel` und `iPhone`. Kein benannter Abschlussverantwortlicher und keine automatische Übernahme als C2-Operator. Identität der tatsächlich verwendeten Gerätezugänge vor Aktivierung prüfen, keine pauschalen Rechte an alle sieben.
 
 Aktuelle cloudfreie Preview: https://silk-trinkgeld-uiux-polish-837yolp8c-restaurant-silk.vercel.app/ (`dpl_7tZZwaR1j9JPtdRgRLkxg7Ex6xAi`, READY, App `a5df93a4`). URL/Schlüssel leer, `localOnly=true`, `c2AppApproved=false`. Production am 17.10.2026 erneut lesend identisch bestätigt.
 
@@ -48,11 +48,11 @@ Die private Sicherung ist ein Trinkgeld-Wiederherstellungsnachweis, kein vollst�
 
 ## Kontrollierte Reihenfolge nach ausdrücklicher Freigabe
 
-1. Marcos getrennte App-/SQL-Freigaben und Entscheidung zum Rundungsausgleich dokumentieren. Den echten Bediencheck und das konkrete Abschlussgerät bestätigen. Alle bestehenden lokalen Eingaben auf den eingesetzten Geräten sichern/synchronisieren, ältere Tabs schliessen.
+1. Marcos getrennte App-/SQL-Freigaben und Entscheidung zum Rundungsausgleich dokumentieren. Den echten Bediencheck und die tatsächlich verwendeten Gerätezugänge (iPhone, iPad und Computer) bestätigen. Alle bestehenden lokalen Eingaben auf den eingesetzten Geräten sichern/synchronisieren, ältere Tabs schliessen.
 2. Zielmetadaten/Revision erneut lesen, aktuellen privaten Snapshot sichern und prüfen. Keine historischen Daten umschreiben. Bei Drift anhalten und gezielt abgleichen.
 3. Geprüftes Installationspaket atomar einspielen. Bei Fehler erfolgt vollständiger Transaktions-Rollback. Gate/Operatoren bleiben leer. Nur Trinkgeld-Clients sind von der Protocol-4-Umstellung betroffen; die gemeinsame Frühstücksdatenbank bleibt als Gesamtprojekt unverändert nutzbar.
 4. Genau den App-Kandidaten als Production-Build bereitstellen; `SILK_C2_APP_APPROVAL=approved-c2` nur nach App-Freigabe setzen. Die isolierte Preview darf nicht einfach als produktive Konfiguration übernommen werden. Bestehende Supabase-Zielkonfiguration beibehalten; keine Service-Schlüssel im Client.
-5. Schema, Eigentümer, RPC-Rechte und die erwartete Sperre zunächst lesen/prüfen. Nur den eindeutig bestätigten aktiven Workspace-Zugang in `private.tip_c2_operators` für `can_finalize`/`can_confirm_cash` freigeben. `private.tip_c2_gate` erst mit `synthetic_only=false`, dokumentierter `sql_approval_ref` und `approved_at` setzen. Diese Konfiguration ist Teil der getrennten SQL-Freigabe; nicht vorab ausführen.
+5. Schema, Eigentümer, RPC-Rechte und die erwartete Sperre zunächst lesen/prüfen. Die eindeutig bestätigten aktiven Workspace-Zugänge der tatsächlich verwendeten Geräte einzeln in `private.tip_c2_operators` für `can_finalize`/`can_confirm_cash` freigeben. `private.tip_c2_gate` erst mit `synthetic_only=false`, dokumentierter `sql_approval_ref` und `approved_at` setzen. Diese Konfiguration ist Teil der getrennten SQL-Freigabe; nicht vorab ausführen.
 6. Echten Arbeitsstand lesen und Anzeige prüfen, keine Testabrechnung in Production erzeugen. Erste tatsächliche Abrechnung fachlich begleiten. Belege und Zahlungen bleiben getrennt.
 
 ## Sicherer Rückfall
@@ -66,10 +66,10 @@ Kein DROP von C2-Daten, keine Entfernung des Versionsschutzes, keine Rücksicher
 ## Freigabeantrag
 
 - **App separat:** Veröffentlichung des korrigierten App-Kandidaten `a5df93a425360a0a35056890bee03432b29fffa8` mit der vorgesehenen Production-Konfiguration und dem App-Freigabeflag.
-- **SQL separat:** Das oben benannte atomare Installationspaket inklusive gezielter RPC-Rechte, anschliessender Gate-/Operator-Konfiguration nur für das eindeutig bestätigte Gerät und dem vorbereiteten sicheren Pausenverfahren.
+- **SQL separat:** Das oben benannte atomare Installationspaket inklusive gezielter RPC-Rechte, anschliessender Gate-/Operator-Konfiguration für die ausdrücklich bestätigten aktiven Gerätezugänge auf iPhone, iPad und Computer und dem vorbereiteten sicheren Pausenverfahren.
 - **Betriebliches Verfahren:** Fehlbeträge aus Aufrundungen aus der bestehenden Betriebskasse ergänzen; Abrundungsreste dort belassen. Je Periode Herkunft/Verbleib belegen und ausdrücklich bestätigen. Tatsächliche Auszahlung anschliessend gesondert bestätigen. Keine neue Kassenverwaltung oder persönlichen Überträge.
 
-Offen vor Aktivierung: echter Bediencheck und eindeutig bestätigtes Arbeitsgerät, aktuelle Sicherung/Driftkontrolle unmittelbar zum Wechsel sowie Marcos drei Entscheidungen. Keine pauschale weitere Funktionsentwicklung.
+Offen vor Aktivierung: echter Bediencheck und eindeutig bestätigte aktive Gerätezugänge, aktuelle Sicherung/Driftkontrolle unmittelbar zum Wechsel sowie Marcos drei Entscheidungen. Keine pauschale weitere Funktionsentwicklung.
 
 Bediencheck: `docs/C2_RELEASE_BEDIENCHECK.md`. Release-Nachweis auf Commit `81c4983249d81fd3583d7ab32addc121b872061b`: https://github.com/marcowilczek84/silk-trinkgeld-uiux-polish/actions/runs/38976560027 – sechs zusätzliche Release-Prüfgruppen bestanden. PostgreSQL 17.11 auf Standard-Runner ubuntu-24.04. Die Ziel-Cloud verwendet PostgreSQL 17.6.
 
@@ -78,3 +78,7 @@ Erster Versuch https://github.com/marcowilczek84/silk-trinkgeld-uiux-polish/acti
 Lokaler Bediencheck-Starter: HTTP 200, synthetisches Fixture und ausschliessliche Loopback-Konfiguration bestätigt. Noch kein physischer Benutzer-/Gerätetest. Der native lokale PostgreSQL-Start war durch Host-Rechte blockiert; er wird nicht als bestanden ausgewiesen. Daher nativer Wiederherstellungsnachweis ausschliesslich auf dem isolierten Actions-Runner.
 
 Bereinigte Protokolle und Versionsdigests liegen im Abschlussnachweis. CI-Erfolg ist keine physische Geräte- oder vollständige Cloud-Abnahme.
+
+## Aktualisierung 17.10.2026, 02:33 Zürich
+
+App-Kandidat bleibt `a5df93a4`. Die zusätzliche Prüfumgebung und aktuelle Sicherung sind in `docs/C2_FINAL_RELEASE_20261017.md` dokumentiert. Kein einzelnes iPad ist vorgeschrieben: Rechte gelten pro bestätigtem Zugang und können auf iPhone, iPad und Computer eingerichtet werden. Alte Testzugänge werden nicht pauschal freigeschaltet. Das vorbereitete SQL-Installationspaket und sein Hash bleiben unverändert.
