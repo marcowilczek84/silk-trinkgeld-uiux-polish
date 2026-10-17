@@ -25,7 +25,7 @@ try{
  const dump=await db.dumpDataDir('gzip');await writeFile('operator-check/public/synthetic-fixture.tgz',Buffer.from(await dump.arrayBuffer()));
 }finally{await db.close();}
 for(const file of ['pglite.wasm','pglite.data'])await cp('node_modules/@electric-sql/pglite/dist/'+file,'operator-check/public/'+file);
-await build({entryPoints:['operator-check/transport.mjs'],outfile:'operator-check/public/supabase-client.js',bundle:true,format:'iife',platform:'browser',external:['node:*'],target:['safari16'],define:{SYNTHETIC_WORKSPACE:JSON.stringify(target),SYNTHETIC_ACTOR:JSON.stringify(member)},minify:true});
+await build({entryPoints:['operator-check/transport.mjs'],outfile:'operator-check/public/supabase-client.js',bundle:true,format:'iife',platform:'browser',external:['node:*'],target:['safari16'],define:{'import.meta.url':'location.href',SYNTHETIC_WORKSPACE:JSON.stringify(target),SYNTHETIC_ACTOR:JSON.stringify(member)},minify:true});
 await writeFile('operator-check/public/supabase-config.js','window.SILK_SUPABASE_CONFIG={url:"",publishableKey:"",localOnly:false,c2Candidate:true,c2LocalTest:false,c2AppApproved:true};\n');
 let html=await readFile('operator-check/public/index.html','utf8');
 html=html.replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="default-src \'self\' data: blob:; connect-src \'self\'; script-src \'self\' \'unsafe-inline\' \'wasm-unsafe-eval\'; style-src \'self\' \'unsafe-inline\'; object-src \'none\'; base-uri \'self\'; form-action \'none\'">');
