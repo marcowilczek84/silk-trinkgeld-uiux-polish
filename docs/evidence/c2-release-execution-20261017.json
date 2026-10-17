@@ -1,34 +1,54 @@
 {
-  "status": "BLOCKED_BEFORE_INSTALLATION",
-  "checkedAt": "2026-10-17T08:48:35.268911Z",
+  "status": "PUBLISHED_AND_ACTIVATED",
+  "checkedAt": "2026-10-17 09:51:01.024339+00",
   "releaseAuthorizationRefs": [
     "MCV2-023",
     "MCV2-024",
     "MCV2-025"
   ],
   "approvedHandoff": "f41770fc44394f2d8f77c5ead441fe5e05a12d17",
+  "previousExecutionHandoff": "a6167a6fc8720767f61b6f21ac348edcf4bf9cd3",
   "approvedApp": "a5df93a425360a0a35056890bee03432b29fffa8",
   "production": {
-    "deployment": "dpl_AckEsRbZoAmihU4wmn7qEtbRrvMj",
-    "commit": "16fab0e23fa58a0fb59d4c8b4c7aa66dbbb79440",
-    "changed": false
+    "deployment": "dpl_9Ak8WF2SUchk3L3ynYYT9xzEdPXY",
+    "commit": "a5df93a425360a0a35056890bee03432b29fffa8",
+    "url": "https://silk-trinkgeld-uiux-polish.vercel.app/",
+    "state": "READY",
+    "changed": true,
+    "previousCommit": "16fab0e23fa58a0fb59d4c8b4c7aa66dbbb79440",
+    "project": "prj_dKUCwFBKHfZVC0hmxhvdKpzrJQYO",
+    "team": "team_38D8NmJHWLJIxN1R5XHD63yJ",
+    "config": {
+      "status": 200,
+      "url": "https://xgbbwnmqgpwxxftnjrkc.supabase.co",
+      "hasPublishableKey": true,
+      "localOnly": false,
+      "c2Candidate": true,
+      "c2LocalTest": false,
+      "c2AppApproved": true
+    }
   },
   "target": {
     "project": "xgbbwnmqgpwxxftnjrkc",
+    "name": "Ambassador Breakfast",
     "workspace": "edb875da-fea6-49a0-8e50-e314254752a6",
+    "postgres": "17.6",
     "revision": 31,
     "payloadMD5": "3832a0ec13892927c3b62fe2cb4d17d1",
-    "c2GateTablePresent": false,
-    "versionedWriteRPCPresent": false
+    "c2GateTablePresent": true,
+    "versionedWriteRPCPresent": true
   },
   "access": {
     "verified": true,
-    "method": "User opened existing Safari context and supplied Synchronisiert screenshot; only the existing paired Safari session refreshed after the guided opening.",
+    "method": "Existing Safari installation, active membership and unique session refresh identified before release. No new account or manual device list.",
     "sessionRefreshedAt": "2026-10-17T08:15:28.446465Z",
-    "automaticDeviceListRequired": false,
     "existingMembershipChanged": false,
-    "operatorRightsActivated": false,
-    "privateIdentityEvidence": "Saved with private release backup; no identifiers or sessions published here."
+    "operatorRightsActivated": true,
+    "operatorCount": 1,
+    "approvedAt": "2026-10-17 09:50:52.221521+00",
+    "syntheticOnly": false,
+    "privateIdentityEvidence": "Identifiers and session evidence retained only in private release backup.",
+    "otherDevices": "Existing pairing remains available on iPhone/iPad/computer; financial operator rights are not automatically granted to unverified browser identities."
   },
   "backup": {
     "capturedAt": "2026-10-17T08:18:27.776Z",
@@ -37,31 +57,260 @@
     "allRowsUnchanged": true,
     "sha256": "72688fb1c6ecf5e9c73fa3a4a8782c011e43d40f0ca9741788f779fc5aefffcb",
     "persisted": true,
-    "localRestore": "PASSED: empty PGlite 0.5.10 / PostgreSQL 18.6 WASM; all rows/fields/revisions, installation/rollback and closed gates checked.",
-    "nativePG17": "Existing isolated runner evidence reused; no repeated broad suite and no native local PG17 claim."
+    "localRestore": "PASSED: empty PGlite 0.5.10 / PostgreSQL 18.6 WASM; previous evidence reused.",
+    "nativePG17": "Existing isolated runner PG17 evidence reused; no new native local or physical device claim.",
+    "preinstallDrift": "All 14 per-table hashes identical to backup with UTC normalization. Existing schema metadata unchanged; function argument DEFAULT display normalized.",
+    "postinstallDrift": "All 14 tables and 153 rows identical after SQL installation.",
+    "postactivationDrift": "All 14 tables and 153 rows identical after activation.",
+    "rowHashes": [
+      {
+        "table_name": "tip_assignments",
+        "rows": 62,
+        "content_md5": "1a5b910305c371c2b922a318ad995a33"
+      },
+      {
+        "table_name": "tip_days",
+        "rows": 48,
+        "content_md5": "430e5d46af3563bc7832a7d57c836886"
+      },
+      {
+        "table_name": "tip_devices",
+        "rows": 7,
+        "content_md5": "ea5abe77c5a4091574bb4efb1419a0e2"
+      },
+      {
+        "table_name": "tip_drafts",
+        "rows": 0,
+        "content_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table_name": "tip_legacy_snapshots",
+        "rows": 0,
+        "content_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table_name": "tip_migrations",
+        "rows": 0,
+        "content_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table_name": "tip_settlement_lines",
+        "rows": 0,
+        "content_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table_name": "tip_settlements",
+        "rows": 0,
+        "content_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table_name": "tip_shift_types",
+        "rows": 13,
+        "content_md5": "58b6c5f2de247f955eb03d7ae1915b0c"
+      },
+      {
+        "table_name": "tip_staff_members",
+        "rows": 14,
+        "content_md5": "a7070efb90620e187c2797986d38d09d"
+      },
+      {
+        "table_name": "tip_sync_mutations",
+        "rows": 0,
+        "content_md5": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "table_name": "tip_workspace_members",
+        "rows": 7,
+        "content_md5": "333da8667741ea71402851f87dc1ab25"
+      },
+      {
+        "table_name": "tip_workspace_state",
+        "rows": 1,
+        "content_md5": "2ded6a41e81a2436fad9d15622960b78"
+      },
+      {
+        "table_name": "tip_workspaces",
+        "rows": 1,
+        "content_md5": "d015239fd1a5e0b3619b7a165e24806f"
+      }
+    ]
   },
   "sql": {
     "file": "release/INSTALL-PREPARED-NOT-APPLIED.sql",
     "sha256": "cb5a28d4fe759904e4096a9dbf9b6ccc90b3f06e794bb3459657827ae560bd33",
-    "installed": false
-  },
-  "attempts": [
-    {
-      "operation": "execute_sql",
-      "attempt": 1,
-      "result": "Invalid or expired requestState"
-    },
-    {
-      "operation": "execute_sql",
-      "attempt": 2,
-      "result": "Invalid or expired requestState"
-    },
-    {
-      "operation": "apply_migration",
-      "name": "silk_c2_approved_release_f41770fc",
-      "result": "Invalid or expired requestState"
+    "installed": true,
+    "executionSurface": "Supabase web dashboard, explicitly authorized fallback.",
+    "transfer": "617 lines / 54384 UTF-8 bytes; SHA256 matched source; editor copy matched exactly.",
+    "installedBy": "postgres",
+    "transaction": "Atomic BEGIN/COMMIT; web editor success and independent catalog readback.",
+    "migrationLedger": "Dashboard SQL execution; no Supabase CLI migration history entry claimed.",
+    "installationReadback": [
+      {
+        "category": "tables",
+        "details": [
+          {
+            "rls": true,
+            "name": "tip_c2_cash",
+            "owner": "postgres",
+            "anon_select": false,
+            "auth_select": false
+          },
+          {
+            "rls": true,
+            "name": "tip_c2_chains",
+            "owner": "postgres",
+            "anon_select": false,
+            "auth_select": false
+          },
+          {
+            "rls": true,
+            "name": "tip_c2_gate",
+            "owner": "postgres",
+            "anon_select": false,
+            "auth_select": false
+          },
+          {
+            "rls": true,
+            "name": "tip_c2_operations",
+            "owner": "postgres",
+            "anon_select": false,
+            "auth_select": false
+          },
+          {
+            "rls": true,
+            "name": "tip_c2_operators",
+            "owner": "postgres",
+            "anon_select": false,
+            "auth_select": false
+          },
+          {
+            "rls": true,
+            "name": "tip_workspace_events_v14",
+            "owner": "postgres",
+            "anon_select": false,
+            "auth_select": false
+          }
+        ]
+      },
+      {
+        "category": "rpcs",
+        "details": [
+          {
+            "args": "p_workspace_id uuid, p_expected_revision bigint, p_id uuid, p_root_id text, p_chain_revision bigint, p_receipt_id text, p_kind text, p_lines jsonb, p_evidence_ref text",
+            "name": "tip_c2_confirm_cash",
+            "owner": "postgres",
+            "definer": true,
+            "anon_execute": false,
+            "authenticated_execute": true
+          },
+          {
+            "args": "p_workspace_id uuid, p_expected_revision bigint, p_id uuid, p_input jsonb, p_root_id text, p_chain_revision bigint, p_reason text, p_cash_evidence jsonb",
+            "name": "tip_c2_finalize",
+            "owner": "postgres",
+            "definer": true,
+            "anon_execute": false,
+            "authenticated_execute": true
+          },
+          {
+            "args": "p_workspace_id uuid, p_expected_revision bigint, p_root_id text",
+            "name": "tip_c2_ledger",
+            "owner": "postgres",
+            "definer": true,
+            "anon_execute": false,
+            "authenticated_execute": true
+          },
+          {
+            "args": "p_workspace_id uuid, p_expected_revision bigint, p_input jsonb, p_root_id text",
+            "name": "tip_c2_preview",
+            "owner": "postgres",
+            "definer": true,
+            "anon_execute": false,
+            "authenticated_execute": true
+          },
+          {
+            "args": "p_workspace_id uuid, p_expected_revision bigint, p_id uuid, p_input jsonb",
+            "name": "tip_finalize_workspace_v14",
+            "owner": "postgres",
+            "definer": true,
+            "anon_execute": false,
+            "authenticated_execute": true
+          },
+          {
+            "args": "p_workspace_id uuid, p_expected_revision bigint, p_payload jsonb",
+            "name": "tip_write_workspace_v14",
+            "owner": "postgres",
+            "definer": true,
+            "anon_execute": false,
+            "authenticated_execute": true
+          }
+        ]
+      },
+      {
+        "category": "initial_counts",
+        "details": {
+          "cash": 0,
+          "gate": 0,
+          "chains": 0,
+          "events": 0,
+          "operators": 0,
+          "operations": 0
+        }
+      }
+    ],
+    "activationReadback": {
+      "checked_at": "2026-10-17 09:51:01.024339+00",
+      "synthetic_only": false,
+      "sql_approval_ref": "MCV2-023/024/025; f41770fc; Marco release authorization 2026-10-17",
+      "approved_at": "2026-10-17 09:50:52.221521+00",
+      "operator_count": 1,
+      "operation_count": 0,
+      "cash_count": 0,
+      "event_count": 0,
+      "revision": 31,
+      "payload_md5": "3832a0ec13892927c3b62fe2cb4d17d1"
     }
+  },
+  "tests": {
+    "scope": "Only release target/configuration, installed ACL/RLS, active access, and unchanged production data verified. No broad suite repeated and no synthetic payouts in production.",
+    "reused": [
+      "38969768198: isolated Supabase acceptance",
+      "38976560027: native PostgreSQL 17 recovery",
+      "38979358392: targeted UX",
+      "38981810075: empty late tips",
+      "38986858879: operator flow"
+    ],
+    "physicalDevices": "Prior Marco iPhone acceptance reused; no new physical iPad/computer acceptance."
+  },
+  "operations": {
+    "productionSyntheticFinancialWrites": 0,
+    "financialEvents": 0,
+    "cashMovements": 0,
+    "c2Operations": 0,
+    "featuresChanged": false
+  },
+  "billing": {
+    "planChanged": false,
+    "plan": "Free",
+    "observedEgressGB": 20.869,
+    "freeEgressGB": 5,
+    "edgeInvocations": 534054,
+    "freeEdgeInvocations": 500000,
+    "periodEnd": "2026-10-19",
+    "risk": "Organization is over free quotas; platform may restrict requests. Actual release SQL and app config requests succeeded. No upgrade or paid addon authorized or purchased."
+  },
+  "rollback": {
+    "file": "release/PAUSE-PREPARED-NOT-APPLIED.sql",
+    "sha256": "49e72f435bedac6e6cab7e5067f865ecf27037dc3042e36712c092d40e9d2fc4",
+    "strategy": "Forward pause of workspace writes, disable gate/operators and remove app approval in a compatible rebuild. Retain receipts/events and version protection; never restore an old snapshot over new payments or deploy unsafe old client."
+  },
+  "priorBlocker": {
+    "resolved": true,
+    "connector": "Repeated Invalid or expired requestState on SQL/migration writes; read-only calls worked.",
+    "resolution": "User-authorized dashboard execution."
+  },
+  "executionNotes": [
+    "First Vercel env attempt contained a mistyped team ID and returned 403. Auto-review blocked an unverified retry. Read-only project lookup proved exact accountId before successful same-scope retry; no mutation occurred on incorrect target."
   ],
-  "blocker": "Supabase write/migration connector request-state error; cause not proven. Read-only access works. Not a SQL assertion failure or missing business approval.",
-  "next": "Use an authorized alternate execution surface for the same exact approved SQL, recheck drift immediately, then build exact approved app with production config and activate only verified existing access. Browser fallback requires explicit user consent under browser tool rules."
+  "blocker": null,
+  "remaining": "No release blocker. Free quota availability risk persists. User should reload existing Safari tab; unverified browser identities need existing pairing/access verification."
 }
