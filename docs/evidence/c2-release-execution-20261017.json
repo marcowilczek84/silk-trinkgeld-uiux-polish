@@ -1,0 +1,67 @@
+{
+  "status": "BLOCKED_BEFORE_INSTALLATION",
+  "checkedAt": "2026-10-17T08:48:35.268911Z",
+  "releaseAuthorizationRefs": [
+    "MCV2-023",
+    "MCV2-024",
+    "MCV2-025"
+  ],
+  "approvedHandoff": "f41770fc44394f2d8f77c5ead441fe5e05a12d17",
+  "approvedApp": "a5df93a425360a0a35056890bee03432b29fffa8",
+  "production": {
+    "deployment": "dpl_AckEsRbZoAmihU4wmn7qEtbRrvMj",
+    "commit": "16fab0e23fa58a0fb59d4c8b4c7aa66dbbb79440",
+    "changed": false
+  },
+  "target": {
+    "project": "xgbbwnmqgpwxxftnjrkc",
+    "workspace": "edb875da-fea6-49a0-8e50-e314254752a6",
+    "revision": 31,
+    "payloadMD5": "3832a0ec13892927c3b62fe2cb4d17d1",
+    "c2GateTablePresent": false,
+    "versionedWriteRPCPresent": false
+  },
+  "access": {
+    "verified": true,
+    "method": "User opened existing Safari context and supplied Synchronisiert screenshot; only the existing paired Safari session refreshed after the guided opening.",
+    "sessionRefreshedAt": "2026-10-17T08:15:28.446465Z",
+    "automaticDeviceListRequired": false,
+    "existingMembershipChanged": false,
+    "operatorRightsActivated": false,
+    "privateIdentityEvidence": "Saved with private release backup; no identifiers or sessions published here."
+  },
+  "backup": {
+    "capturedAt": "2026-10-17T08:18:27.776Z",
+    "tableCount": 14,
+    "rowCount": 153,
+    "allRowsUnchanged": true,
+    "sha256": "72688fb1c6ecf5e9c73fa3a4a8782c011e43d40f0ca9741788f779fc5aefffcb",
+    "persisted": true,
+    "localRestore": "PASSED: empty PGlite 0.5.10 / PostgreSQL 18.6 WASM; all rows/fields/revisions, installation/rollback and closed gates checked.",
+    "nativePG17": "Existing isolated runner evidence reused; no repeated broad suite and no native local PG17 claim."
+  },
+  "sql": {
+    "file": "release/INSTALL-PREPARED-NOT-APPLIED.sql",
+    "sha256": "cb5a28d4fe759904e4096a9dbf9b6ccc90b3f06e794bb3459657827ae560bd33",
+    "installed": false
+  },
+  "attempts": [
+    {
+      "operation": "execute_sql",
+      "attempt": 1,
+      "result": "Invalid or expired requestState"
+    },
+    {
+      "operation": "execute_sql",
+      "attempt": 2,
+      "result": "Invalid or expired requestState"
+    },
+    {
+      "operation": "apply_migration",
+      "name": "silk_c2_approved_release_f41770fc",
+      "result": "Invalid or expired requestState"
+    }
+  ],
+  "blocker": "Supabase write/migration connector request-state error; cause not proven. Read-only access works. Not a SQL assertion failure or missing business approval.",
+  "next": "Use an authorized alternate execution surface for the same exact approved SQL, recheck drift immediately, then build exact approved app with production config and activate only verified existing access. Browser fallback requires explicit user consent under browser tool rules."
+}
