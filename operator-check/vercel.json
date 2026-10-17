@@ -1,0 +1,6 @@
+{
+  "installCommand": "cd .. && npm ci",
+  "buildCommand": "cd .. && node operator-check/build.mjs",
+  "outputDirectory": "public",
+  "headers": [{"source":"/(.*)","headers":[{"key":"Cache-Control","value":"no-cache, must-revalidate"},{"key":"X-Robots-Tag","value":"noindex, nofollow"}]}]
+}

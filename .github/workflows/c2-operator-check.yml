@@ -1,0 +1,28 @@
+name: C2 accessible operator check
+on:
+  push:
+    branches: [tips-v14-c-whole-chf-complete-period-20261016]
+    paths: ['operator-check/**', '.github/workflows/c2-operator-check.yml']
+permissions:
+  contents: read
+jobs:
+  operator-check:
+    if: github.repository == 'marcowilczek84/silk-trinkgeld-uiux-polish' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.18.0'
+      - run: npm ci
+      - run: node operator-check/build.mjs
+      - run: npx playwright install --with-deps chromium webkit
+      - run: node operator-check/browser.mjs
+      - if: ${{ !cancelled() }}
+        env:
+          QA_BROWSER: webkit
+        run: node operator-check/browser.mjs
