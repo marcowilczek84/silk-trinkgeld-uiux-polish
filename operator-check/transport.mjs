@@ -12,8 +12,10 @@ const ready=(async()=>{
   let db;
   try{
    const [wasm,bundle,fixture]=await Promise.all(['pglite.wasm','pglite.data','synthetic-fixture.tgz'].map(async file=>{const r=await fetch(file);if(!r.ok)throw Error('Testdatei konnte nicht geladen werden.');return r.blob();}));
-   db=await PGlite.create({dataDir:'idb://silk-operator-check-a5df93a4-v1',loadDataDir:fixture,fsBundle:bundle,pgliteWasmModule:await WebAssembly.compile(await wasm.arrayBuffer())});
+   const initialized=localStorage.getItem('silk-operator-db-initialized-v1')==='yes';
+   db=await PGlite.create({dataDir:'idb://silk-operator-check-a5df93a4-v1',...(initialized?{}:{loadDataDir:fixture}),fsBundle:bundle,pgliteWasmModule:await WebAssembly.compile(await wasm.arrayBuffer())});
    const valid=(await db.query('select payload from tip_workspace_state where workspace_id=$1',[target])).rows[0];if(!valid)throw Error('Synthetischer Teststand fehlt.');
+   localStorage.setItem('silk-operator-db-initialized-v1','yes');
    localStorage.setItem('silk_workspace_connection_v1',JSON.stringify({id:target,name:'BEDIENCHECK · NUR TESTDATEN'}));
    message('Bereit. Alle Bestätigungen betreffen ausschliesslich Testdaten auf diesem Gerät.');resolve(db);
    await new Promise(done=>addEventListener('pagehide',()=>{db.close().finally(done);},{once:true}));
