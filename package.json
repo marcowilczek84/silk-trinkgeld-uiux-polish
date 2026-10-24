@@ -15,7 +15,8 @@
     "test:browser:v14": "node tests/browser-v14.mjs",
     "test:variant-c": "node --test v14-prototypes/*.test.cjs",
     "test:c2": "node --test tests/c2-*.test.mjs",
-    "test:browser:c2": "node tests/browser-c2.mjs"
+    "test:browser:c2": "node tests/browser-c2.mjs",
+    "test:personal-access": "node --test server/module-runtime.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4"
